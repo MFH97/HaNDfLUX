@@ -1,2 +1,2 @@
 Folder to the dataset used to train:
-https://drive.google.com/drive/folders/11ZV0Q0dZ-yrCO1tgXpUtCoQM26eS-k1P?usp=drive_link
+https://drive.google.com/file/d/1QpIHZwzD3l0nXOb2Qc-_gdVwn6SGYWBn/view?usp=drive_link
