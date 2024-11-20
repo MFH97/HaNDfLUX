@@ -2,122 +2,162 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import os
-from tqdm import tqdm  # For progress bar
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import joblib
 
-# Mediapipe setup
+# Setup MediaPipe
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7)
 mp_drawing = mp.solutions.drawing_utils
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
 
-# Constants
-GESTURES = ["Left", "Right"]  # Ensure these match Mediapipe's hand labels
-DATA_PATH = "gesture_data"
+# Directory to save datasets
+DATASET_DIR = "gesture_data"
+if not os.path.exists(DATASET_DIR):
+    os.makedirs(DATASET_DIR)
+
+# Define gestures
+GESTURES = ["left", "right"]  # You can expand this list
 SAMPLES_PER_GESTURE = 250
 
-# Initialize variables
-current_hand = 0  # 0 for Left, 1 for Right
-collected_samples = 0
-collecting = False
-
-# Create folders for gestures automatically
-def setup_data_folders():
-    os.makedirs(DATA_PATH, exist_ok=True)
-    for gesture in GESTURES:
-        os.makedirs(os.path.join(DATA_PATH, gesture), exist_ok=True)
-    print(f"Folders created for gestures: {GESTURES}")
-
-# Save hand landmarks to file
-def save_landmarks(hand_landmarks, hand_name):
-    global collected_samples
-    landmarks = []
-    for landmark in hand_landmarks.landmark:
-        landmarks.extend([landmark.x, landmark.y, landmark.z])
-    landmarks = np.array(landmarks)
-
-    # Save to file
-    filename = os.path.join(DATA_PATH, hand_name, f"{collected_samples}.npy")
-    np.save(filename, landmarks)
-    collected_samples += 1
-
-# Main function for collecting gestures
-def gesture_collector():
-    global current_hand, collected_samples, collecting
-
-    # Ensure folders are set up
-    setup_data_folders()
-
+# Collect Data
+def collect_gesture_data(gesture_label):
     cap = cv2.VideoCapture(0)
-    print(f"Starting Gesture Collector. Press 's' to start/pause, and 'q' to quit.")
-
-    progress_bar = None  # Placeholder for progress bar
-
+    count = 0
+    print(f"Collecting data for {gesture_label}... Press 'q' to quit.")
+    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
-            print("Failed to grab frame")
             break
-
+        
         frame = cv2.flip(frame, 1)
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands.process(rgb_frame)
-
-        # Check for hand landmarks
-        if result.multi_hand_landmarks:
-            print("Hands detected!")
-            for hand_landmarks, handedness in zip(result.multi_hand_landmarks, result.multi_handedness):
-                hand_label = handedness.classification[0].label  # 'Left' or 'Right'
-                print(f"Detected hand: {hand_label}")
-
-                if collecting and hand_label == GESTURES[current_hand]:
-                    save_landmarks(hand_landmarks, GESTURES[current_hand])
-
-                    if progress_bar is None:
-                        # Initialize the progress bar
-                        progress_bar = tqdm(total=SAMPLES_PER_GESTURE, desc=f"Collecting {GESTURES[current_hand]}", unit="samples")
-                    progress_bar.update(1)
-
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(image)
+        
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
                 mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                
+                # Extract landmarks
+                landmarks = []
+                for lm in hand_landmarks.landmark:
+                    landmarks.append(lm.x)
+                    landmarks.append(lm.y)
+                    landmarks.append(lm.z)
+                
+                # Save landmarks with the label
+                if count < SAMPLES_PER_GESTURE:
+                    data = [gesture_label] + landmarks
+                    save_to_csv(data, gesture_label)
+                    count += 1
 
-        else:
-            print("No hands detected.")
-
-        # Overlay collection status
-        cv2.putText(frame, f"Collecting: {collecting}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"Hand: {GESTURES[current_hand]}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.imshow("Gesture Collector", frame)
-
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('s'):  # Start/Pause collection
-            collecting = not collecting
-            if collecting:
-                print(f"Started collecting for {GESTURES[current_hand]}")
-                if progress_bar is None:
-                    progress_bar = tqdm(total=SAMPLES_PER_GESTURE, desc=f"Collecting {GESTURES[current_hand]}", unit="samples")
-            else:
-                print(f"Paused collection.")
-                if progress_bar:
-                    progress_bar.close()
-                    progress_bar = None
-        elif key == ord('q'):  # Quit
+        # Display progress
+        cv2.putText(frame, f"Collecting {gesture_label}: {count}/{SAMPLES_PER_GESTURE}", 
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow("Data Collection", frame)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q') or count >= SAMPLES_PER_GESTURE:
             break
-
-        # Check if collection is complete
-        if collected_samples >= SAMPLES_PER_GESTURE:
-            print(f"Collected {SAMPLES_PER_GESTURE} samples for {GESTURES[current_hand]}")
-            collecting = False
-            collected_samples = 0
-            current_hand += 1
-            if progress_bar:
-                progress_bar.close()
-                progress_bar = None
-
-            if current_hand >= len(GESTURES):
-                print("Gesture collection complete.")
-                break
-            print(f"Switching to {GESTURES[current_hand]}")
-
+    
     cap.release()
     cv2.destroyAllWindows()
 
-# Run the gesture collector
-gesture_collector()
+# Save to CSV
+def save_to_csv(data, gesture_label):
+    file_path = os.path.join(DATASET_DIR, f"{gesture_label}.csv")
+    with open(file_path, 'a') as f:
+        f.write(",".join(map(str, data)) + "\n")
+
+# Train the Model
+def train_model():
+    all_data = []
+    all_labels = []
+    
+    for gesture_label in GESTURES:
+        file_path = os.path.join(DATASET_DIR, f"{gesture_label}.csv")
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path, header=None)
+            data = df.iloc[:, 1:].values  # Landmarks
+            labels = df.iloc[:, 0].values  # Labels
+            all_data.extend(data)
+            all_labels.extend(labels)
+    
+    # Train-Test Split
+    X_train, X_test, y_train, y_test = train_test_split(all_data, all_labels, test_size=0.2, random_state=42)
+    
+    # Train a RandomForest Classifier
+    clf = RandomForestClassifier()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    
+    print(f"Model trained with accuracy: {accuracy * 100:.2f}%")
+    joblib.dump(clf, "gesture_model.pkl")
+
+# Recognize Gestures
+def recognize_gestures():
+    clf = joblib.load("gesture_model.pkl")
+    cap = cv2.VideoCapture(0)
+    
+    print("Recognizing gestures... Press 'q' to quit.")
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        frame = cv2.flip(frame, 1)
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(image)
+        
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                
+                # Extract landmarks
+                landmarks = []
+                for lm in hand_landmarks.landmark:
+                    landmarks.append(lm.x)
+                    landmarks.append(lm.y)
+                    landmarks.append(lm.z)
+                
+                # Predict gesture
+                landmarks = np.array(landmarks).reshape(1, -1)
+                prediction = clf.predict(landmarks)
+                gesture = prediction[0]
+                
+                # Display prediction
+                cv2.putText(frame, f"Gesture: {gesture}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        
+        cv2.imshow("Gesture Recognition", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    cap.release()
+    cv2.destroyAllWindows()
+
+# Main Menu
+def main():
+    while True:
+        print("1. Collect Data")
+        print("2. Train Model")
+        print("3. Recognize Gestures")
+        print("4. Exit")
+        
+        choice = input("Enter your choice: ")
+        if choice == '1':
+            for gesture in GESTURES:
+                collect_gesture_data(gesture)
+        elif choice == '2':
+            train_model()
+        elif choice == '3':
+            recognize_gestures()
+        elif choice == '4':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
