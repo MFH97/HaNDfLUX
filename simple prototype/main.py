@@ -1,6 +1,7 @@
 #Main program for GUI interface
 import subprocess
 import os
+import psutil
 import tkinter as tk
 from tkinter import messagebox
 
@@ -37,7 +38,21 @@ def run_program2():
     except Exception as e:
         messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
-import psutil
+def run_program3():
+    global process
+    try:
+        if process is not None:
+            messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+            return
+        # Placeholder for Two Hands Gesture Control program
+        process = subprocess.Popen(
+            ["python", os.path.join(base_path, "swipeControl.py")],
+            shell=True
+        )
+        print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
+
 
 def release_control():
     global process
@@ -66,7 +81,7 @@ def exit_program():
     root.destroy()
 
 # Set the base path to your scripts
-base_path = r"C:\Users\mdfah\OneDrive\Desktop\FYP\Prototype 3"  # Replace with your directory
+base_path = ""  # Replace with your directory
 
 # Initialize the tkinter root window
 root = tk.Tk()
@@ -84,6 +99,9 @@ button1 = tk.Button(frame, text="Run Mouse Control", command=run_program1, width
 button1.pack(pady=5)
 
 button2 = tk.Button(frame, text="Run Two Hands Gesture Control", command=run_program2, width=20, height=2)
+button2.pack(pady=5)
+
+button2 = tk.Button(frame, text="Run Swipe Motion Gesture Control", command=run_program3, width=20, height=2)
 button2.pack(pady=5)
 
 # Release control button
