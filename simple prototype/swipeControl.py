@@ -16,10 +16,10 @@ print(f"Started Swipe Motion Gesture Control with PID: {os.getpid()}")
 
 # Mediapipe setup
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7, min_tracking_confidence=0.7)
 
 # Constants
-BASE_THRESHOLD = 0.010
+BASE_THRESHOLD = 0.01
 MIN_THRESHOLD = 0.006
 ADAPTIVE_WINDOW = 20
 THRESHOLD_RESTORE_RATE = 0.0005
@@ -27,6 +27,8 @@ IDLE_TIMEOUT = 1.0
 LOG_FILE = "gesture_log.txt"
 KEYS = {"Swipe Left": "d", "Swipe Right": "j"}
 TREND_WINDOW = 50  # Number of gestures to analyze trends
+SWIPE_COOLDOWN = 0.3  # Minimum time between swipes
+SPAM_WINDOW = 0.5  # Allow spamming gestures within this time window
 
 # Tracking variables
 prev_landmarks = {"Left": None, "Right": None}
@@ -35,21 +37,24 @@ swipe_velocities = {"Left": [], "Right": []}
 adaptive_threshold = BASE_THRESHOLD
 last_motion_time = {"Left": time.time(), "Right": time.time()}
 gesture_trends = {"Left": [], "Right": []}
+last_swipe_time = {"Left": 0, "Right": 0}
+spam_start_time = {"Left": 0, "Right": 0}
+spam_count = {"Left": 0, "Right": 0}
 
 # Initialize log file
 with open(LOG_FILE, "w") as log_file:
     log_file.write("Gesture Sensitivity Log\n")
     log_file.write("========================\n")
 
+
 def log_data(data):
-    """
-    Log data to the .txt file.
-    """
+    """Log data to the .txt file."""
     with open(LOG_FILE, "a") as log_file:
         log_file.write(data + "\n")
 
-# Analyze behavior trends
+
 def analyze_behavior(hand_label):
+    """Analyze gesture behavior trends."""
     if len(gesture_trends[hand_label]) < TREND_WINDOW:
         return "Analyzing..."
 
@@ -64,8 +69,9 @@ def analyze_behavior(hand_label):
         return "Deliberate"
     return "Neutral"
 
-# Detect motion and manage adaptive sensitivity
+
 def detect_motion(current_landmarks, hand_label):
+    """Detect motion and manage adaptive sensitivity."""
     global prev_landmarks, gesture_state, swipe_velocities, adaptive_threshold, last_motion_time, gesture_trends
 
     if prev_landmarks[hand_label] is None:
@@ -96,14 +102,13 @@ def detect_motion(current_landmarks, hand_label):
         adaptive_threshold = min(adaptive_threshold + THRESHOLD_RESTORE_RATE, BASE_THRESHOLD)
         log_data(f"Adjusted threshold up to {adaptive_threshold:.4f} for {hand_label} hand.")
 
-    if hand_label == "Left" and velocity > adaptive_threshold and gesture_state[hand_label] != "Swipe Right":
-        gesture_state[hand_label] = "Swipe Right"
+    # Detect gestures based on refined velocity logic
+    if velocity > adaptive_threshold and hand_label == "Left" and gesture_state[hand_label] != "Swipe Right":
         return "Swipe Right"
-    elif hand_label == "Right" and velocity < -adaptive_threshold and gesture_state[hand_label] != "Swipe Left":
-        gesture_state[hand_label] = "Swipe Left"
+    elif velocity < -adaptive_threshold and hand_label == "Right" and gesture_state[hand_label] != "Swipe Left":
         return "Swipe Left"
-    elif abs(velocity) < adaptive_threshold:
-        gesture_state[hand_label] = None
+
+    gesture_state[hand_label] = None
 
     # Log trends for analysis
     idle_time = time.time() - last_motion_time[hand_label]
@@ -111,19 +116,34 @@ def detect_motion(current_landmarks, hand_label):
     if len(gesture_trends[hand_label]) > TREND_WINDOW:
         gesture_trends[hand_label].pop(0)
 
-    # Call behavior analysis
-    behavior = analyze_behavior(hand_label)
-    print(f"{hand_label} hand behavior: {behavior}")
-    return behavior
+    return "Idle"
 
-# Execute the gesture action
-def execute_gesture(gesture):
+
+def execute_gesture(gesture, hand_label):
+    """Execute gesture actions with spam detection."""
+    global last_swipe_time, spam_start_time, spam_count
+
+    current_time = time.time()
+
+    # Prevent excessive spamming
+    if current_time - last_swipe_time[hand_label] < SWIPE_COOLDOWN:
+        return
+
+    if current_time - spam_start_time[hand_label] > SPAM_WINDOW:
+        spam_start_time[hand_label] = current_time
+        spam_count[hand_label] = 0
+
+    spam_count[hand_label] += 1
+    last_swipe_time[hand_label] = current_time
+
+    # Trigger key press
     if gesture in KEYS:
-        print(f"Gesture Detected: {gesture} -> Pressing '{KEYS[gesture]}'")
+        print(f"Gesture Detected: {gesture} -> Pressing '{KEYS[gesture]}' (Spam Count: {spam_count[hand_label]})")
         pydirectinput.press(KEYS[gesture])
 
-# Main function
+
 def main():
+    """Main function."""
     global adaptive_threshold
 
     cap = cv2.VideoCapture(0)
@@ -151,8 +171,8 @@ def main():
 
                 motion = detect_motion(raw_landmarks, hand_label)
                 gestures[hand_label] = motion
-                if motion != "Idle":
-                    execute_gesture(motion)
+                if motion in KEYS:
+                    execute_gesture(motion, hand_label)
 
                 mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
@@ -171,6 +191,7 @@ def main():
     if os.path.exists(LOG_FILE):
         os.remove(LOG_FILE)
         print("Log file cleared.")
+
 
 if __name__ == "__main__":
     main()
