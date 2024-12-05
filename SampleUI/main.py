@@ -1,12 +1,15 @@
-#Main program for GUI interface
+# Main program for GUI interface
 import subprocess
 import os
 import tkinter as tk
 import psutil
 from tkinter import messagebox
+import pyautogui
 
-# Track running subprocess
-process = None
+def button_hover(tkb, b_Hover, b_Release ):
+    # Changes the colour of the button whether if it hovers or not
+    tkb.bind("<Enter>", func=lambda e: tkb.config(background=b_Hover))
+    tkb.bind("<Leave>", func=lambda e: tkb.config(background=b_Release))
 
 def run_program1():
     global process
@@ -16,7 +19,7 @@ def run_program1():
             return
         # Start MouseControl program
         process = subprocess.Popen(
-            ["py", os.path.join(base_path, "MouseControl.py")],
+            ["python", os.path.join(base_path, "MouseControl.py")],
             shell=True
         )
         print(f"Started Mouse Control with PID: {process.pid}")  # Debugging info
@@ -31,14 +34,95 @@ def run_program2():
             return
         # Placeholder for Two Hands Gesture Control program
         process = subprocess.Popen(
-            ["py", os.path.join(base_path, "control_2hands.py")],
+            ["python", os.path.join(base_path, "control_2hands.py")],
             shell=True
         )
         print(f"Started Two Hands Gesture Control with PID: {process.pid}")  # Debugging info
     except Exception as e:
         messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
+def run_program3():
+    global process
+    try:
+        if process is not None:
+            messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+            return
+        # Placeholder for Two Hands Gesture Control program
+        process = subprocess.Popen(
+            ["python", os.path.join(base_path, "swipeControl.py")],
+            shell=True
+        )
+        print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
+def run_tutorial():
+    global MaxRes
+    global tut_count
+    global tut_toggle
+    tutlabel1.pack(anchor="nw")
+    tutlabel2.pack(anchor="nw")
+    tutlabel3.pack(anchor="nw")
+    tutlabel4.pack(anchor="nw")
+    tutlabel5.pack(anchor="nw")
+    tutlabel6.pack(anchor="nw")
+    # Tutorial Process - Video / Tkinter animation on how to use the software
+    try:
+        if tut_toggle == False:
+            if tut_count < MaxRes[1]:
+                tutlabel6.config(height=tut_count)
+                tut_count += 1
+                tutlabel6.after(15,run_tutorial)
+                if tut_count == MaxRes[1]:
+                    tut_toggle = True
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to startup Tutorial process: {e}")
+
+def run_faq():
+    try:
+        # Function to Load a TXT File in the folder to faqtxt Text Element
+        def txtLoader():
+            with open('faq_text.txt', 'r') as txtfile:
+                faq_text = txtfile.read()
+                faqtxt.insert(tk.END, faq_text)
+
+        # FAQ Process - Tkinter Window for troubleshooting issues via FAQ
+        faq_window = tk.Toplevel()
+        faq_window.title("FAQ")
+        faq_window.geometry('1200x600')
+        faq_window.maxsize(1600,900)
+        faq_window.minsize(1200,600)
+        faq_window.configure(background="#333333")
+
+        # FAQ Frame & Scrollbar to navigate
+        faqframe = tk.Frame(faq_window, padx=5, pady=5, bg="#333333")
+        faqtitleframe = tk.Frame(faq_window, padx=5, pady=5, bg="#222222")
+        faqScroll = tk.Scrollbar(faq_window)
+
+        # Text Element to input FAQ Items
+        faqtxt = tk.Text(faq_window, yscrollcommand = faqScroll.set, bg="#333333", width=1100, font=("Archivo Black", 14), fg="#EEEEEE")
+        
+        # Label and button to close the FAQ Window
+        FAQlabel = tk.Label(faqtitleframe, text="Handflux FAQ", bg="#333333", fg="#FE5312", font=("Archivo Black", 25, "bold"))
+        close_faq = tk.Button(faqtitleframe, text="Return", command=faq_window.destroy, width=10, height=0, bg="#B83301", fg="#FFFFFF", border=0, font=("Archivo Black", 15, "bold"))
+
+        # GUI Layout
+        faqtitleframe.pack(side="top", anchor="nw", fill="x")
+        FAQlabel.pack(pady=5, side="left", anchor="nw")
+        close_faq.pack(padx=25, pady=5, side="right", anchor="ne")
+        button_hover(close_faq,"#B83301", "#333333")
+
+        faqframe.pack(side="left", anchor="nw")
+        faqtxt.pack(side="left", fill="both")
+        faqScroll.pack(side="right", fill="y")
+
+        # Loads the TXT into the faqtxt Element
+        txtLoader()
+
+        #faqlist.bind("<Button-1>", no_select)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to open FAQ. Reason: {e}")
 
 def release_control():
     global process
@@ -59,56 +143,97 @@ def release_control():
             messagebox.showerror("Error", f"Failed to terminate the program: {e}")
     else:
         print("No process to terminate.")  # Debugging info
-        #messagebox.showinfo("Info", "No programs are currently running.")
-
+        #messagebox.showinfo("Info", "No program is currently running.")
 
 def exit_program():
     release_control()  # Ensure any running process is terminated before exiting
     root.destroy()
 
 # Set the base path to your scripts
-base_path = r"Directory"  # Replace with your directory
+base_path = r"C:\Users\User\OneDrive\UniStuff\FYP\Handflux\UI_Prototype"  # Replace with your directory
+
+# Track running subprocess
+process = None
+
+# For UI Animation
+tut_count = 0
+tut_toggle = False
+
+# Gets the resolution for the default monitor
+MaxRes = pyautogui.size()
 
 # Initialize the tkinter root window
 root = tk.Tk()
-root.title("Handflux-GUI Prototype 1.1")
-root.geometry('800x500')
-root.maxsize(1920,1080)
-root.minsize(640,480)
-
+root.title("Handflux-GUI Prototype 1.3")
+root.geometry('800x600')
+root.maxsize(MaxRes[0],MaxRes[1])
+root.minsize(800,600)
 root.configure(background="#333333")
 
-# GUI Layout Configuration
-Titleframe = tk.Frame(root, padx=10, pady=5, bg="#333333")
-Titleframe.pack(anchor="nw")
 
-#Spareframe = tk.Frame(root, padx=25, pady=5)
-#Spareframe.pack(anchor="e",side="left")
+
+# For UI Management, Pack cannot be mixed with Grid and Vice Versa
+#Thing.pack(side="top/left/right/down", fill="none/x/y/both", expand="true/false", padx=123, pady=123)
+#Thing.grid(row=123, column=123, rowspan=123, columnspan=123, padx=123, pady=123, sticky=nsew)
+
+# Configure the GUI layout
+UIframe1 = tk.Frame(root, padx=5, pady=5, bg="#333333")
+UIframe2 = tk.Frame(root, padx=5, pady=5, bg="#333333")
 
 # GUI Labels
-TKlabel = tk.Label(Titleframe, text="Handflux Prototype", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 25, "bold"))
-TKlabel.pack(pady=5, anchor="nw")
-
-PRlabel = tk.Label(Titleframe, text="Select a program to run:", font=("Archivo Black", 14), bg="#333333", fg="#FE5312")
-PRlabel.pack(pady=5, anchor="nw")
+TKlabel = tk.Label(UIframe1, text="Handflux Prototype", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 25, "bold"))
 
 # Buttons for each program
-button1 = tk.Button(Titleframe, text="Mouse Controls", command=run_program1, width=25, height=2, bg="#B83301", fg="#FFFFFF")
+button1 = tk.Button(UIframe1, text="Mouse", command=run_program1, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
+button_hover(button1,"#B83301", "#333333")
+button2 = tk.Button(UIframe1, text="Two-handed Gesture", command=run_program2, width=20, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
+button_hover(button2,"#B83301", "#333333")
+button3 = tk.Button(UIframe1, text="Swipe Motion Gesture", command=run_program3, width=20, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
+button_hover(button3,"#B83301", "#333333")
 
-button2 = tk.Button(Titleframe, text="Two-handed Gesture Controls", command=run_program2, width=25, height=2, bg="#B83301", fg="#FFFFFF")
+# Button to display a tutorial window/widget
+tutorial_button = tk.Button(UIframe2, text="Help", command=run_tutorial, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
+button_hover(tutorial_button,"#B80120", "#333333")
+
+tutFrame = tk.Frame(root, padx=5, pady=5, bg="#333333")
+tutlabel1 = tk.Label(tutFrame, text="Click a Control button above to open up the webcam with that control", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 12))
+tutlabel2 = tk.Label(tutFrame, text="Mouse - Your hands act as the PC's Mouse", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
+tutlabel3 = tk.Label(tutFrame, text="Two-handed Gesture - Hand Gestures are linked to set keybinds", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
+tutlabel4 = tk.Label(tutFrame, text="Swipe Motion Gesture - Swipe Gestures are linked to set keybinds", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
+tutlabel5 = tk.Label(tutFrame, text="Release Control - Closes the control and its webcam window", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
+tutlabel6 = tk.Label(tutFrame, text="Exit - Closes the app", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
+
+# Button to display FAQ window/widget
+faq_button = tk.Button(UIframe2, text="FAQs", command=run_faq, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
+button_hover(faq_button,"#B80120", "#333333")
 
 # Release control button
-release_button = tk.Button(Titleframe, text="Release Control", command=release_control, width=20, height=2, bg="#660000", fg="#FFFFFF")
+release_button = tk.Button(UIframe2, text="Release Controls", command=release_control, width=15, height=2, bg="#333333", fg="#FFFFFF", activebackground='#660000', border=0, font=("Archivo Black", 10))
+button_hover(release_button,"#660000", "#333333")
 
-# Exit button
-exit_button = tk.Button(Titleframe, text="Exit", command=exit_program ,width=20, height=2, bg="#ff3300", fg="white")
+# Exit button - better implemented as image
+exit_button = tk.Button(UIframe2, text="Exit", command=exit_program ,width=10, height=2, bg="#333333", fg="#FFFFFF", border=0, font=("Archivo Black", 10))
+button_hover(exit_button,"#CC3300", "#333333")
 
+# GUI Layout and Labels
+UIframe1.pack(side="top", fill="x")
+TKlabel.pack(pady=5, anchor="nw")
 
-# Orients the buttons based on this layout: Button 1, Button 2, Release, Exit
+# Button Layout
 button1.pack(padx=5, pady=5, side="left", anchor="nw")
 button2.pack(padx=5, pady=5, side="left", anchor="nw")
-release_button.pack(padx=5, pady=5, side="left", anchor="w")
-exit_button.pack(padx=5, pady=5, side="left", anchor="w")
+button3.pack(padx=5, pady=5, side="left", anchor="nw")
+
+# For the second row
+UIframe2.pack(side="top", fill="x")
+tutorial_button.pack(padx=5, pady=5, side="left", anchor="nw")
+faq_button.pack(padx=5, pady=5, side="left", anchor="nw")
+release_button.pack(padx=5, pady=5, side="left", anchor="nw")
+exit_button.pack(padx=5, pady=5, side="left", anchor="nw")
+
+# Temp tutorial Section
+tutFrame.pack(side="left", fill="x")
+
 
 
 # Run the tkinter event loop
