@@ -18,13 +18,18 @@ print(f"Started Swipe Motion Gesture Control with PID: {os.getpid()}")
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7, min_tracking_confidence=0.7)
 
+# Default sensitivity values
+DEFAULT_BASE_THRESHOLD = 0.01
+DEFAULT_MIN_THRESHOLD = 0.006
+
 # Constants
-BASE_THRESHOLD = 0.01
-MIN_THRESHOLD = 0.006
+BASE_THRESHOLD = DEFAULT_BASE_THRESHOLD # Increasing the threshold make it not sensitive. Where decreasing it make it more sensitive
+MIN_THRESHOLD = DEFAULT_MIN_THRESHOLD # Increasing the threshold make it not sensitive. Where decreasing it make it more sensitive
 ADAPTIVE_WINDOW = 20
 THRESHOLD_RESTORE_RATE = 0.0005
 IDLE_TIMEOUT = 1.0
 LOG_FILE = "gesture_log.txt"
+SETTINGS_FILE = "sensitivity_settings.txt"
 KEYS = {"Swipe Left": "d", "Swipe Right": "j"}
 TREND_WINDOW = 50  # Number of gestures to analyze trends
 SWIPE_COOLDOWN = 0.3  # Minimum time between swipes
@@ -141,10 +146,39 @@ def execute_gesture(gesture, hand_label):
         print(f"Gesture Detected: {gesture} -> Pressing '{KEYS[gesture]}' (Spam Count: {spam_count[hand_label]})")
         pydirectinput.press(KEYS[gesture])
 
+def save_sensitivity_settings():
+    """Save sensitivity settings to a file."""
+    with open(SETTINGS_FILE, "w") as settings_file:
+        settings_file.write(f"BASE_THRESHOLD={BASE_THRESHOLD}\n")
+        settings_file.write(f"MIN_THRESHOLD={MIN_THRESHOLD}\n")
+    print("Sensitivity settings saved.")
+
+
+def load_sensitivity_settings():
+    """Load sensitivity settings from a file."""
+    global BASE_THRESHOLD, MIN_THRESHOLD
+    if os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, "r") as settings_file:
+            for line in settings_file:
+                key, value = line.strip().split("=")
+                if key == "BASE_THRESHOLD":
+                    BASE_THRESHOLD = float(value)
+                elif key == "MIN_THRESHOLD":
+                    MIN_THRESHOLD = float(value)
+        print("Sensitivity settings loaded.")
+    else:
+        print("No sensitivity settings file found. Using default values.")
+
+
+# Load settings at the start
+load_sensitivity_settings()
 
 def main():
     """Main function."""
     global adaptive_threshold
+
+    # Use loaded BASE_THRESHOLD and MIN_THRESHOLD
+    adaptive_threshold = BASE_THRESHOLD
 
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -188,6 +222,9 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
+    # Save settings on exit
+    save_sensitivity_settings()
+    
     if os.path.exists(LOG_FILE):
         os.remove(LOG_FILE)
         print("Log file cleared.")
