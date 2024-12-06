@@ -3,7 +3,9 @@ import subprocess
 import os
 import tkinter as tk
 import psutil
-from tkinter import messagebox
+from tkinter import PhotoImage, messagebox
+from tkinter.ttk import *
+
 import pyautogui
 
 def button_hover(tkb, b_Hover, b_Release ):
@@ -122,7 +124,29 @@ def run_faq():
 
         #faqlist.bind("<Button-1>", no_select)
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to open FAQ. Reason: {e}")
+        messagebox.showerror("Error", f"Failed to start FAQ Process: {e}")
+
+def run_settings():
+    try:
+        # Settings process - Tkinter overlay to change settings
+        gearCanvas = tk.Canvas(root, width=400, height=300, bg="#444444", highlightthickness=0)
+        gearCanvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+        gearTF = tk.Frame(gearCanvas, padx=5, pady=5, bg="#222222")
+        gearFrame = tk.Frame(gearCanvas, padx=5, pady=5, bg="#222222")
+
+        gearTitle = tk.Label(gearTF, text="Settings", bg="#222222", fg="#FE5312", font=("Archivo Black", 20, "bold"))
+        closeGear = tk.Button(gearTF, text="Return", command=gearCanvas.destroy, width=10, height=0, bg="#333333", fg="#FFFFFF", border=0, font=("Archivo Black", 15, "bold"))
+
+        gearTF.pack(side="top", anchor="nw", fill="x")
+        gearFrame.pack(side="top", anchor="nw", fill="x")
+        gearTitle.pack(pady=5, side="left", anchor="nw")
+        
+        closeGear.pack(padx=5, pady=5, side="right", anchor="ne")
+        button_hover(closeGear,"#B83301", "#333333")
+            
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to open up Settings: {e}")
 
 def release_control():
     global process
@@ -150,7 +174,7 @@ def exit_program():
     root.destroy()
 
 # Set the base path to your scripts
-base_path = r"C:\Users\User\OneDrive\UniStuff\FYP\Handflux\UI_Prototype"  # Replace with your directory
+base_path = ""  # Replace with your directory
 
 # Track running subprocess
 process = None
@@ -170,8 +194,6 @@ root.maxsize(MaxRes[0],MaxRes[1])
 root.minsize(800,600)
 root.configure(background="#333333")
 
-
-
 # For UI Management, Pack cannot be mixed with Grid and Vice Versa
 #Thing.pack(side="top/left/right/down", fill="none/x/y/both", expand="true/false", padx=123, pady=123)
 #Thing.grid(row=123, column=123, rowspan=123, columnspan=123, padx=123, pady=123, sticky=nsew)
@@ -185,16 +207,12 @@ TKlabel = tk.Label(UIframe1, text="Handflux Prototype", anchor="ne", bg="#333333
 
 # Buttons for each program
 button1 = tk.Button(UIframe1, text="Mouse", command=run_program1, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
-button_hover(button1,"#B83301", "#333333")
 button2 = tk.Button(UIframe1, text="Two-handed Gesture", command=run_program2, width=20, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
-button_hover(button2,"#B83301", "#333333")
 button3 = tk.Button(UIframe1, text="Swipe Motion Gesture", command=run_program3, width=20, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
-button_hover(button3,"#B83301", "#333333")
 
 # Button to display a tutorial window/widget
 tutorial_button = tk.Button(UIframe2, text="Help", command=run_tutorial, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
 button_hover(tutorial_button,"#B80120", "#333333")
-
 tutFrame = tk.Frame(root, padx=5, pady=5, bg="#333333")
 tutlabel1 = tk.Label(tutFrame, text="Click a Control button above to open up the webcam with that control", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 12))
 tutlabel2 = tk.Label(tutFrame, text="Mouse - Your hands act as the PC's Mouse", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
@@ -203,17 +221,19 @@ tutlabel4 = tk.Label(tutFrame, text="Swipe Motion Gesture - Swipe Gestures are l
 tutlabel5 = tk.Label(tutFrame, text="Release Control - Closes the control and its webcam window", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
 tutlabel6 = tk.Label(tutFrame, text="Exit - Closes the app", anchor="ne", bg="#333333", fg="#FE5312", font=("Archivo Black", 10))
 
-# Button to display FAQ window/widget
+# Miscellaneous UI Buttons
+settings_img = PhotoImage(file = "settings.png")
+scaled_settingsImg = settings_img.subsample(2, 2)
+settings_button = tk.Button(UIframe1, image=scaled_settingsImg, command=run_settings, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0)
+
+
 faq_button = tk.Button(UIframe2, text="FAQs", command=run_faq, width=10, height=2, bg="#333333", fg="#FFFFFF", activebackground='#B83301', border=0, font=("Archivo Black", 10))
-button_hover(faq_button,"#B80120", "#333333")
 
 # Release control button
 release_button = tk.Button(UIframe2, text="Release Controls", command=release_control, width=15, height=2, bg="#333333", fg="#FFFFFF", activebackground='#660000', border=0, font=("Archivo Black", 10))
-button_hover(release_button,"#660000", "#333333")
 
 # Exit button - better implemented as image
 exit_button = tk.Button(UIframe2, text="Exit", command=exit_program ,width=10, height=2, bg="#333333", fg="#FFFFFF", border=0, font=("Archivo Black", 10))
-button_hover(exit_button,"#CC3300", "#333333")
 
 # GUI Layout and Labels
 UIframe1.pack(side="top", fill="x")
@@ -221,20 +241,32 @@ TKlabel.pack(pady=5, anchor="nw")
 
 # Button Layout
 button1.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(button1,"#B83301", "#333333")
+
 button2.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(button2,"#B83301", "#333333")
+
 button3.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(button3,"#B83301", "#333333")
+
+settings_button.pack(padx=50, pady=5, side="right", anchor="ne")
+button_hover(settings_button,"#B80120", "#333333")
 
 # For the second row
 UIframe2.pack(side="top", fill="x")
 tutorial_button.pack(padx=5, pady=5, side="left", anchor="nw")
+
 faq_button.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(faq_button,"#B80120", "#333333")
+
 release_button.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(release_button,"#660000", "#333333")
+
 exit_button.pack(padx=5, pady=5, side="left", anchor="nw")
+button_hover(exit_button,"#CC3300", "#333333")
 
 # Temp tutorial Section
 tutFrame.pack(side="left", fill="x")
-
-
 
 # Run the tkinter event loop
 root.mainloop()
