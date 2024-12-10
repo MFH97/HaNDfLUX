@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import win32api
+import win32con
 import pyautogui
 import math
 import signal
@@ -39,6 +40,7 @@ if not video.isOpened():
 
 screen_width, screen_height = pyautogui.size()
 cursor_speed = 5
+position_displacement = 1.5
 previous_base_coord = [0, 0]
 
 # Cursor D8 Movement function
@@ -58,32 +60,35 @@ def dpadCursor(index_x, index_y):
     
     if not (deadzone_min_vector[0] < index_x < deadzone_max_vector[0] and deadzone_min_vector[1] < index_y < deadzone_max_vector[1]):
         #control the movement of the cursor, similar to a d-pad
-            
         if index_x < deadzone_min_vector[0] and index_y < deadzone_min_vector[1]:                             #top left position
-            win32api.SetCursorPos((current_cursor_x - current_speed, current_cursor_y - current_speed))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, -current_speed, -current_speed, 0, 0)
         if deadzone_min_vector[0] < index_x < deadzone_max_vector[0] and index_y < deadzone_min_vector[1]:    #top middle position
-            win32api.SetCursorPos((current_cursor_x, current_cursor_y - current_speed))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, 0, -current_speed, 0, 0)
         if deadzone_max_vector[0] < index_x  and index_y < deadzone_min_vector[1]:                            #top right position
-            win32api.SetCursorPos((current_cursor_x + current_speed, current_cursor_y - current_speed))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, current_speed, -current_speed, 0, 0)
         if index_x < deadzone_min_vector[0]  and deadzone_min_vector[1] < index_y < deadzone_max_vector[1]:   #middle left position
-            win32api.SetCursorPos((current_cursor_x - current_speed, current_cursor_y))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, -current_speed, 0, 0, 0)
         if deadzone_max_vector[0] < index_x  and deadzone_min_vector[1] < index_y < deadzone_max_vector[1]:   #middle right position
-            win32api.SetCursorPos((current_cursor_x + current_speed, current_cursor_y))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, current_speed, 0, 0, 0)
         if index_x < deadzone_min_vector[0] and deadzone_max_vector[1] < index_y:                             #bottom left position
-            win32api.SetCursorPos((current_cursor_x - current_speed, current_cursor_y + current_speed))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, -current_speed, current_speed, 0, 0)
         if deadzone_min_vector[0] < index_x < deadzone_max_vector[0] and deadzone_max_vector[1] < index_y:    #bottom middle position
-            win32api.SetCursorPos((current_cursor_x, current_cursor_y + current_speed))
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, 0, current_speed, 0, 0)
         if deadzone_max_vector[0] < index_x  and deadzone_max_vector[1] < index_y:                            #bottom right position
-            win32api.SetCursorPos((current_cursor_x + current_speed, current_cursor_y + current_speed))
-      
+            win32api.mouse_event(win32con.MOUSEEVENTF_MOVE, current_speed, current_speed, 0, 0)
+        
 #Cursor Postion Movement function  
 def positionCursor(index_x, index_y, index_base, previous_base_coord):
     deadzone_dist = calculate_distance(index_base.x, index_base.y, previous_base_coord[0], previous_base_coord[1])
     #print(str(deadzone_dist))
     
+    center_pos = [screen_width / 2, screen_height / 2]
+    offset_x = int((index_x - center_pos[0]) * position_displacement)
+    offset_y = int((index_y - center_pos[1]) * position_displacement)
+    
     if deadzone_dist > 0.006:
         #Move cursor
-        win32api.SetCursorPos((index_x, index_y))
+        win32api.SetCursorPos(((index_x + offset_x), (index_y + offset_y)))
 
 def calculate_distance(x1, y1, x2, y2):
     """Calculate the Euclidean distance between two points."""
