@@ -3,10 +3,11 @@ import subprocess
 import os
 import tkinter as tk
 import psutil
-from tkinter import PhotoImage, StringVar, messagebox, ttk
+from tkinter import Image, PhotoImage, StringVar, messagebox, ttk
 
 # Additonal imports
 import pyautogui
+from PIL import Image, ImageTk
 
 class generalUI:
     def button_hover(tkb, b_Hover, b_Release ):
@@ -14,7 +15,7 @@ class generalUI:
         tkb.bind("<Enter>", func=lambda e: tkb.config(background=b_Hover))
         tkb.bind("<Leave>", func=lambda e: tkb.config(background=b_Release))
 
-class gameMenu:
+class tabFunc:
     # For Game Tab Functions
     def run_gameMenu():
         global menuAct, uiDynamTabs
@@ -28,22 +29,64 @@ class gameMenu:
             if menuAct != "Game":
                 showF(uiDynamTabs["Game"])
                 menuAct = "Game"
+            
             else: 
                 # Sets Game Menu tab as the default tab first
                 showF(uiDynamTabs["Game"])
-            
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
-    
+
+    # To be integrated with filterGame
+    def gameDisplay(txt, filter):
+        global game_Count, gamesList, gamesDisplay, gameDisplayArray, descDisplayArray
+
+        # Resets the list
+        game_Count = 0
+        gameDisplayArray.clear()
+        descDisplayArray.clear()
+        imgDisplayArray.clear()
+
+        # Fills the list
+        for line in txt:
+            if "GameÃ· " in line:
+                gameName = line.split("Ã· ")
+                game_Count += 1
+                gameDisplayArray.append(gameName[1].replace("\n",""))
+            
+            elif "DescÃ· " in line:
+                gameDesc = line.split("Ã· ")
+                descDisplayArray.append(gameDesc[1].replace("\n",""))
+            
+            elif "ImgÃ· " in line:
+                gameImg = line.split("Ã· ")
+                file = base_path + gameImg[1].replace("\n","")
+                imgDisplayArray.append(file)
+
+        # Var checks
+        #print(game_Count)
+        for gameItem in range(game_Count):
+            pass
+            #print(gameDisplayArray[gameItem])
+            #print(descDisplayArray[gameItem])
+            #print(imgDisplayArray[gameItem])
+        
+        return game_Count, gameDisplayArray, descDisplayArray, imgDisplayArray
+
     # To filter the games
     def filterGame():
+        global game_Count, gamesList, gameDisplayArray
         filter = gameSearchBar.get()
         if filter !="":
-            print(filter)
+            gamesList = open('gamesList.txt', 'r')
+            tabFunc.gameDisplay(gamesList, filter)
+            
         else:
-            print("Filter has nothing in it")
+            print("Null")
 
-class profileMenu:
+    def closeTXT():
+        global gamesList
+        gamesList.close()
+
     # For Profile Tab Functions
     def run_profileMenu():
         global menuAct, uiDynamTabs
@@ -61,7 +104,6 @@ class profileMenu:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
 
-class gestureMenu:
     # For Gesture Tab Functions
     def run_gestureMenu():
         global menuAct, uiDynamTabs
@@ -79,29 +121,33 @@ class gestureMenu:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
 
+    def game_Describe(gameItem):
+        print(gameItem)
+
 class quit:
     # Class for closing the window
     def exit_program():
-        global quitCan, quitAct, onceMade
+        global quitCan, quitAct, onceMade_Quit
         try:
+            # Closes everything and ensures any running process is terminated before exiting
             def zeroAll():
-                quit.release_control()  # Ensure any running process is terminated before exiting
+                tabFunc.closeTXT()
+                quit.release_control() 
                 root.destroy()
-        
+
+            # Returns to the main menu
             def stayIn():
                 global quitAct
                 quitCan.place_forget()
                 quitAct = False
 
-            
-
             if not quitAct:
-                if not onceMade:
+                if not onceMade_Quit:
                     quitCan.place(relheight=1, relwidth=1)
         
-                    quitLabel = tk.Label(quitCan, text="Do you want to quit?", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 25, "bold"))
-                    yesButton = tk.Button(quitCan, text="YES", command=zeroAll ,width=15, height=3, bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20))
-                    noButton = tk.Button(quitCan, text="NO", command=stayIn ,width=15, height=3, bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20))
+                    quitLabel = tk.Label(quitCan, text="Do you want to quit?", bg=greyThree, fg=brightMahogany, font=(standardFont, 25, boldForm))
+                    yesButton = tk.Button(quitCan, text="YES", command=zeroAll ,width=15, height=3, bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20))
+                    noButton = tk.Button(quitCan, text="NO", command=stayIn ,width=15, height=3, bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20))
 
                     quitLabel.pack(padx=25, pady=25, anchor="center")
                     yesButton.pack(padx=25, pady=25, anchor="center")
@@ -110,7 +156,7 @@ class quit:
                     noButton.pack(padx=25, pady=25, anchor="center")
                     generalUI.button_hover(noButton, exitRed, greyThree)
                     quitAct = True
-                    onceMade = True
+                    onceMade_Quit = True
                 else:
                     quitCan.place(relheight=1, relwidth=1)
             else:
@@ -119,10 +165,10 @@ class quit:
             messagebox.showerror("Error", f"Failed to open up quit confirmation: {e}") 
 
     def exit_viaKey(key):
-        global quitAct
-        if not quitAct:
-            if key.keysym == "Escape" and quitCan.winfo_ismapped:
-                quit.exit_program()
+        #global quitAct
+        #if not quitAct:
+        if key.keysym == "Escape" and quitCan.winfo_ismapped and tutCanvas.winfo_ismapped != True and gearCanvas.winfo_ismapped !=True and faqCanvas.winfo_ismapped !=True:
+            quit.exit_program()
     
     def release_control():
         global process
@@ -186,7 +232,22 @@ class run:
             # Placeholder for Two Hands Gesture Control program
             process = subprocess.Popen(
                 ["python", os.path.join(base_path, "swipeControl.py")],
-                hell=True
+                shell=True
+            )
+            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
+
+    def program4():
+        global process
+        try:
+            if process is not None:
+                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+                return
+            # Placeholder for Hybrid Gesture Control Program
+            process = subprocess.Popen(
+                ["python", os.path.join(base_path, "hybrid.py")],
+                shell=True
             )
             print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
         except Exception as e:
@@ -208,16 +269,15 @@ class run:
                 tutAct = False
         
             if not tutAct:
-                tutCanvas = tk.Canvas(root, width=400, height=300, bg=greyThree, highlightthickness=0)
                 tutCanvas.place(relx=0.15, rely=0.25, bordermode="inside")
                 root.bind("<Key>", tutKey)
 
                 tutFrame = tk.Frame(tutCanvas, padx=5, pady=5, bg=greyThree)
-                tutlabel1 = tk.Label(tutFrame, text="These buttons function as such:", anchor="ne", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 12))
-                tutlabel2 = tk.Label(tutFrame, text="Settings - Opens up the settings for the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 10))
-                tutlabel3 = tk.Label(tutFrame, text="FAQ - Shows the frequently asked questions about the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 10))
-                tutlabel4 = tk.Label(tutFrame, text="Release Control - Closes the control and its webcam window", anchor="ne", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 10))
-                tutlabel5 = tk.Label(tutFrame, text="Exit - Closes the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=("Archivo Black", 10))
+                tutlabel1 = tk.Label(tutFrame, text="These buttons function as such:", anchor="ne", bg=greyThree, fg=brightMahogany, font=(standardFont, 12))
+                tutlabel2 = tk.Label(tutFrame, text="Settings - Opens up the settings for the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=(standardFont, 10))
+                tutlabel3 = tk.Label(tutFrame, text="FAQ - Shows the frequently asked questions about the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=(standardFont, 10))
+                tutlabel4 = tk.Label(tutFrame, text="Release Control - Closes the control and its webcam window", anchor="ne", bg=greyThree, fg=brightMahogany, font=(standardFont, 10))
+                tutlabel5 = tk.Label(tutFrame, text="Exit - Closes the app", anchor="ne", bg=greyThree, fg=brightMahogany, font=(standardFont, 10))
             
                 tutFrame.pack(fill="x")
                 tutlabel1.pack()
@@ -254,7 +314,7 @@ class run:
 
             # Checks if FAQ UI is opened
             if not faqAct:
-                faqCanvas = tk.Canvas(root, width=400, height=300, bg=greyFour, highlightthickness=0)
+                
                 faqCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                 root.bind("<Key>", faqKey)
 
@@ -264,11 +324,11 @@ class run:
                 faqScroll = tk.Scrollbar(faqCanvas)
 
                 # Text Element to input FAQ Items
-                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=greyFour, width=1100, font=("Archivo Black", 14), fg=ui_Txt, border=0, wrap="word")
+                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=greyFour, width=1100, font=(standardFont, 14), fg=ui_Txt, border=0, wrap="word")
         
                 # Label and button to close the FAQ Window
-                FAQlabel = tk.Label(faqTF, text="Frequently Asked Questions", bg=greyTwo, fg=brightMahogany, font=("Archivo Black", 20, "bold"))
-                close_faq = tk.Button(faqTF, text="Return", command=faqClose, width=10, height=0, bg=mahoGany, fg=ui_Txt, border=0, font=("Archivo Black", 15, "bold"))
+                FAQlabel = tk.Label(faqTF, text="Frequently Asked Questions", bg=greyTwo, fg=brightMahogany, font=(standardFont, 20, boldForm))
+                close_faq = tk.Button(faqTF, text="Return", command=faqClose, width=10, height=0, bg=mahoGany, fg=ui_Txt, border=0, font=(standardFont, 15, boldForm))
 
                 # GUI Layout
                 faqTF.pack(side="top", anchor="nw", fill="x")
@@ -290,13 +350,22 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to start FAQ Process: {e}")
 
-    def settings():
-        global gearAct, gearCanvas
+    def settings():        
+        global gearAct, gearCanvas, onceMade_Settings
         try:
             # Checks if Escape key is pressed
             def settingKey(key):
                 if key.keysym == "Escape":
                     setClose()
+            
+            def canvasConfig(e):
+                gearCanvas.configure(scrollregion=gearCanvas.bbox("all"))
+            
+            def canvasResize(e):
+                gearCanvas.itemconfig(gearSettings, width=e.width)
+            
+            def mouseScroll(e):
+                gearCanvas.yview_scroll(-1 * (e.delta // 120), "units")
 
             # Closes the settings
             def setClose():
@@ -305,76 +374,104 @@ class run:
                 gearAct = False
 
             if not gearAct:
-                # Settings process - Tkinter overlay to change settings
-                gearCanvas = tk.Canvas(root, bg=greyFour, highlightthickness=0)
-                gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
-                root.bind("<Key>", settingKey)
+                if not onceMade_Settings:
+                    # Settings process - Tkinter overlay to change settings
+                    gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                
+                    root.bind("<Key>", settingKey)
             
-                gearTF = tk.Frame(gearCanvas, padx=5, pady=5, bg=greyTwo)
-                gearFrame = tk.Frame(gearCanvas, padx=5, pady=5, bg=greyThree)
+                    gearMaster = tk.Frame(gearCanvas, padx=5, pady=5, bg=greyTwo)
+               
+                    gearScroll = tk.Scrollbar(gearMaster, command=gearCanvas.yview)
+                    gearCanvas.configure(yscrollcommand=gearScroll.set)
 
-                gearScroll = tk.Scrollbar(gearFrame)
+                    gearSettings = gearCanvas.create_window((0, 0), window=gearMaster)
+
+                    gearMaster.bind("<Configure>", canvasConfig)
+                    gearCanvas.bind("<Configure>", canvasResize)
+                    gearCanvas.bind_all("<MouseWheel>", mouseScroll)
+
+                    gearTF = tk.Frame(gearMaster, padx=5, pady=5, bg=greyTwo)
+                    debugFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=greyThree)
+                    testFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=greyFive)
             
-                gearTitle = tk.Label(gearTF, text="SETTINGS", bg=greyTwo, fg=brightMahogany, font=("Archivo Black", 25, "bold"))
-                closeGear = tk.Button(gearTF, text="RETURN", command=setClose, width=10, height=0, bg=greyTwo, fg=ui_Txt, border=0, font=("Archivo Black", 15, "bold"))
+                    gearTitle = tk.Label(gearTF, text="SETTINGS", bg=greyTwo, fg=brightMahogany, font=(standardFont, 25, boldForm))
+                    closeGear = tk.Button(gearTF, text="RETURN", command=setClose, width=10, height=0, bg=greyTwo, fg=ui_Txt, border=0, font=(standardFont, 15, boldForm))
 
-                debugLabel = tk.Label(gearFrame, text="DEBUG", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                debugDescLabel = tk.Label(gearFrame, text="For devs to configure the controls", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 12))
+                    debugLabel = tk.Label(debugFrame, text="DEBUG", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    debugDescLabel = tk.Label(debugFrame, text="For devs to configure the controls", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 12))
 
-                button1 = tk.Button(gearFrame, text="Mouse", command=run.program1, width=10, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
-                button2 = tk.Button(gearFrame, text="Two-handed Gesture", command=run.program2, width=20, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
-                button3 = tk.Button(gearFrame, text="Swipe Motion Gesture", command=run.program3, width=20, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
+                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=10, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=20, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=20, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=20, height=2, bg=greyThree, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+                    
+                    # Release control button
+                    release_button = tk.Button(debugFrame, text="Reset Controls", command=quit.release_control, width=15, height=2, bg=greyTwo, fg=ui_Txt, activebackground=crimSon, border=0, font=(standardFont, 10))
 
-                gearScroll.pack(side="right", fill="y")
-                gearTF.pack(side="top", anchor="nw", fill="x")
-                gearTitle.pack(padx=10, pady=10, side="left", anchor="nw")
-                gearFrame.pack(anchor="w", fill="x")
+                    gearScroll.pack(side="right", fill="y")
+                    gearTF.pack(side="top", anchor="nw", fill="x")
+                    gearTitle.pack(padx=10, pady=10, side="left", anchor="nw")
+                    debugFrame.pack(anchor="w", fill="x")
+                    testFrame.pack(anchor="w", fill="both")
             
-                closeGear.pack(padx=30, pady=10, side="right", anchor="ne")
-                generalUI.button_hover(closeGear,mahoGany, greyTwo)
+                    closeGear.pack(padx=30, pady=10, side="right", anchor="ne")
+                    generalUI.button_hover(closeGear,mahoGany, greyTwo)
 
-                debugLabel.pack(padx=10, pady=5, anchor="nw")
-                debugDescLabel.pack(padx=10, pady=2, anchor="nw")
+                    debugLabel.pack(padx=10, pady=5, anchor="nw")
+                    debugDescLabel.pack(padx=10, pady=2, anchor="nw")
 
-                button1.pack(padx=5, pady=5, side="left", anchor="w")
-                generalUI.button_hover(button1,mahoGany, greyTwo)
+                    button1.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button1,mahoGany, greyTwo)
 
-                button2.pack(padx=5, pady=5, side="left", anchor="w")
-                generalUI.button_hover(button2,mahoGany, greyTwo)
+                    button2.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button2,mahoGany, greyTwo)
 
-                button3.pack(padx=5, pady=5, side="left", anchor="w")
-                generalUI.button_hover(button3,mahoGany, greyTwo)
+                    button3.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button3,mahoGany, greyTwo)
 
-                """
-                # Scrollbar Tester
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                label = tk.Label(gearFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=("Archivo Black", 20, "bold"))
-                label.pack(padx=10, pady=2)
-                """
+                    button4.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button4,mahoGany, greyTwo)
 
-                gearAct = True
+                    release_button.pack(padx=5, pady=5, side="left", anchor="nw")
+                    generalUI.button_hover(release_button, crimSon, greyTwo)
+                
+                    """
+                    # Scrollbar Tester
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    label = tk.Label(testFrame, text="Scrollbar Test", bg=greyThree, fg=ui_Txt, border=0, font=(standardFont, 20, boldForm))
+                    label.pack(padx=10, pady=2)
+                    """
+                    
+                    gearAct = True
+                    onceMade_Settings = True
+                else:
+                    gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                    gearCanvas.bind("<Configure>", canvasResize)
+
             else:
                 setClose()
   
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up Settings: {e}")
 
-# Set the base path to your scripts
-base_path = r"C:\Users\User\OneDrive\UniStuff\FYP\Handflux\UI_Prototype"  # Replace with your directory
+# Sets the base path to the scripts. Currently os.getcwd() since it returns the current directory the code is in without the hardcoding issue
+#base_path = f"Filepath/Folder"
+base_path = os.getcwd()
 
-# Version Number
-versionNum = "1.42"
+# Version Number 
+versionNum = "1.43"
 
 # For tracking UI activity and subprocesses
 tut_count = 0
@@ -382,9 +479,17 @@ gearAct = False
 tutAct = False
 faqAct = False
 quitAct = False
-onceMade = False
+onceMade_Quit = False
+onceMade_Settings = False
+filter = ""
 
 process = None
+
+gameDisplayArray = []
+descDisplayArray = []
+imgDisplayArray = []
+gamesList = open('gamesList.txt', 'r')
+tabFunc.gameDisplay(gamesList, filter)
 
 # Temporary colour scheme variables to prevent hardcoding problems, and maybe implement a way to mod the UI layout
 greyTwo= "#222222"
@@ -396,6 +501,8 @@ mahoGany = "#B83301"
 crimSon = "#660000"
 brightMahogany = "#FE5312"
 exitRed = "#CC3300"
+standardFont = "Archivo Black"
+boldForm = "bold"
 
 testingTurquoise = "#00FFD5"
 
@@ -408,7 +515,7 @@ MaxRes = pyautogui.size()
 # Initialize the tkinter root window
 root = tk.Tk()
 root.title(f"Handflux - GUI Prototype {versionNum}")
-root.geometry('800x600')
+root.geometry('1360x780')
 root.maxsize(MaxRes[0],MaxRes[1])
 root.minsize(800,600)
 root.configure(background=greyTwo)
@@ -422,21 +529,24 @@ uiDynamFrame = tk.Frame(root, padx=5, pady=5, bg=greyTwo)
 # Tabs for the UI Frame, opens up game menu as the default
 uiDynamTabs = {
     "Game": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo),
+    "GameInfo": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo),
     "Profiles": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo),
+    "ProfileSet": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo),
     "Gestures": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo),
+    "GestureSet": tk.Frame(uiDynamFrame, padx=5, pady=5, bg=greyTwo)
 }
-gameMenu.run_gameMenu()
+tabFunc.run_gameMenu()
 
-# Game Tab
-menuGameTab = tk.Button(uiMasterFrame, text="GAMES", command=gameMenu.run_gameMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
+# Game Tab - Opens up a specific game & displays its desc. Has a button that transfers to profile
+menuGameTab = tk.Button(uiMasterFrame, text="GAMES", command=tabFunc.run_gameMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
 
 gameMasterFrame = tk.Frame(uiDynamTabs["Game"], background=greyTwo)
-gamesDisplay = tk.Frame(uiDynamTabs["Game"], background=testingTurquoise)
+gamesDisplay = tk.Frame(uiDynamTabs["Game"], background=greyTwo)
 
 gameSearchBorder = tk.Frame(gameMasterFrame, background=mahoGany)
-gameLabel = tk.Label(gameMasterFrame, text="GAMES & APPS", bg=greyTwo, fg=ui_Txt, font=("Archivo Black", 15, "bold"))
-gameSearchBar = tk.Entry(gameMasterFrame, bg=greyFive, fg=ui_Txt, border=0, font=("Archivo Black", 10))
-gameSearchButton= tk.Button(gameSearchBorder, text="Search", command=gameMenu.filterGame, bg=greyThree, fg=ui_Txt, border=0, activebackground=mahoGany, font=("Archivo Black", 11, "bold"))
+gameLabel = tk.Label(gameMasterFrame, text="GAMES & APPS", bg=greyTwo, fg=ui_Txt, font=(standardFont, 15, boldForm))
+gameSearchBar = tk.Entry(gameMasterFrame, bg=greyFive, fg=ui_Txt, border=0, font=(standardFont, 10))
+gameSearchButton= tk.Button(gameSearchBorder, text="Search", command=tabFunc.filterGame, bg=greyThree, fg=ui_Txt, border=0, activebackground=mahoGany, font=(standardFont, 11, boldForm))
 
 gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
 gameLabel.pack(padx=5, pady=15, side="left")
@@ -447,36 +557,47 @@ generalUI.button_hover(gameSearchButton,mahoGany, greyThree)
 
 gamesDisplay.pack(padx=10, pady=5, side="top", fill="x")
 
-# Profile Tab
-menuProfileTab = tk.Button(uiMasterFrame, text="PROFILES", command=profileMenu.run_profileMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
-profileLabel = tk.Label(uiDynamTabs["Profiles"], text="PROFILES", bg=greyThree, fg=ui_Txt, font=("Archivo Black", 15, "bold"))
+for gItem in range(game_Count):
+    gameFrame = tk.Frame(gamesDisplay, bg=greyFive)
+    gameItem = tk.Text(gameFrame, bg=greyFive, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(standardFont, 10))
+    gameItem.insert(tk.END, gameDisplayArray[gItem])
+    gameItem.configure(exportselection=0, state="disabled")
 
-profileLabel.pack(padx=5, pady=15, side="left")
+    gameImg = PhotoImage(file = imgDisplayArray[gItem]).subsample(1,1)
+    imgDisplayArray[gItem] = gameImg
+    gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: tabFunc.game_Describe(gameDisplayArray[gIter]), bg=greyTwo, fg=ui_Txt, border=0)
 
-# Gestures Tab
-menuGestureTab = tk.Button(uiMasterFrame, text="GESTURES", command=gestureMenu.run_gestureMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
-gestureLabel = tk.Label(uiDynamTabs["Gestures"], text="GESTURES", bg=greyThree, fg=ui_Txt, font=("Archivo Black", 15, "bold"))
+    gameFrame.pack(padx=35, pady=20, side="left")
+    gameButton.pack()
+    gameItem.pack()
+    
+# Profile Tab - Displays the gestures mapped to a game. Has buttons that transfers to that gesture
+menuProfileTab = tk.Button(uiMasterFrame, text="PROFILES", command=tabFunc.run_profileMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+profileLabel = tk.Label(uiDynamTabs["Profiles"], text="PROFILES", bg=greyTwo, fg=ui_Txt, font=(standardFont, 15, boldForm))
 
-gestureLabel.pack(padx=5, pady=15, side="left")
+profileLabel.pack(padx=10, pady=5, side="left")
+
+# Gestures Tab - Displays the gestures that are mapped. Has buttons that transfers or re-do that gesture
+menuGestureTab = tk.Button(uiMasterFrame, text="GESTURES", command=tabFunc.run_gestureMenu, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
+gestureLabel = tk.Label(uiDynamTabs["Gestures"], text="GESTURES", bg=greyTwo, fg=ui_Txt, font=(standardFont, 15, boldForm))
+
+gestureLabel.pack(padx=10, pady=5, side="left")
 
 # GUI Labels
-TKlabel = tk.Label(uiMasterFrame, text=f"PROTOTYPE {versionNum}", anchor="ne", bg=greyTwo, fg=brightMahogany, font=("Archivo Black", 25, "bold"))
+TKlabel = tk.Label(uiMasterFrame, text=f"PROTOTYPE {versionNum}", anchor="ne", bg=greyTwo, fg=brightMahogany, font=(standardFont, 25, boldForm))
 
 # Button to display a tutorial window/widget
-tutorial_button = tk.Button(uiMiscFrame, text="HELP", command=run.tutorial, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
+tutorial_button = tk.Button(uiMiscFrame, text="HELP", command=run.tutorial, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
 generalUI.button_hover(tutorial_button, mahoGany, greyTwo)
 
 # Miscellaneous UI Buttons
 settings_img = PhotoImage(file = "settings.png")
 scaled_settingsImg = settings_img.subsample(2, 2)
 settings_button = tk.Button(uiMasterFrame, image=scaled_settingsImg, command=run.settings, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0)
-faq_button = tk.Button(uiMiscFrame, text="FAQs", command=run.faq, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=("Archivo Black", 10))
-
-# Release control button
-release_button = tk.Button(uiMiscFrame, text="RESET CONTROLS", command=quit.release_control, width=15, height=2, bg=greyTwo, fg=ui_Txt, activebackground=crimSon, border=0, font=("Archivo Black", 10))
+faq_button = tk.Button(uiMiscFrame, text="FAQs", command=run.faq, width=10, height=2, bg=greyTwo, fg=ui_Txt, activebackground=mahoGany, border=0, font=(standardFont, 10))
 
 # Exit button - better implemented as image
-exit_button = tk.Button(uiMiscFrame, text="EXIT", command=quit.exit_program ,width=10, height=2, bg=greyTwo, fg=ui_Txt, border=0, font=("Archivo Black", 10))
+exit_button = tk.Button(uiMiscFrame, text="EXIT", command=quit.exit_program ,width=10, height=2, bg=greyTwo, fg=ui_Txt, border=0, font=(standardFont, 10))
 
 # GUI Layout and Labels
 uiMasterFrame.pack(side="top", fill="x")
@@ -502,14 +623,16 @@ tutorial_button.pack(padx=5, pady=5, side="left", anchor="nw")
 faq_button.pack(padx=5, pady=5, side="left", anchor="nw")
 generalUI.button_hover(faq_button, mahoGany, greyTwo)
 
-release_button.pack(padx=5, pady=5, side="left", anchor="nw")
-generalUI.button_hover(release_button, crimSon, greyTwo)
-
 exit_button.pack(padx=5, pady=5, side="left", anchor="nw")
 generalUI.button_hover(exit_button, exitRed, greyTwo)
 
 uiDynamFrame.pack(side="top", fill="x")
+
+# Global Canvases
 quitCan = tk.Canvas(root, width=400, height=300, bg=greyThree, highlightthickness=0)
+tutCanvas = tk.Canvas(root, width=400, height=300, bg=greyThree, highlightthickness=0)
+faqCanvas = tk.Canvas(root, width=400, height=300, bg=greyFour, highlightthickness=0)
+gearCanvas = tk.Canvas(root, bg=greyFour, highlightthickness=0)
 
 # Run the tkinter event loop
 root.mainloop()

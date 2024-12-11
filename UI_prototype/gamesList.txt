@@ -1,0 +1,11 @@
+Game÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL
+Desc÷ Taiko is a rhythm game
+Img÷ \img\Taiko.png
+
+Game÷ FORZA HORIZON 5
+Desc÷ Forza is a racing game
+Img÷ \img\Forza.png
+
+Game÷ SOLITAIRE
+Desc÷ Solitaire is a card game
+Img÷ \img\Solitaire.png
