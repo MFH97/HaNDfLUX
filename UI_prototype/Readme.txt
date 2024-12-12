@@ -4,6 +4,7 @@ img Folder Rules
 
 gamesList.txt Rules
 1 - ENTRIES MUST FOLLOW THIS FORMAT
-	Game÷ GAME NAME
-	Desc÷ Description of game
-	Img÷ \img\ImgFile.png
+	Game÷ GAMEID÷ GAME TITLE
+	Desc÷ GAMEID÷ Description of Game
+	ThumbImg÷ GAMEID÷ \filepath\ImageFile.png
+	Exe÷ GAMEID÷ filepath\Executable.exe

@@ -1,11 +1,19 @@
-Game÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL
-Desc÷ Taiko is a rhythm game
-Img÷ \img\Taiko.png
+Game÷ TAIKO÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL
+Desc÷ TAIKO÷ Taiko is a rhythm game
+ThumbImg÷ TAIKO÷ \img\Taiko.png
+Exe÷ TAIKO÷ D:\SteamGame\steamapps\common\Taiko no Tatsujin Rhythm Festival_DEMO\Taiko no Tatsujin Rhythm Festival_DEMO.exe
 
-Game÷ FORZA HORIZON 5
-Desc÷ Forza is a racing game
-Img÷ \img\Forza.png
+Game÷ FORZA÷ FORZA HORIZON 5
+Desc÷ FORZA÷ Forza is a racing game
+ThumbImg÷ FORZA÷ \img\Forza.png
+Exe÷ FORZA÷ D:\SteamGame\steamapps\common\Forza Horizon 5\Forza.exe
 
-Game÷ SOLITAIRE
-Desc÷ Solitaire is a card game
-Img÷ \img\Solitaire.png
+Game÷ SOLITAIRE÷ SOLITAIRE
+Desc÷ SOLITAIRE÷ Solitaire is a card game
+ThumbImg÷ SOLITAIRE÷ \img\Solitaire.png
+Exe÷ SOLITAIRE÷ C:\Program Files\WindowsApps\Microsoft.MicrosoftSolitaireCollection_4.21.11061.0_x64__8wekyb3d8bbwe\Solitaire.exe
+
+Game÷ ASPHALT 8÷ ASPHALT 8
+Desc÷ ASPHALT 8÷ Asphalt 8 is a racing game
+ThumbImg÷ ASPHALT 8÷ \img\Placeholder.png
+Exe÷ ASPHALT 8÷ C:\Program Files\WindowsApps\GAMELOFTSA.Asphalt8Airborne_8.1.9.0_x64__0pp20fcewvvtj\GAMELOFTSA.Asphalt8Airborne.exe
