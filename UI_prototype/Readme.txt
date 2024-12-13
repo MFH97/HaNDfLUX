@@ -7,4 +7,4 @@ gamesList.txt Rules
 	Game÷ GAMEID÷ GAME TITLE
 	Desc÷ GAMEID÷ Description of Game
 	ThumbImg÷ GAMEID÷ \filepath\ImageFile.png
-	Exe÷ GAMEID÷ filepath\Executable.exe
+	Exe÷ GAMEID÷ filepath/Executable.exe

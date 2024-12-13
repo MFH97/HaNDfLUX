@@ -3,7 +3,7 @@ import subprocess
 import os
 import tkinter as tk
 import psutil
-from tkinter import PhotoImage, messagebox
+from tkinter import PhotoImage, messagebox, filedialog
 
 # Additonal imports
 import pyautogui
@@ -15,154 +15,178 @@ class generalUI:
         tkb.bind("<Leave>", func=lambda e: tkb.config(background=b_Release))
 
 class gameTabFunc:
+    # For Game Tab Functions
     # Maps the gamesDisplay frame for usage
     def __init__(self, gFrame):
         self.gFrame = gFrame
         gamesList = open('gamesList.txt', 'r')
         gameTabFunc.gameDisplay(gamesList, filter)
-        gameTabFunc.id_Game(gFrame)
-
-    # For Game Tab Functions
+        gameTabFunc.id_Game(gamesDisplay)
+        for uiBorder in uiMasterFrame.winfo_children():
+            uiBorder.config(bg=ui_AC1)
+            menuGameTabBorder.config(bg=ui_AH1)
+        
+    # Swaps the current Tab to the Games Tab
     def run_gameMenu():
-        global menuAct, uiDynamTabs
-        try:
-            # Swaps the current Tab for the Game Tab - Shows available games
-            def showF(uiCurrent):
+        global menuAct, uiDynamTabs, gameDisplay
+        try:  
+            def showF(uiGame):
                 for uiTabs in uiDynamTabs.values():
                     uiTabs.pack_forget()
-                    uiCurrent.pack(fill="both")
+                    uiGame.pack(fill="both")
 
             if menuAct != "Game":
                 showF(uiDynamTabs["Game"])
                 menuAct = "Game"
+                gameDisplay.pack_forget()
+                gameTabFunc(gamesDisplay)
+                gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
             
             else: 
                 # Sets Game Menu tab as the default tab first
                 showF(uiDynamTabs["Game"])
+                
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")       
 
     # Displays the games list
     def id_Game(self):
-        # Clears the old list
-        for gItem in self.winfo_children():
-            gItem.destroy()
+        try:
+            # Clears the old list
+            for gItem in self.winfo_children():
+                gItem.destroy()
 
-        # Fills the new list
-        for gItem in range(game_Count):
-            gameFrame = tk.Frame(self, bg=ui_AC4)
-            gameItem = tk.Text(gameFrame, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
-            gameItem.insert(tk.END, gameDisplayArray[gItem])
-            gameItem.configure(exportselection=0, state="disabled")
+            # Fills the new list
+            for gItem in range(game_Count):
+                gameFrame = tk.Frame(self, bg=ui_AC4)
+                gameItem = tk.Text(gameFrame, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
+                gameItem.insert(tk.END, gameDisplayArray[gItem])
+                gameItem.configure(exportselection=0, state="disabled")
 
-            gameImg = PhotoImage(file = thumbDisplayArray[gItem]).subsample(1,1)
-            thumbDisplayArray[gItem] = gameImg
-            gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+                gameImg = PhotoImage(file = thumbDisplayArray[gItem]).subsample(1,1)
+                thumbDisplayArray[gItem] = gameImg
+                gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
 
-            gameFrame.pack(padx=25, pady=2, side="left")
-            gameButton.pack()
-            gameItem.pack()
+                gameFrame.pack(padx=25, pady=2, side="left")
+                gameButton.pack()
+                gameItem.pack()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
         
     # Gets the available games from gamesList.txt using filters from filterGame
     def gameDisplay(txt, filter):
         global game_Count, gamesList, gameDisplayArray, descDisplayArray, gamesList, gamesDisplay
+        try:
+            # Resets the list
+            game_Count = 0
+            gameDisplayArray.clear()
+            descDisplayArray.clear()
+            thumbDisplayArray.clear()
+            exeDisplayArray.clear()
 
-        # Resets the list
-        game_Count = 0
-        gameDisplayArray.clear()
-        descDisplayArray.clear()
-        thumbDisplayArray.clear()
-        exeDisplayArray.clear()
-
-        # Redundant Filter check
-        if filter:
-            filterForm = filter.upper()
-            print(filterForm)
-            # Fills the list with the filter results
-            for line in txt:
-                if f"GameÃ· {filterForm}" in line:
-                    gameName = line.split("Ã· ")
-                    game_Count += 1
-                    gameDisplayArray.append(gameName[2].replace("\n",""))
+            # Redundant Filter check
+            if filter:
+                filterForm = filter.upper()
+                #print(filterForm)
+                # Fills the list with the filter results
+                for line in txt:
+                    if f"GameÃ· {filterForm}" in line:
+                        gameName = line.split("Ã· ")
+                        game_Count += 1
+                        gameDisplayArray.append(gameName[2].replace("\n",""))
             
-                elif f"DescÃ· {filterForm}" in line:
-                    gameDesc = line.split("Ã· ")
-                    descDisplayArray.append(gameDesc[2].replace("\n",""))
+                    elif f"DescÃ· {filterForm}" in line:
+                        gameDesc = line.split("Ã· ")
+                        descDisplayArray.append(gameDesc[2].replace("\n",""))
             
-                elif f"ThumbImgÃ· {filterForm}" in line:
-                    gameThumb = line.split("Ã· ")
-                    file = base_path + gameThumb[2].replace("\n","")
-                    thumbDisplayArray.append(file)
+                    elif f"ThumbImgÃ· {filterForm}" in line:
+                        gameThumb = line.split("Ã· ")
+                        file = base_path + gameThumb[2].replace("\n","")
+                        thumbDisplayArray.append(file)
                 
-                elif f"ExeÃ· {filterForm}" in line:
-                    gameExe = line.split("Ã· ")
-                    file = base_path + gameExe[2].replace("\n","")
-                    exeDisplayArray.append(file)
+                    elif f"ExeÃ· {filterForm}" in line:
+                        gameExe = line.split("Ã· ")
+                        file = gameExe[2].replace("\n","")
+                        exeDisplayArray.append(file)
             
-            # Var checks
-            for gameItem in range(game_Count):
-                #print(gameDisplayArray[gameItem])
-                #print(descDisplayArray[gameItem])
-                #print(thumbDisplayArray[gameItem])
-                #print("\n \n")
-                pass 
-        else:
-            # Default list filling
-            for line in txt:
-                if "GameÃ· " in line:
-                    gameName = line.split("Ã· ")
-                    game_Count += 1
-                    gameDisplayArray.append(gameName[2].replace("\n",""))
+                # Var checks
+                """
+                for gameItem in range(game_Count):
+                    print(gameDisplayArray[gameItem])
+                    print(descDisplayArray[gameItem])
+                    print(thumbDisplayArray[gameItem])
+                    print("\n \n")
+                    pass 
+                """
+            else:
+                # Default list filling
+                for line in txt:
+                    if "GameÃ· " in line:
+                        gameName = line.split("Ã· ")
+                        game_Count += 1
+                        gameDisplayArray.append(gameName[2].replace("\n",""))
             
-                elif "DescÃ· " in line:
-                    gameDesc = line.split("Ã· ")
-                    descDisplayArray.append(gameDesc[2].replace("\n",""))
+                    elif "DescÃ· " in line:
+                        gameDesc = line.split("Ã· ")
+                        descDisplayArray.append(gameDesc[2].replace("\n",""))
             
-                elif "ThumbImgÃ· " in line:
-                    gameThumb = line.split("Ã· ")
-                    file = base_path + gameThumb[2].replace("\n","")
-                    thumbDisplayArray.append(file)
+                    elif "ThumbImgÃ· " in line:
+                        gameThumb = line.split("Ã· ")
+                        file = base_path + gameThumb[2].replace("\n","")
+                        thumbDisplayArray.append(file)
                 
-                elif "ExeÃ· " in line:
-                    gameExe = line.split("Ã· ")
-                    file = base_path + gameExe[2].replace("\n","")
-                    exeDisplayArray.append(file)
+                    elif "ExeÃ· " in line:
+                        gameExe = line.split("Ã· ")
+                        file = gameExe[2].replace("\n","")
+                        exeDisplayArray.append(file)
 
-            #Var checks
-            for gameItem in range(game_Count):
-                #print(gameDisplayArray[gameItem])
-                #print(descDisplayArray[gameItem])
-                #print(thumbDisplayArray[gameItem])
-                #print("\n \n")
-                pass
+                #Var checks
+                """
+                for gameItem in range(game_Count):
+                    print(gameDisplayArray[gameItem])
+                    print(descDisplayArray[gameItem])
+                    print(thumbDisplayArray[gameItem])
+                    print("\n \n")
+                    pass
+                """
 
-        # Closes the filestream for gamesList.txt
-        gamesList.close()
+            # Closes the filestream for gamesList.txt
+            gamesList.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
 
     # Filters the output of gameDisplay
     def filterGame():
         global gamesList, gamesDisplay
-        filter = gameSearchBar.get()
-        if filter !="":
-            gamesList = open('gamesList.txt', 'r')
-            gameTabFunc.gameDisplay(gamesList, filter)
-            gameTabFunc(gamesDisplay)
-            gameSearchBar.delete(0, 'end')
-        else:
-            pass
+        try:
+            filter = gameSearchBar.get()
+            if filter !="":
+                gamesList = open('gamesList.txt', 'r')
+                gameTabFunc.gameDisplay(gamesList, filter)
+                gameTabFunc.id_Game(gamesDisplay)
+                gameSearchBar.delete(0, 'end')
+            else:
+                pass
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
     
     # Resets the filters in filterGame
     def resetFilter():
         global gamesList, gamesDisplay
-        filter = ""
-        gamesList = open('gamesList.txt', 'r')
-        gameTabFunc.gameDisplay(gamesList, filter)
-        gameTabFunc(gamesDisplay)
-        gameSearchBar.delete(0, 'end')
+        try:
+            filter = ""
+            gamesList = open('gamesList.txt', 'r')
+            gameTabFunc.gameDisplay(gamesList, filter)
+            gameTabFunc.id_Game(gamesDisplay)
+            gameSearchBar.delete(0, 'end')
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
 
     # Displays that specific game
     def game_Describe(gameItem):
-        global gamesDisplay, gameMasterFrame, gameDetails
+        
+        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay
         # Goes back to the Games Tab
         def goBack():
             gameDisplay.pack_forget()
@@ -170,110 +194,383 @@ class gameTabFunc:
             gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
             gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
         
-        # Hides the game selection tab
-        gameMasterFrame.pack_forget()
-        gamesDisplay.pack_forget()
+        # Goes to the respective profile's description in Profile Tab
+        def goToProfile(profileItem):
+            gameDisplay.pack_forget()
+            profileTabFunc.run_profileMenu()
+            profileTabFunc.profile_Describe(profileItem)
 
-        # Creates an individual game tab for the UI to use
-        gameDisplay = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
-        gameDisplay.pack(padx=10, pady=1, side="top", fill="x")
+        # Experimental function to write to gamesList.txt
+        def writeToFile():
+            filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
 
-        # Clears the old items
-        for gItem in gameDisplay.winfo_children():
-            gItem.destroy()
+            # Formats the filepath to fit the gamesList format
+            filepath_Change = f"ExeÃ· {gItemExt[0]}Ã· {filepath_New}"
+
+            with open('gamesList.txt', "r") as txt:
+                gameWrite = txt.readlines()
+
+            filepath_Update = False
+            with open('gamesList.txt', 'w') as txt:
+                for line in gameWrite:
+                    if not filepath_Update and gameDetails[3] in line:
+                        txt.write(filepath_Change + "\n")
+                        filepath_Update = True
+                    else:
+                        txt.write(line)
+
+            # Changes the filepath in the game description
+            gameItemFile.configure(text = filepath_New)
+
+        try:
+            # Hides the game selection tab
+            gameMasterFrame.pack_forget()
+            gamesDisplay.pack_forget()
+            gameDisplay.pack(padx=10, pady=1, side="top", fill="x")
+
+            # Clears the old items
+            for gItem in gameDisplay.winfo_children():
+                gItem.destroy()
         
-        gameDetails.clear()
-        gItemExt = gameItem.split()
+            gameDetails.clear()
+            gItemExt = gameItem.split()
         
-        # Displays the new items
-        gameGet = open('gamesList.txt', 'r')
-        for line in gameGet:
-            if f"GameÃ· {gItemExt[0]}" in line:
-                gameName = line.split("Ã· ")
-                gameDetails.append(gameName[2].replace("\n",""))
+            # Displays the new items
+            gameGet = open('gamesList.txt', 'r')
+            for line in gameGet:
+                if f"GameÃ· {gItemExt[0]}" in line:
+                    gameName = line.split("Ã· ")
+                    gameDetails.append(gameName[2].replace("\n",""))
             
-            elif f"DescÃ· {gItemExt[0]}" in line:
-                gameDesc = line.split("Ã· ")
-                gameDetails.append(gameDesc[2].replace("\n",""))
+                elif f"DescÃ· {gItemExt[0]}" in line:
+                    gameDesc = line.split("Ã· ")
+                    gameDetails.append(gameDesc[2].replace("\n",""))
             
-            elif f"ThumbImgÃ· {gItemExt[0]}" in line:
-                gameThumb = line.split("Ã· ")
-                file = base_path + gameThumb[2].replace("\n","")
-                gameDetails.append(file)
+                elif f"ThumbImgÃ· {gItemExt[0]}" in line:
+                    gameThumb = line.split("Ã· ")
+                    file = base_path + gameThumb[2].replace("\n","")
+                    gameDetails.append(file)
                 
-            elif f"ExeÃ· {gItemExt[0]}" in line:
-                gameExe = line.split("Ã· ")
-                file = base_path + gameExe[2].replace("\n","")
-                gameDetails.append(file)
+                elif f"ExeÃ· {gItemExt[0]}" in line:
+                    gameExe = line.split("Ã· ")
+                    file = gameExe[2].replace("\n","")
+                    gameDetails.append(file)
 
-        # Prints out the game details
-        """
-        for i in range(len(gameDetails)):
-            print(gameDetails[i] + "\n")
-        """
-        
-        gameIF = tk.Frame(gameDisplay, bg=ui_AC2)
-        gameDF = tk.Frame(gameDisplay, bg=ui_AC2)
-        gameItemLabel = tk.Label(gameDisplay, text=gameDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+            # Prints out the game details
+            """
+            for i in range(len(gameDetails)):
+                print(gameDetails[i] + "\n")
+            """
 
-        gameItemTXT= tk.Text(gameDF, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
-        gameItemTXT.insert(tk.END, gameDetails[1])
-        gameItemTXT.configure(exportselection=0, state="disabled")
+            # Displays the selected game
+            game_DisplayFrame = tk.Frame(gameDisplay, bg=ui_AC2)
+            game_DisplayPicFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
+            game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
+            gameItemLabel = tk.Label(gameDisplay, text=gameDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
-        gameItemImg = PhotoImage(file = gameDetails[2]).subsample(1,1)
-        gameImg = tk.Label(gameDF, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
-        gameImg.image = gameItemImg
+            backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameLink = tk.Button(gameDisplay, text="Go to Profiles", command=lambda: goToProfile(gameDetails[0]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+     
+            gameItemImg = PhotoImage(file = gameDetails[2]).subsample(1,1)
+            gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
+            gameImg.image = gameItemImg
 
-        backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-        
-        gameIF.pack(padx=5, pady=15, side="left", fill="x")
-        gameDF.pack(padx=5, pady=15, side="bottom", fill="x")
+            s = tk.Scrollbar(root, orient='horizontal')
 
-        gameItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
-        backButton.pack(padx=5, pady=5, side="top", anchor="nw")
+            gameItemTxt = tk.Text(game_DisplayFrame, width=65, height=5, xscrollcommand=s.set, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
+            gameItemTxt.insert(tk.END, gameDetails[1])
+            gameItemTxt.configure(exportselection=0, state="disabled")  
 
-        gameImg.pack(padx=5, pady=5, side="left")
-        gameItemTXT.pack(padx=5, pady=5, side="left", anchor="nw")
-        
-        
-        
-        generalUI.button_hover(backButton, ui_AH1, ui_AC1)
-        
+            #gameItemTxt = tk.Label(game_DisplayFrame, text=gameDetails[1], wraplength=1250, height=5, justify="left", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
+            gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeToFile, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=5000, height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+
+            game_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
+            gameItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
+
+            backButton.pack(padx=4, pady=4, side="left", anchor="w")
+            generalUI.button_hover(backButton, ui_AH1, ui_AC1)
+
+            gameLink.pack(padx=4, pady=4, side="left", anchor="w")
+            generalUI.button_hover(gameLink, ui_AH1, ui_AC1)
+
+            gameImg.pack(padx=4, pady=4, side="left", anchor="nw")
+            gameItemTxt.pack(padx=4, pady=4, side="left", anchor="nw")
+
+            gameItemFileP.pack(padx=4, pady=4, side="left", anchor="nw")
+            generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
+            gameItemFile.pack(padx=4, pady=4, side="left", anchor="nw")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to display individual game: {e}")
+      
 class profileTabFunc:
     # For Profile Tab Functions
+    # Maps the profilesDisplay frame for usage
+    def __init__(self, pFrame):
+        self.pFrame = pFrame
+        profilesList = open('gamesList.txt', 'r')
+        profileTabFunc.profileDisplay(profilesList, filter)
+        profileTabFunc.id_Profile(profilesDisplay)
+        for uiBorder in uiMasterFrame.winfo_children():
+            uiBorder.config(bg=ui_AC1)
+            menuProfileTabBorder.config(bg=ui_AH1)
+
+    # Swaps the current tab to the Profiles Tab
     def run_profileMenu():
         global menuAct, uiDynamTabs
         try:
             # Swaps the current Tab for the Profile Tab - Shows the profiles the user set
-            def showF(uiCurrent):
+            def showF(uiProfile):
                 for uiTabs in uiDynamTabs.values():
                     uiTabs.pack_forget()
-                    uiCurrent.pack(fill="both")
+                    uiProfile.pack(fill="both")
 
             if menuAct != "Profile":
                 showF(uiDynamTabs["Profiles"])
                 menuAct = "Profile"
-            
+                profileDisplay.pack_forget()
+                profileMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                profilesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+                profileTabFunc(profilesDisplay)
+
+                profileMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                profileLabel.pack(padx=10, pady=5, side="left")
+                profile_SearchBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+                profile_ResetBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+
+                profileResetSearch.pack(padx=2, pady=2, side="right")
+                profileSearchButton.pack(padx=2,pady=2, anchor="center")
+                profileSearchBar.pack(ipady=9.75, padx=1, pady=15, side="right", anchor="ne")
+                
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
+    
+    def id_Profile(self):
+        try:
+            # Clears the old list
+            for pItem in self.winfo_children():
+                pItem.destroy()
+
+            # Fills the new list
+            for pItem in range(game_Count):
+                profileFrame = tk.Frame(self, bg=ui_AC4)
+                profileItem = tk.Text(profileFrame, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
+                profileItem.insert(tk.END, gameDisplayArray[pItem])
+                profileItem.configure(exportselection=0, state="disabled")
+
+                profileImg = PhotoImage(file = thumbDisplayArray[pItem]).subsample(1,1)
+                thumbDisplayArray[pItem] = profileImg
+                profileButton = tk.Button(profileFrame, image=profileImg, command=lambda pIter=pItem: profileTabFunc.profile_Describe(gameDisplayArray[pIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+
+                profileFrame.pack(padx=25, pady=2, side="left")
+                profileButton.pack()
+                profileItem.pack()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
+        
+    # Gets the available games from gamesList.txt using filters from filterGame
+    def profileDisplay(txt, filter):
+        global game_Count, gamesList, gameDisplayArray, profileDisplayArray, descDisplayArray, gamesList, gamesDisplay
+        try:
+            # Resets the list
+            game_Count = 0
+            gameDisplayArray.clear()
+            descDisplayArray.clear()
+            thumbDisplayArray.clear()
+            exeDisplayArray.clear()
+            profileDisplayArray.clear()
+
+            # Redundant Filter check
+            if filter:
+                filterForm = filter.upper()
+                # Fills the list with the filter results
+                for line in txt:
+                    if f"GameÃ· {filterForm}" in line:
+                        gameName = line.split("Ã· ")
+                        game_Count += 1
+                        gameDisplayArray.append(gameName[2].replace("\n",""))
+            
+                    elif f"DescÃ· {filterForm}" in line:
+                        gameDesc = line.split("Ã· ")
+                        descDisplayArray.append(gameDesc[2].replace("\n",""))
+            
+                    elif f"ThumbImgÃ· {filterForm}" in line:
+                        gameThumb = line.split("Ã· ")
+                        file = base_path + gameThumb[2].replace("\n","")
+                        thumbDisplayArray.append(file)
+                
+                    elif f"ExeÃ· {filterForm}" in line:
+                        gameExe = line.split("Ã· ")
+                        file = base_path + gameExe[2].replace("\n","")
+                        exeDisplayArray.append(file)
+            else:
+                # Default list filling
+                for line in txt:
+                    if "GameÃ· " in line:
+                        gameName = line.split("Ã· ")
+                        game_Count += 1
+                        gameDisplayArray.append(gameName[2].replace("\n",""))
+            
+                    elif "DescÃ· " in line:
+                        gameDesc = line.split("Ã· ")
+                        descDisplayArray.append(gameDesc[2].replace("\n",""))
+            
+                    elif "ThumbImgÃ· " in line:
+                        gameThumb = line.split("Ã· ")
+                        file = base_path + gameThumb[2].replace("\n","")
+                        thumbDisplayArray.append(file)
+                
+                    elif "ExeÃ· " in line:
+                        gameExe = line.split("Ã· ")
+                        file = base_path + gameExe[2].replace("\n","")
+                        exeDisplayArray.append(file)
+
+            # Closes the filestream for gamesList.txt
+            gamesList.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the profiles: {e}")
+
+    # Filters the output of profilesDisplay
+    def filterProfile():
+        global gamesList, profilesDisplay
+        try:
+            filter = profileSearchBar.get()
+            if filter !="":
+                gamesList = open('gamesList.txt', 'r')
+                profileTabFunc.profileDisplay(gamesList, filter)
+                profileTabFunc.id_Profile(profilesDisplay)
+                profileSearchBar.delete(0, 'end')
+            else:
+                pass
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
+    
+    # Resets the filters in filterProfiles
+    def resetFilter():
+        global gamesList, profilesDisplay
+        try:
+            filter = ""
+            gamesList = open('gamesList.txt', 'r')
+            profileTabFunc.profileDisplay(gamesList, filter)
+            profileTabFunc.id_Profile(profilesDisplay)
+            profileSearchBar.delete(0, 'end')
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to filter the games: {e}")
+
+    # Displays that specific game
+    def profile_Describe(profileItem):
+        global profilesDisplay, profileMasterFrame, gameDetails, profileDisplay
+        # Goes back to the Games Tab
+        def goBack():
+            profileDisplay.pack_forget()
+            profileTabFunc(profilesDisplay)
+            profileMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+            profilesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+        try:
+            # Hides the game selection tab
+            profileMasterFrame.pack_forget()
+            profilesDisplay.pack_forget()
+
+            # Creates an individual profile tab for the UI to use
+            profileDisplay.pack(padx=10, pady=1, side="top", fill="x")
+
+            # Clears the old items
+            for gItem in profileDisplay.winfo_children():
+                gItem.destroy()
+        
+            profileDetails.clear()
+            pItemExt = profileItem.split()
+            #print(pItemExt[0])
+        
+            # Displays the new items
+            itemGet = open('gamesList.txt', 'r')
+            for line in itemGet:
+                if f"GameÃ· {pItemExt[0]}" in line:
+                    gameName = line.split("Ã· ")
+                    profileDetails.append(gameName[2].replace("\n","'S PROFILE"))
+            
+                elif f"ThumbImgÃ· {pItemExt[0]}" in line:
+                    gameThumb = line.split("Ã· ")
+                    file = base_path + gameThumb[2].replace("\n","")
+                    profileDetails.append(file)
+                
+                elif f"ExeÃ· {pItemExt[0]}" in line:
+                    gameExe = line.split("Ã· ")
+                    file = gameExe[2].replace("\n","")
+                    profileDetails.append(file)
+        
+            profileIF = tk.Frame(profileDisplay, bg=ui_AC2)
+            profileDF = tk.Frame(profileDisplay, bg=ui_AC2)
+            profileItemLabel = tk.Label(profileDisplay, text=profileDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+
+            profileItemImg = PhotoImage(file = profileDetails[1]).subsample(1,1)
+            profileImg = tk.Label(profileDF, image=profileItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
+            profileImg.image = profileItemImg
+
+            backButton = tk.Button(profileDisplay, text="Go back", command=goBack, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+        
+            profileIF.pack(padx=5, pady=15, side="left", fill="x")
+            profileDF.pack(padx=5, pady=15, side="bottom", fill="x")
+
+            profileItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
+            backButton.pack(padx=5, pady=5, side="top", anchor="nw")
+
+            profileImg.pack(padx=5, pady=5, side="left")
+
+            generalUI.button_hover(backButton, ui_AH1, ui_AC1)
+        except Exception as e:
+            print(e)
+            messagebox.showerror("Error", f"{e}")
 
 class gestureTabFunc:
     # For Gesture Tab Functions
+    # Maps the gesturesDisplay frame for usage
+    def __init__(self, geFrame):
+        self.geFrame = geFrame
+        #profilesList = open('gesturesList.txt', 'r')
+        #profileTabFunc.gestureDisplay(gesturesList, filter)
+        #profileTabFunc.id_Gesture(gesturesDisplay)
+        for uiBorder in uiMasterFrame.winfo_children():
+            uiBorder.config(bg=ui_AC1)
+            menuGestureTabBorder.config(bg=ui_AH1)
+
     def run_gestureMenu():
         global menuAct, uiDynamTabs
         try:
             # Swaps the current Tab for the Gestures Tab - Shows the gestures the user set
-            def showF(uiCurrent):
+            def showF(uiGesture):
                 for uiTabs in uiDynamTabs.values():
                     uiTabs.pack_forget()
-                    uiCurrent.pack(fill="both")
+                    uiGesture.pack(fill="both")
         
             if menuAct != "Gesture":
                 showF(uiDynamTabs["Gestures"])
                 menuAct = "Gesture"
+                gestureDisplay.pack_forget()
+                gestureMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                gesturesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+                gestureTabFunc(profilesDisplay)
+
+                gestureMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                gestureLabel.pack(padx=10, pady=5, side="left")
+                gesture_SearchBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+                gesture_ResetBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+
+                gestureResetSearch.pack(padx=2, pady=2, side="right")
+                gestureSearchButton.pack(padx=2,pady=2, anchor="center")
+                gestureSearchBar.pack(ipady=9.75, padx=1, pady=15, side="right", anchor="ne")   
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
+    
+    def filterGesture():
+        pass
+
+    def resetFilter():
+        pass 
 
 class quit:
     # Class for closing the window
@@ -323,7 +620,8 @@ class quit:
                 quit.exit_program()
                 #quitAct = True
             else:
-                print("One or more UIs are active")
+                #print("One or more UIs are active")
+                pass
     
     def release_control():
         global process
@@ -486,7 +784,7 @@ class run:
                 faqScroll = tk.Scrollbar(faqCanvas)
 
                 # Text Element to input FAQ Items
-                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=ui_AC3,height=MaxRes[0], width=MaxRes[1], font=(ui_Font, 14), fg=ui_Txt, border=0, wrap="word")
+                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=ui_AC3, height=MaxRes[0], width=MaxRes[1], font=(ui_Font, 14), fg=ui_Txt, border=0, wrap="word")
         
                 # Label and button to close the FAQ Window
                 FAQlabel = tk.Label(faqTF, text="Frequently Asked Questions", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 20, ui_Bold))
@@ -637,7 +935,7 @@ class run:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.44"
+versionNum = "1.45"
 
 # For tracking UI activity and subprocesses
 tut_count = 0
@@ -656,7 +954,9 @@ gameDisplayArray = []
 descDisplayArray = []
 thumbDisplayArray = []
 exeDisplayArray = []
+profileDisplayArray = []
 gameDetails = []
+profileDetails = []
 gamesList = open('gamesList.txt', 'r')
 gameTabFunc.gameDisplay(gamesList, filter)
 
@@ -704,46 +1004,70 @@ uiDynamTabs = {
 gameTabFunc.run_gameMenu()
 
 # Game Tab - Opens up a specific game & displays its desc. Has a button that transfers to profile
-menuGameTab = tk.Button(uiMasterFrame, text="GAMES", command=gameTabFunc.run_gameMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-
+menuGameTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
+menuGameTab = tk.Button(menuGameTabBorder, text="GAMES", command=gameTabFunc.run_gameMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 gameMasterFrame = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
 gamesDisplay = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
+gameDisplay = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
 
 # Initialises the game tab
 gameTabFunc(gamesDisplay)
 
-game_SBorder = tk.Frame(gameMasterFrame, background=ui_AH1)
-game_RSBorder = tk.Frame(gameMasterFrame, background=ui_AH1)
+game_SearchBorder = tk.Frame(gameMasterFrame, background=ui_AH1)
+game_ResetBorder = tk.Frame(gameMasterFrame, background=ui_AH1)
 gameLabel = tk.Label(gameMasterFrame, text="GAMES & APPS", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 gameSearchBar = tk.Entry(gameMasterFrame, bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 10))
-gameSearchButton= tk.Button(game_SBorder, text="Search", command=gameTabFunc.filterGame, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
-gameResetSearch= tk.Button(game_RSBorder, text="Reset Search", command=gameTabFunc.resetFilter, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+gameSearchButton= tk.Button(game_SearchBorder, text="Search", command=gameTabFunc.filterGame, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+gameResetSearch= tk.Button(game_ResetBorder, text="Reset Search", command=gameTabFunc.resetFilter, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
 
 gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
 gameLabel.pack(padx=5, pady=15, side="left")
-game_SBorder.pack(padx=5, pady=15, side="right", anchor="ne")
-game_RSBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+game_SearchBorder.pack(padx=5, pady=15, side="right", anchor="ne")
+game_ResetBorder.pack(padx=5, pady=15, side="right", anchor="ne")
 
 gameResetSearch.pack(padx=2, pady=2, side="right")
 gameSearchButton.pack(padx=2,pady=2, anchor="center")
 gameSearchBar.pack(ipady=9.75, padx=1, pady=15, side="right", anchor="ne")
+gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
 
 generalUI.button_hover(gameSearchButton,ui_AH1, ui_AC2)
 generalUI.button_hover(gameResetSearch,ui_AH1, ui_AC2)
 
-gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
-
 # Profile Tab - Displays the gestures mapped to a game. Has buttons that transfers to that gesture
-menuProfileTab = tk.Button(uiMasterFrame, text="PROFILES", command=profileTabFunc.run_profileMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-profileLabel = tk.Label(uiDynamTabs["Profiles"], text="PROFILES", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+menuProfileTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
+menuProfileTab = tk.Button(menuProfileTabBorder, text="PROFILES", command=profileTabFunc.run_profileMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
-profileLabel.pack(padx=10, pady=5, side="left")
+profileMasterFrame = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
+profilesDisplay = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
+profileDisplay = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
+
+profile_SearchBorder = tk.Frame(profileMasterFrame, background=ui_AH1)
+profile_ResetBorder = tk.Frame(profileMasterFrame, background=ui_AH1)
+profileLabel = tk.Label(profileMasterFrame, text="PROFILES", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+profileSearchBar = tk.Entry(profileMasterFrame, bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 10))
+profileSearchButton= tk.Button(profile_SearchBorder, text="Search", command=profileTabFunc.filterProfile, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+profileResetSearch= tk.Button(profile_ResetBorder, text="Reset Search", command=profileTabFunc.resetFilter, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+
+generalUI.button_hover(profileSearchButton,ui_AH1, ui_AC2)
+generalUI.button_hover(profileResetSearch,ui_AH1, ui_AC2)
 
 # Gestures Tab - Displays the gestures that are mapped. Has buttons that transfers or re-do that gesture
-menuGestureTab = tk.Button(uiMasterFrame, text="GESTURES", command=gestureTabFunc.run_gestureMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-gestureLabel = tk.Label(uiDynamTabs["Gestures"], text="GESTURES", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+menuGestureTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
+menuGestureTab = tk.Button(menuGestureTabBorder, text="GESTURES", command=gestureTabFunc.run_gestureMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
-gestureLabel.pack(padx=10, pady=5, side="left")
+gestureMasterFrame = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
+gesturesDisplay = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
+gestureDisplay = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
+
+gesture_SearchBorder = tk.Frame(gestureMasterFrame, background=ui_AH1)
+gesture_ResetBorder = tk.Frame(gestureMasterFrame, background=ui_AH1)
+gestureLabel = tk.Label(gestureMasterFrame, text="GESTURES", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+gestureSearchBar = tk.Entry(gestureMasterFrame, bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 10))
+gestureSearchButton= tk.Button(gesture_SearchBorder, text="Search", command=gestureTabFunc.filterGesture, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+gestureResetSearch= tk.Button(gesture_ResetBorder, text="Reset Search", command=gestureTabFunc.resetFilter, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 11, ui_Bold))
+
+generalUI.button_hover(gestureSearchButton,ui_AH1, ui_AC2)
+generalUI.button_hover(gestureResetSearch,ui_AH1, ui_AC2)
 
 # GUI Labels
 TKlabel = tk.Label(uiMasterFrame, text=f"PROTOTYPE {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
@@ -753,7 +1077,7 @@ tutorial_button = tk.Button(uiMasterFrame, text="HELP", command=run.tutorial, wi
 generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
 
 # Miscellaneous UI Buttons
-settings_img = PhotoImage(file = "settings.png")
+settings_img = PhotoImage(file = base_path + "\\img\\settings.png")
 scaled_settingsImg = settings_img.subsample(2, 2)
 settings_button = tk.Button(uiMasterFrame, image=scaled_settingsImg, command=run.settings, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0)
 faq_button = tk.Button(uiMasterFrame, text="FAQs", command=run.faq, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
@@ -766,13 +1090,16 @@ uiMasterFrame.pack(side="top", fill="x")
 TKlabel.pack(pady=5, anchor="nw")
 
 # Menu Tabs Layout
-menuGameTab.pack(padx=5, pady=5, side="left", anchor="w")
+menuGameTabBorder.pack(side="left", anchor="w")
+menuGameTab.pack(padx= 2, pady=2, side="left", anchor="w")
 generalUI.button_hover(menuGameTab, ui_AH1, ui_AC1)
 
-menuProfileTab.pack(padx=5, pady=5, side="left", anchor="w")
+menuProfileTabBorder.pack(side="left", anchor="w")
+menuProfileTab.pack(padx= 2, pady=2, side="left", anchor="w")
 generalUI.button_hover(menuProfileTab, ui_AH1, ui_AC1)
 
-menuGestureTab.pack(padx=5, pady=5, side="left", anchor="w")
+menuGestureTabBorder.pack(side="left", anchor="w")
+menuGestureTab.pack(padx= 2, pady=2, side="left", anchor="w")
 generalUI.button_hover(menuGestureTab, ui_AH1, ui_AC1)
 
 settings_button.pack(padx=50, pady=5, side="right", anchor="ne")
