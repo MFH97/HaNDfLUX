@@ -5,6 +5,7 @@ import mediapipe as mp
 import numpy as np
 import pydirectinput
 import time
+from tensorflow.keras.models import load_model
 
 
 # Suppress logs and warnings
@@ -17,6 +18,15 @@ print(f"Started Swipe Motion Gesture Control with PID: {os.getpid()}")
 # Mediapipe setup
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7, min_tracking_confidence=0.7)
+
+# Load the saved Keras model for gesture recognition
+model = load_model('twoHands_model.h5')  # Ensure the model file exists
+
+class_names = ['call', 'dislike', 'fist', 'like', 'one', 'peace', 'peace_inverted', 'rock', 'stop']
+
+# global variable pause state
+is_paused = False
+pause_start_time = None
 
 # Default sensitivity values
 DEFAULT_BASE_THRESHOLD = 0.01
@@ -57,6 +67,28 @@ def log_data(data):
     with open(LOG_FILE, "a") as log_file:
         log_file.write(data + "\n")
 
+def preprocess_landmarks(landmarks):
+    flattened_landmarks = np.array([[lm.x, lm.y, lm.z] for lm in landmarks]).flatten()
+    wrist_x, wrist_y, wrist_z = flattened_landmarks[0], flattened_landmarks[1], flattened_landmarks[2]
+    flattened_landmarks = flattened_landmarks - np.array([wrist_x, wrist_y, wrist_z] * 21)
+    return flattened_landmarks
+
+def check_pause_gesture(gestures):
+    """Check if both hands are performing the 'one' gesture and toggle pause."""
+    global is_paused, pause_start_time
+    if gestures["Left"] == "one" and gestures["Right"] == "one":
+        if pause_start_time is None:
+            pause_start_time = time.time()
+            print("Pause gesture detected, starting timer...")
+        elif time.time() - pause_start_time >= 2.5:  # Time required to hold the gesture
+            is_paused = not is_paused
+            print("System Paused" if is_paused else "System Resumed")
+            pause_start_time = None  # Reset the timer
+    else:
+        # Reset timer if gesture is interrupted
+        if pause_start_time is not None:
+            print("Pause gesture interrupted.")
+        pause_start_time = None
 
 def analyze_behavior(hand_label):
     """Analyze gesture behavior trends."""
@@ -175,14 +207,14 @@ load_sensitivity_settings()
 
 def main():
     """Main function."""
-    global adaptive_threshold
+    global adaptive_threshold, is_paused
 
-    # Use loaded BASE_THRESHOLD and MIN_THRESHOLD
     adaptive_threshold = BASE_THRESHOLD
 
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 60)  # Set FPS to 60
 
     print("Gesture Controller started. Press 'q' to quit.")
 
@@ -202,17 +234,22 @@ def main():
             for hand_landmarks, handedness in zip(result.multi_hand_landmarks, result.multi_handedness):
                 hand_label = "Left" if handedness.classification[0].label == "Right" else "Right"
                 raw_landmarks = [[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]
-
                 motion = detect_motion(raw_landmarks, hand_label)
-                gestures[hand_label] = motion
-                if motion in KEYS:
+                
+                if motion in KEYS and not is_paused:
                     execute_gesture(motion, hand_label)
 
                 mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-        cv2.putText(frame, f"Left Hand: {gestures['Left']}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"Right Hand: {gestures['Right']}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"Adaptive Sensitivity: {adaptive_threshold:.4f}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+        # Always check for pause gesture
+        check_pause_gesture(gestures)
+
+        # Display status
+        status_text = "PAUSED" if is_paused else "ACTIVE"
+        cv2.putText(frame, f"System Status: {status_text}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(frame, f"Left Hand: {gestures['Left']}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Right Hand: {gestures['Right']}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Adaptive Sensitivity: {adaptive_threshold:.4f}", (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
 
         cv2.imshow("Gesture Controller", frame)
 
@@ -221,10 +258,8 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-
-    # Save settings on exit
     save_sensitivity_settings()
-    
+
     if os.path.exists(LOG_FILE):
         os.remove(LOG_FILE)
         print("Log file cleared.")
