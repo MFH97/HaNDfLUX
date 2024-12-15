@@ -19,7 +19,7 @@ class gameTabFunc:
     # Maps the gamesDisplay frame for usage
     def __init__(self, gFrame):
         self.gFrame = gFrame
-        gamesList = open('gamesList.txt', 'r')
+        gamesList = open("gamesList.txt", "r")
         gameTabFunc.gameDisplay(gamesList, filter)
         gameTabFunc.id_Game(gamesDisplay)
         for uiBorder in uiMasterFrame.winfo_children():
@@ -162,10 +162,10 @@ class gameTabFunc:
         try:
             filter = gameSearchBar.get()
             if filter !="":
-                gamesList = open('gamesList.txt', 'r')
+                gamesList = open("gamesList.txt", "r")
                 gameTabFunc.gameDisplay(gamesList, filter)
                 gameTabFunc.id_Game(gamesDisplay)
-                gameSearchBar.delete(0, 'end')
+                gameSearchBar.delete(0, "end")
             else:
                 pass
         except Exception as e:
@@ -176,23 +176,24 @@ class gameTabFunc:
         global gamesList, gamesDisplay
         try:
             filter = ""
-            gamesList = open('gamesList.txt', 'r')
+            gamesList = open("gamesList.txt", "r")
             gameTabFunc.gameDisplay(gamesList, filter)
             gameTabFunc.id_Game(gamesDisplay)
-            gameSearchBar.delete(0, 'end')
+            gameSearchBar.delete(0, "end")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to filter the games: {e}")
 
     # Displays that specific game
     def game_Describe(gameItem):
-        
-        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay
+        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess
+
         # Goes back to the Games Tab
         def goBack():
             gameDisplay.pack_forget()
             gameTabFunc(gamesDisplay)
             gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
             gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+            gItemExt.clear()
         
         # Goes to the respective profile's description in Profile Tab
         def goToProfile(profileItem):
@@ -200,27 +201,64 @@ class gameTabFunc:
             profileTabFunc.run_profileMenu()
             profileTabFunc.profile_Describe(profileItem)
 
-        # Experimental function to write to gamesList.txt
-        def writeToFile():
-            filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
+        # Runs the exe described in the filepath
+        def runGame():
+            try:
+                #Maps the Executable to a process checker
+                gameEXE = gameDetails[3]
+                gameEXE = gameEXE.split("/")
 
-            # Formats the filepath to fit the gamesList format
-            filepath_Change = f"ExeÃ· {gItemExt[0]}Ã· {filepath_New}"
+                if len(gameDetails[3]) == 0 or gameDetails[3] == "Filepath":
+                    messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
+                else:
+                    # Starts up the respective game's control and game
+                    if gameDetails[4] == "Mouse":
+                        run.program1()
+                    elif gameDetails[4] == "Two-Hands":
+                        run.program2()
+                    elif gameDetails[4] == "Swipe":
+                        run.program3()
+                    elif gameDetails[4] == "Hybrid":
+                        run.program4()
+                    elif gameDetails[4] == "HB2":
+                        run.program5()
+                    else: 
+                        pass
 
-            with open('gamesList.txt', "r") as txt:
-                gameWrite = txt.readlines()
+                    gameProcess = subprocess.Popen(gameDetails[3])
+                    
+                    # Closes the controls if the game is closed
+                    if gameProcess.poll is not None:
+                        print(f"{gameProcess} closed")
+                        gameProcess = None
+                        quit.release_control()
 
-            filepath_Update = False
-            with open('gamesList.txt', 'w') as txt:
-                for line in gameWrite:
-                    if not filepath_Update and gameDetails[3] in line:
-                        txt.write(filepath_Change + "\n")
-                        filepath_Update = True
-                    else:
-                        txt.write(line)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to run the game: {e}")
 
-            # Changes the filepath in the game description
-            gameItemFile.configure(text = filepath_New)
+        # Experimental function to write the filepath for an EXE to the gamesList
+        def writeEXE():
+            try:
+                # Formats the filepath to fit the gamesList format
+                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
+                filepath_Change = f"ExeÃ· {gItemExt[0]}Ã· {filepath_New}"
+
+                with open("gamesList.txt", "r") as txt:
+                    gameWrite = txt.readlines()
+
+                filepath_Update = False
+                with open("gamesList.txt", "w") as txt:
+                    for line in gameWrite:
+                        if not filepath_Update and gameDetails[3] in line:
+                            txt.write(filepath_Change + "\n")
+                            filepath_Update = True
+                        else:
+                            txt.write(line)
+
+                # Changes the filepath in the game description
+                gameItemFile.configure(text = filepath_New)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to modify Exe's Filepath: {e}")
 
         try:
             # Hides the game selection tab
@@ -233,10 +271,11 @@ class gameTabFunc:
                 gItem.destroy()
         
             gameDetails.clear()
+            
             gItemExt = gameItem.split()
         
-            # Displays the new items
-            gameGet = open('gamesList.txt', 'r')
+            # Gets the new items
+            gameGet = open("gamesList.txt", "r")
             for line in gameGet:
                 if f"GameÃ· {gItemExt[0]}" in line:
                     gameName = line.split("Ã· ")
@@ -255,6 +294,11 @@ class gameTabFunc:
                     gameExe = line.split("Ã· ")
                     file = gameExe[2].replace("\n","")
                     gameDetails.append(file)
+                
+                elif f"ControlsÃ· {gItemExt[0]}" in line:
+                    gameControls = line.split("Ã· ")
+                    file = gameControls[2].replace("\n","")
+                    gameDetails.append(file)
 
             # Prints out the game details
             """
@@ -266,35 +310,38 @@ class gameTabFunc:
             game_DisplayFrame = tk.Frame(gameDisplay, bg=ui_AC2)
             game_DisplayPicFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
+            game_RunFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             gameItemLabel = tk.Label(gameDisplay, text=gameDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            gameLink = tk.Button(gameDisplay, text="Go to Profiles", command=lambda: goToProfile(gameDetails[0]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            profileLink = tk.Button(gameDisplay, text="Map Profiles", command=lambda: goToProfile(gameDetails[0]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
      
             gameItemImg = PhotoImage(file = gameDetails[2]).subsample(1,1)
             gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
             gameImg.image = gameItemImg
 
-            s = tk.Scrollbar(root, orient='horizontal')
+            s = tk.Scrollbar(root, orient="horizontal")
 
             gameItemTxt = tk.Text(game_DisplayFrame, width=65, height=5, xscrollcommand=s.set, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             gameItemTxt.insert(tk.END, gameDetails[1])
             gameItemTxt.configure(exportselection=0, state="disabled")  
 
             #gameItemTxt = tk.Label(game_DisplayFrame, text=gameDetails[1], wraplength=1250, height=5, justify="left", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
-            gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeToFile, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=5000, height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
-
-            game_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[1], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with Gesture Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
+            game_RunFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            game_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             gameItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
 
             backButton.pack(padx=4, pady=4, side="left", anchor="w")
             generalUI.button_hover(backButton, ui_AH1, ui_AC1)
 
-            gameLink.pack(padx=4, pady=4, side="left", anchor="w")
-            generalUI.button_hover(gameLink, ui_AH1, ui_AC1)
+            profileLink.pack(padx=4, pady=4, side="left", anchor="w")
+            generalUI.button_hover(profileLink, ui_AH1, ui_AC1)
 
             gameImg.pack(padx=4, pady=4, side="left", anchor="nw")
             gameItemTxt.pack(padx=4, pady=4, side="left", anchor="nw")
@@ -302,6 +349,9 @@ class gameTabFunc:
             gameItemFileP.pack(padx=4, pady=4, side="left", anchor="nw")
             generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
             gameItemFile.pack(padx=4, pady=4, side="left", anchor="nw")
+            
+            gameItemExe.pack(padx=4, pady=4, side="bottom", anchor="nw")
+            generalUI.button_hover(gameItemExe, ui_AH1, ui_AC1)
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display individual game: {e}")
@@ -311,7 +361,7 @@ class profileTabFunc:
     # Maps the profilesDisplay frame for usage
     def __init__(self, pFrame):
         self.pFrame = pFrame
-        profilesList = open('gamesList.txt', 'r')
+        profilesList = open("gamesList.txt", "r")
         profileTabFunc.profileDisplay(profilesList, filter)
         profileTabFunc.id_Profile(profilesDisplay)
         for uiBorder in uiMasterFrame.winfo_children():
@@ -439,10 +489,10 @@ class profileTabFunc:
         try:
             filter = profileSearchBar.get()
             if filter !="":
-                gamesList = open('gamesList.txt', 'r')
+                gamesList = open("gamesList.txt", "r")
                 profileTabFunc.profileDisplay(gamesList, filter)
                 profileTabFunc.id_Profile(profilesDisplay)
-                profileSearchBar.delete(0, 'end')
+                profileSearchBar.delete(0, "end")
             else:
                 pass
         except Exception as e:
@@ -453,22 +503,30 @@ class profileTabFunc:
         global gamesList, profilesDisplay
         try:
             filter = ""
-            gamesList = open('gamesList.txt', 'r')
+            gamesList = open("gamesList.txt", "r")
             profileTabFunc.profileDisplay(gamesList, filter)
             profileTabFunc.id_Profile(profilesDisplay)
-            profileSearchBar.delete(0, 'end')
+            profileSearchBar.delete(0, "end")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to filter the games: {e}")
 
     # Displays that specific game
     def profile_Describe(profileItem):
         global profilesDisplay, profileMasterFrame, gameDetails, profileDisplay
+
         # Goes back to the Games Tab
         def goBack():
             profileDisplay.pack_forget()
             profileTabFunc(profilesDisplay)
             profileMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
             profilesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+        
+        # Goes to the respective game's description in Game Tab
+        def goToGame(profileItem):
+            profileDisplay.pack_forget()
+            gameTabFunc.run_gameMenu()
+            gameTabFunc.game_Describe(profileItem)
+
         try:
             # Hides the game selection tab
             profileMasterFrame.pack_forget()
@@ -486,7 +544,7 @@ class profileTabFunc:
             #print(pItemExt[0])
         
             # Displays the new items
-            itemGet = open('gamesList.txt', 'r')
+            itemGet = open("gamesList.txt", "r")
             for line in itemGet:
                 if f"GameÃ· {pItemExt[0]}" in line:
                     gameName = line.split("Ã· ")
@@ -501,26 +559,32 @@ class profileTabFunc:
                     gameExe = line.split("Ã· ")
                     file = gameExe[2].replace("\n","")
                     profileDetails.append(file)
-        
-            profileIF = tk.Frame(profileDisplay, bg=ui_AC2)
-            profileDF = tk.Frame(profileDisplay, bg=ui_AC2)
+
+            profile_DisplayFrame = tk.Frame(profileDisplay, bg=ui_AC2)
+            profile_DisplayPicFrame = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
+            profile_InfoFrame = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
             profileItemLabel = tk.Label(profileDisplay, text=profileDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
+            backButton = tk.Button(profileDisplay, text="Go back", command=goBack, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameLink = tk.Button(profileDisplay, text="Configure Game", command=lambda: goToGame(profileDetails[0]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+
             profileItemImg = PhotoImage(file = profileDetails[1]).subsample(1,1)
-            profileImg = tk.Label(profileDF, image=profileItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
+            profileImg = tk.Label(profile_DisplayPicFrame, image=profileItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
             profileImg.image = profileItemImg
 
-            backButton = tk.Button(profileDisplay, text="Go back", command=goBack, bg=ui_AC2, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-        
-            profileIF.pack(padx=5, pady=15, side="left", fill="x")
-            profileDF.pack(padx=5, pady=15, side="bottom", fill="x")
-
+            profile_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            profile_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
+            profile_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
             profileItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
-            backButton.pack(padx=5, pady=5, side="top", anchor="nw")
 
-            profileImg.pack(padx=5, pady=5, side="left")
-
+            backButton.pack(padx=4, pady=4, side="left", anchor="nw")
             generalUI.button_hover(backButton, ui_AH1, ui_AC1)
+
+            gameLink.pack(padx=4, pady=4, side="left", anchor="nw")
+            generalUI.button_hover(gameLink, ui_AH1, ui_AC1)
+
+            profileImg.pack(padx=4, pady=4, side="left", anchor="nw")
+            
         except Exception as e:
             print(e)
             messagebox.showerror("Error", f"{e}")
@@ -530,9 +594,10 @@ class gestureTabFunc:
     # Maps the gesturesDisplay frame for usage
     def __init__(self, geFrame):
         self.geFrame = geFrame
-        #profilesList = open('gesturesList.txt', 'r')
-        #profileTabFunc.gestureDisplay(gesturesList, filter)
-        #profileTabFunc.id_Gesture(gesturesDisplay)
+        #gesturesList = open("gesturesList.txt", "r")
+        #gestureTabFunc.gestureDisplay(gesturesList, filter)
+        #gestureTabFunc.id_Gesture(gesturesDisplay)
+
         for uiBorder in uiMasterFrame.winfo_children():
             uiBorder.config(bg=ui_AC1)
             menuGestureTabBorder.config(bg=ui_AH1)
@@ -657,7 +722,13 @@ class run:
                 ["python", os.path.join(base_path, "MouseControl.py")],
                 shell=True
             )
-            print(f"Started Mouse Control with PID: {process.pid}")  # Debugging info
+
+            # Debugging info
+            print(f"Started Mouse Control with PID: {process.pid}")  
+
+            # Closes the control without using release_control
+            if process.poll is not None:
+               process = None
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Mouse Control: {e}")
 
@@ -672,7 +743,11 @@ class run:
                 ["python", os.path.join(base_path, "control_2hands.py")],
                 shell=True
             )
-            print(f"Started Two Hands Gesture Control with PID: {process.pid}")  # Debugging info
+            # Debugging info
+            print(f"Started Two Hands Gesture Control with PID: {process.pid}")  
+            # Closes the control without using release_control
+            if process.poll is not None:
+               process = None
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -687,7 +762,11 @@ class run:
                 ["python", os.path.join(base_path, "swipeControl.py")],
                 shell=True
             )
-            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
+            # Debugging info
+            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
+            # Closes the control without using release_control
+            if process.poll is not None:
+               process = None
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -702,7 +781,30 @@ class run:
                 ["python", os.path.join(base_path, "hybrid.py")],
                 shell=True
             )
-            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")  # Debugging info
+            # Debugging info
+            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
+            # Closes the control without using release_control
+            if process.poll is not None:
+               process = None
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
+    
+    def program5():
+        global process
+        try:
+            if process is not None:
+                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+                return
+            # Placeholder for HB2 Gesture Control Program
+            process = subprocess.Popen(
+                ["python", os.path.join(base_path, "hb2.py")],
+                shell=True
+            )
+            # Debugging info
+            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
+            # Closes the control without using release_control
+            if process.poll is not None:
+               process = None
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -769,7 +871,7 @@ class run:
 
             # Function to Load a TXT File in the folder to faqtxt Text Element
             def txtLoader():
-                with open('faq_text.txt', 'r') as txtfile:
+                with open("faq_text.txt", "r") as txtfile:
                     faq_text = txtfile.read()
                     faqtxt.insert(tk.END, faq_text)
 
@@ -864,10 +966,11 @@ class run:
                     debugLabel = tk.Label(debugFrame, text="DEBUG", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     debugDescLabel = tk.Label(debugFrame, text="For devs to configure the controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
 
-                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=10, height=2, bg=ui_AC2, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=20, height=2, bg=ui_AC2, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=20, height=2, bg=ui_AC2, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=20, height=2, bg=ui_AC2, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button5 = tk.Button(debugFrame, text="HB2", command=run.program5, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
                     
                     # Release control button
                     release_button = tk.Button(debugFrame, text="Reset Controls", command=quit.release_control, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
@@ -895,6 +998,9 @@ class run:
 
                     button4.pack(padx=5, pady=5, side="left", anchor="w")
                     generalUI.button_hover(button4,ui_AH1, ui_AC1)
+
+                    button5.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button5,ui_AH1, ui_AC1)
 
                     release_button.pack(padx=5, pady=5, side="left", anchor="nw")
                     generalUI.button_hover(release_button, ui_AH3, ui_AC1)
@@ -935,7 +1041,7 @@ class run:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.45"
+versionNum = "1.46"
 
 # For tracking UI activity and subprocesses
 tut_count = 0
@@ -949,6 +1055,7 @@ onceMade_Tut = False
 filter = ""
 
 process = None
+gameProcess = None
 
 gameDisplayArray = []
 descDisplayArray = []
@@ -957,7 +1064,7 @@ exeDisplayArray = []
 profileDisplayArray = []
 gameDetails = []
 profileDetails = []
-gamesList = open('gamesList.txt', 'r')
+gamesList = open("gamesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
 
 # Temporary colour scheme variables to prevent hardcoding problems, and maybe implement a way to mod the UI layout
@@ -984,7 +1091,7 @@ MaxRes = pyautogui.size()
 # Initialize the tkinter root window
 root = tk.Tk()
 root.title(f"Handflux - GUI Prototype {versionNum}")
-root.geometry('1280x720')
+root.geometry("1280x720")
 root.maxsize(MaxRes[0],MaxRes[1])
 root.minsize(1280,720)
 root.configure(background=ui_AC1)

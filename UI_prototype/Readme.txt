@@ -8,3 +8,11 @@ gamesList.txt Rules
 	Desc÷ GAMEID÷ Description of Game
 	ThumbImg÷ GAMEID÷ \filepath\ImageFile.png
 	Exe÷ GAMEID÷ filepath/Executable.exe
+	Controls÷ GAMEID÷ Control
+
+2 - APPLICABLE CONTROLS FOR Control
+	Mouse
+	Two-Hands
+	Swipe
+	Hybrid
+	HB2
