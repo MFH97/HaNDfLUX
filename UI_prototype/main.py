@@ -1,8 +1,5 @@
 # Main program for GUI interface
-import subprocess
-import os
-import tkinter as tk
-import psutil
+import subprocess, os, psutil, tkinter as tk
 from tkinter import PhotoImage, messagebox, filedialog
 
 # Additonal imports
@@ -19,7 +16,7 @@ class gameTabFunc:
     # Maps the gamesDisplay frame for usage
     def __init__(self, gFrame):
         self.gFrame = gFrame
-        gamesList = open("gamesList.txt", "r")
+        gamesList = open(f"{base_path}\\gamesList.txt", "r")
         gameTabFunc.gameDisplay(gamesList, filter)
         gameTabFunc.id_Game(gamesDisplay)
         for uiBorder in uiMasterFrame.winfo_children():
@@ -162,7 +159,7 @@ class gameTabFunc:
         try:
             filter = gameSearchBar.get()
             if filter !="":
-                gamesList = open("gamesList.txt", "r")
+                gamesList = open(f"{base_path}\\gamesList.txt", "r")
                 gameTabFunc.gameDisplay(gamesList, filter)
                 gameTabFunc.id_Game(gamesDisplay)
                 gameSearchBar.delete(0, "end")
@@ -176,7 +173,7 @@ class gameTabFunc:
         global gamesList, gamesDisplay
         try:
             filter = ""
-            gamesList = open("gamesList.txt", "r")
+            gamesList = open(f"{base_path}\\gamesList.txt", "r")
             gameTabFunc.gameDisplay(gamesList, filter)
             gameTabFunc.id_Game(gamesDisplay)
             gameSearchBar.delete(0, "end")
@@ -203,6 +200,7 @@ class gameTabFunc:
 
         # Runs the exe described in the filepath
         def runGame():
+            global process
             try:
                 #Maps the Executable to a process checker
                 gameEXE = gameDetails[3]
@@ -227,9 +225,10 @@ class gameTabFunc:
 
                     gameProcess = subprocess.Popen(gameDetails[3])
                     
+                    gameProcess.wait()
+                    
                     # Closes the controls if the game is closed
                     if gameProcess.poll is not None:
-                        print(f"{gameProcess} closed")
                         gameProcess = None
                         quit.release_control()
 
@@ -241,13 +240,13 @@ class gameTabFunc:
             try:
                 # Formats the filepath to fit the gamesList format
                 filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
-                filepath_Change = f"ExeÃ· {gItemExt[0]}Ã· {filepath_New}"
+                filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
 
-                with open("gamesList.txt", "r") as txt:
+                with open(f"{base_path}\\gamesList.txt", "r") as txt:
                     gameWrite = txt.readlines()
 
                 filepath_Update = False
-                with open("gamesList.txt", "w") as txt:
+                with open(f"{base_path}\\gamesList.txt", "w") as txt:
                     for line in gameWrite:
                         if not filepath_Update and gameDetails[3] in line:
                             txt.write(filepath_Change + "\n")
@@ -271,11 +270,10 @@ class gameTabFunc:
                 gItem.destroy()
         
             gameDetails.clear()
-            
             gItemExt = gameItem.split()
         
             # Gets the new items
-            gameGet = open("gamesList.txt", "r")
+            gameGet = open(f"{base_path}\\gamesList.txt", "r")
             for line in gameGet:
                 if f"GameÃ· {gItemExt[0]}" in line:
                     gameName = line.split("Ã· ")
@@ -361,7 +359,7 @@ class profileTabFunc:
     # Maps the profilesDisplay frame for usage
     def __init__(self, pFrame):
         self.pFrame = pFrame
-        profilesList = open("gamesList.txt", "r")
+        profilesList = open(f"{base_path}\\gamesList.txt", "r")
         profileTabFunc.profileDisplay(profilesList, filter)
         profileTabFunc.id_Profile(profilesDisplay)
         for uiBorder in uiMasterFrame.winfo_children():
@@ -489,7 +487,7 @@ class profileTabFunc:
         try:
             filter = profileSearchBar.get()
             if filter !="":
-                gamesList = open("gamesList.txt", "r")
+                gamesList = open(f"{base_path}\\gamesList.txt", "r")
                 profileTabFunc.profileDisplay(gamesList, filter)
                 profileTabFunc.id_Profile(profilesDisplay)
                 profileSearchBar.delete(0, "end")
@@ -503,7 +501,7 @@ class profileTabFunc:
         global gamesList, profilesDisplay
         try:
             filter = ""
-            gamesList = open("gamesList.txt", "r")
+            gamesList = open(f"{base_path}\\gamesList.txt", "r")
             profileTabFunc.profileDisplay(gamesList, filter)
             profileTabFunc.id_Profile(profilesDisplay)
             profileSearchBar.delete(0, "end")
@@ -544,7 +542,7 @@ class profileTabFunc:
             #print(pItemExt[0])
         
             # Displays the new items
-            itemGet = open("gamesList.txt", "r")
+            itemGet = open(f"{base_path}\\gamesList.txt", "r")
             for line in itemGet:
                 if f"GameÃ· {pItemExt[0]}" in line:
                     gameName = line.split("Ã· ")
@@ -594,7 +592,7 @@ class gestureTabFunc:
     # Maps the gesturesDisplay frame for usage
     def __init__(self, geFrame):
         self.geFrame = geFrame
-        #gesturesList = open("gesturesList.txt", "r")
+        #gesturesList = open(f"{base_path}\\gamesList.txt", "r")
         #gestureTabFunc.gestureDisplay(gesturesList, filter)
         #gestureTabFunc.id_Gesture(gesturesDisplay)
 
@@ -692,17 +690,18 @@ class quit:
         global process
         if process is not None:
             try:
-                print(f"Terminating process with PID: {process.pid}")  # Debugging info
                 # Terminate process and all its children
+                #print(f"Terminating process with PID: {process.pid}")  # Debugging info
                 parent = psutil.Process(process.pid)
                 for child in parent.children(recursive=True):
                     child.kill()
                 parent.kill()
-
                 process.wait()  # Ensure the process is fully terminated
                 print("Process and its children terminated successfully.")  # Debugging info
                 process = None
                 messagebox.showinfo("Info", "Running program has been terminated.")
+            except psutil.NoSuchProcess:
+                process = None
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to terminate the program: {e}")
         else:
@@ -723,12 +722,11 @@ class run:
                 shell=True
             )
 
-            # Debugging info
-            print(f"Started Mouse Control with PID: {process.pid}")  
+            # Debugging info 
+            print(f"Started Mouse Control with PID: {process.pid}")
 
-            # Closes the control without using release_control
-            if process.poll is not None:
-               process = None
+            # For runGame to process
+            return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Mouse Control: {e}")
 
@@ -744,10 +742,10 @@ class run:
                 shell=True
             )
             # Debugging info
-            print(f"Started Two Hands Gesture Control with PID: {process.pid}")  
-            # Closes the control without using release_control
-            if process.poll is not None:
-               process = None
+            print(f"Started Two Hands Gesture Control with PID: {process.pid}")
+
+            # For runGame to process
+            return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -764,9 +762,10 @@ class run:
             )
             # Debugging info
             print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
-            # Closes the control without using release_control
-            if process.poll is not None:
-               process = None
+            
+            # For runGame to process
+            return process
+        
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -783,9 +782,9 @@ class run:
             )
             # Debugging info
             print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
-            # Closes the control without using release_control
-            if process.poll is not None:
-               process = None
+            
+            # For runGame to process
+            return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
     
@@ -802,9 +801,9 @@ class run:
             )
             # Debugging info
             print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
-            # Closes the control without using release_control
-            if process.poll is not None:
-               process = None
+
+            # For runGame to process
+            return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
@@ -871,7 +870,7 @@ class run:
 
             # Function to Load a TXT File in the folder to faqtxt Text Element
             def txtLoader():
-                with open("faq_text.txt", "r") as txtfile:
+                with open(f"{base_path}\\faq_text.txt", "r") as txtfile:
                     faq_text = txtfile.read()
                     faqtxt.insert(tk.END, faq_text)
 
@@ -1064,7 +1063,7 @@ exeDisplayArray = []
 profileDisplayArray = []
 gameDetails = []
 profileDetails = []
-gamesList = open("gamesList.txt", "r")
+gamesList = open(f"{base_path}\\gamesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
 
 # Temporary colour scheme variables to prevent hardcoding problems, and maybe implement a way to mod the UI layout
