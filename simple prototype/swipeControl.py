@@ -30,7 +30,7 @@ pause_start_time = None
 
 # Default sensitivity values
 DEFAULT_BASE_THRESHOLD = 0.01
-DEFAULT_MIN_THRESHOLD = 0.006
+DEFAULT_MIN_THRESHOLD = 0.01
 
 # Constants
 BASE_THRESHOLD = DEFAULT_BASE_THRESHOLD # Increasing the threshold make it not sensitive. Where decreasing it make it more sensitive
@@ -90,6 +90,7 @@ def check_pause_gesture(gestures):
             print("Pause gesture interrupted.")
         pause_start_time = None
 
+# this is for determine the user is tired or still on normal state
 def analyze_behavior(hand_label):
     """Analyze gesture behavior trends."""
     if len(gesture_trends[hand_label]) < TREND_WINDOW:
@@ -131,6 +132,7 @@ def detect_motion(current_landmarks, hand_label):
     else:
         last_motion_time[hand_label] = time.time()
 
+    # This is the adaptive sensitivity behaviour detection logic
     avg_velocity = np.mean(swipe_velocities[hand_label])
     if avg_velocity < adaptive_threshold:
         adaptive_threshold = max(avg_velocity, MIN_THRESHOLD)
@@ -155,7 +157,7 @@ def detect_motion(current_landmarks, hand_label):
 
     return "Idle"
 
-
+# this is for executing the swipe gesture
 def execute_gesture(gesture, hand_label):
     """Execute gesture actions with spam detection."""
     global last_swipe_time, spam_start_time, spam_count
