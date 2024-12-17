@@ -42,8 +42,8 @@ LOG_FILE = "gesture_log.txt"
 SETTINGS_FILE = "sensitivity_settings.txt"
 KEYS = {"Swipe Left": "d", "Swipe Right": "j"}
 TREND_WINDOW = 50  # Number of gestures to analyze trends
-SWIPE_COOLDOWN = 0.3  # Minimum time between swipes
-SPAM_WINDOW = 0.5  # Allow spamming gestures within this time window
+SWIPE_COOLDOWN = 0  # Minimum time between swipes
+SPAM_WINDOW = 2  # Allow spamming gestures within this time window
 
 # Tracking variables
 prev_landmarks = {"Left": None, "Right": None}
