@@ -1,0 +1,39 @@
+gameimg Folder Rules
+1 - PIC MUST BE IN PNG FORMAT
+2 - PIC MUST FIT 220 x 300 PX
+
+gestureimg Folder Rules
+1 - PIC MUST BE IN PNG FORMAT
+2 - PIC MUST FIT 400 x 400 PX
+
+gamesList.txt Rules
+1 - ENTRIES MUST FOLLOW THIS FORMAT
+	Game÷ GAMEID÷ GAME TITLE
+	Desc÷ GAMEID÷ Description of Game
+	ThumbImg÷ GAMEID÷ \filepath\ImageFile.png
+	Exe÷ GAMEID÷ filepath/Executable.exe
+	Controls÷ GAMEID÷ Control
+
+2 - APPLICABLE CONTROLS FOR Control
+	Mouse
+	Two-Hands
+	Swipe
+	Hybrid
+	HB2
+
+gesturesList.txt Rules
+1 - GESTURES MUST FOLLOW THIS FORMAT
+	Gesture÷ CALL÷ CALL
+	Desc÷ CALL÷ Thumb and Pinky Finger held out, all other fingers closed in
+	ThumbImg÷ CALL÷ \img\gestureimg\call.png
+
+2 - APPLICABLE GESTURES FOR Gesture
+	CALL
+	DISLIKE
+	FIST
+	LIKE
+	ONE
+	PEACE_INV
+	PEACE_NOR
+	ROCK
+	STOP
