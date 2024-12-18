@@ -204,34 +204,51 @@ class gameTabFunc:
             global process, gameProcess
             try:
                 #Maps the Executable to a process checker
-                gameEXE = gameDetails[3]
-                gameEXE = gameEXE.split("/")
+                #gameEXE = gameDetails[3]
+                #gameEXE = gameEXE.split("/")
+
+                fArray.clear()
 
                 if len(gameDetails[3]) == 0 or gameDetails[3] == "Filepath":
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
                     # Starts up the respective game's control and game
                     if gameDetails[4] == "Mouse":
-                        run.program1()
+                        fArray.append(["python", os.path.join(base_path, "MouseControl.py")])
+                        fArray.append(gameDetails[3])
+                        gameProcess = [subprocess.Popen(procs) for procs in fArray]
+
                     elif gameDetails[4] == "Two-Hands":
-                        run.program2()
+                        fArray.append(["python", os.path.join(base_path, "control_2hands.py")])
+                        fArray.append(gameDetails[3])
+                        gameProcess = [subprocess.Popen(procs) for procs in fArray]
+
                     elif gameDetails[4] == "Swipe":
-                        run.program3()
+                        fArray.append(["python", os.path.join(base_path, "Swipe.py")])
+                        fArray.append(gameDetails[3])
+                        gameProcess = [subprocess.Popen(procs) for procs in fArray]
+
                     elif gameDetails[4] == "Hybrid":
-                        run.program4()
+                        fArray.append(["python", os.path.join(base_path, "hybrid.py")])
+                        fArray.append(gameDetails[3])
+                        gameProcess = [subprocess.Popen(procs) for procs in fArray]
+
                     elif gameDetails[4] == "HB2":
-                        run.program5()
+                        fArray.append(["python", os.path.join(base_path, "hb2.py")])
+                        fArray.append(gameDetails[3])
+                        gameProcess = [subprocess.Popen(procs) for procs in fArray]
+                        
                     else: 
                         pass
-
-                    gameProcess = subprocess.Popen(gameDetails[3])
-                    gameProcess.wait()
+                    #process.wait()
+                    #gameProcess = subprocess.Popen(gameDetails[3]) 
+                    #gameProcess.wait()
                     #print(gameProcess)
                     
                     # Closes the controls if the game is closed
-                    if gameProcess.poll is not None:
-                        gameProcess = None
-                        quit.release_control()
+                    #if gameProcess.poll is not None:
+                        #gameProcess = None
+                        #quit.release_control()
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to run the game: {e}")
@@ -821,9 +838,7 @@ class gestureTabFunc:
                         gestureImg = line.split("Ã· ")
                         extract = base_path + gestureImg[2].replace("\n","")
                         gestureDetails.append(extract)
-            
-            
-            
+
             with open(f"{base_path}\\resources\\gamesList.txt", "r") as gameGet:
                 for line in gameGet:
                     if re.search(testFilter, line):
@@ -1321,6 +1336,7 @@ class run:
 # Sets the base path to the scripts. Currently os.getcwd() since it returns the current directory the code is in without the hardcoding issue
 #base_path = f"Filepath/Folder"
 base_path = os.getcwd()
+print(base_path)
 
 # Version Number 
 versionNum = "1.47"
@@ -1347,6 +1363,7 @@ profileDisplayArray = []
 gameDetails = []
 profileDetails = []
 gestureDetails = []
+fArray = []
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gesturesList = open(f"{base_path}\\resources\\gesturesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
