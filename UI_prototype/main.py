@@ -201,7 +201,7 @@ class gameTabFunc:
 
         # Runs the exe described in the filepath
         def runGame():
-            global process
+            global process, gameProcess
             try:
                 #Maps the Executable to a process checker
                 gameEXE = gameDetails[3]
@@ -225,8 +225,8 @@ class gameTabFunc:
                         pass
 
                     gameProcess = subprocess.Popen(gameDetails[3])
-                    
                     gameProcess.wait()
+                    #print(gameProcess)
                     
                     # Closes the controls if the game is closed
                     if gameProcess.poll is not None:
@@ -251,6 +251,7 @@ class gameTabFunc:
                     for line in gameWrite:
                         if not filepath_Update and gameDetails[3] in line:
                             txt.write(filepath_Change + "\n")
+                            gameDetails[3] = filepath_New
                             filepath_Update = True
                         else:
                             txt.write(line)
@@ -299,6 +300,11 @@ class gameTabFunc:
                         file = gameControls[2].replace("\n","")
                         gameDetails.append(file)
 
+                    elif f"GestureMapÃ· {gItemExt[0]}" in line:
+                        gestureControl = line.split("Ã· ")
+                        file = gestureControl[2].replace("\n","")
+                        gameDetails.append(file)
+
             # Displays the selected game
             game_DisplayFrame = tk.Frame(gameDisplay, bg=ui_AC2)
             game_DisplayPicFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
@@ -319,7 +325,7 @@ class gameTabFunc:
 
             gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[1], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
-            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with Gesture Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with {gameDetails[4]} Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -1233,7 +1239,7 @@ class run:
 
                     # Toggle borderless / fullscreen
                     fullscreen_button = tk.Button(winStateFrame, text="Fullscreen", command=lambda:toggleWindowState("fullscreen"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
-                    borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
+                    borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
                     windowed_button = tk.Button(winStateFrame, text="Windowed", command=lambda:toggleWindowState("windowed"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
 
                     #gearScroll.pack(side="right", fill="y")
