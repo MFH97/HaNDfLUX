@@ -3,8 +3,8 @@ import subprocess, os, psutil, tkinter as tk
 from tkinter import PhotoImage, messagebox, filedialog
 
 # Additonal imports
-import pyautogui
-import re
+import pyautogui, re
+import time, threading
 
 class generalUI:
     def button_hover(tkb, b_Hover, b_Release ):
@@ -183,7 +183,7 @@ class gameTabFunc:
 
     # Displays that specific game
     def game_Describe(gameItem):
-        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList
+        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList, process
 
         # Goes back to the Games Tab
         def goBack():
@@ -201,45 +201,41 @@ class gameTabFunc:
 
         # Runs the exe described in the filepath
         def runGame():
-            global process, gameProcess
+            def gameCheck(proc):
+                while True:
+                    procs = [proc.name() for proc in psutil.process_iter()]
+                    if proc not in procs:
+                        quit.release_control()
+                        break
+                    time.sleep(1)
+
+            def gameStart(proc):
+                thread = threading.Thread(target=gameCheck, args=(proc))
+                thread.daemon = True
+                thread.start()
+
             try:
-                fArray.clear()
+                gameEXE = gameDetails[3]
+                gameEXE = gameEXE.split("/")
 
                 if len(gameDetails[3]) == 0 or gameDetails[3] == "Filepath":
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
                     # Starts up the respective game's control and game
                     if gameDetails[4] == "Mouse":
-                        fArray.append(["python", os.path.join(base_path, "MouseControl.py")])
-                        fArray.append(gameDetails[3])
+                       run.program1()
                     elif gameDetails[4] == "Two-Hands":
-                        fArray.append(["python", os.path.join(base_path, "control_2hands.py")])
-                        fArray.append(gameDetails[3])
+                       run.program2()
                     elif gameDetails[4] == "Swipe":
-                        fArray.append(["python", os.path.join(base_path, "swipeControl.py")])
-                        fArray.append(gameDetails[3])
+                        run.program3()
                     elif gameDetails[4] == "Hybrid":
-                        fArray.append(["python", os.path.join(base_path, "hybrid.py")])
-                        fArray.append(gameDetails[3])
+                        run.program4()
                     elif gameDetails[4] == "HB2":
-                        fArray.append(["python", os.path.join(base_path, "hb2.py")])
-                        fArray.append(gameDetails[3])
+                        run.program5()
                     else: 
                         pass
-                        
-                    for procs in fArray:
-                        gameProcess = subprocess.Popen(procs)
-                    #for iter in gameProcess:
-                        #iter.wait()
-                    #gameProcess = subprocess.Popen(gameDetails[3]) 
-                    #gameProcess.wait()
-                    #print(gameProcess)
-                    
-                    # Closes the controls if the game is closed
-                    if gameProcess.poll is not None:
-                        gameProcess = None
-                        quit.release_control()
-
+                    os.startfile(gameDetails[3])
+                    gameStart(gameEXE[-1])
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to run the game: {e}")
 
@@ -1069,22 +1065,26 @@ class run:
             if not tutAct:
                 if not onceMade_Tut:
                     tutCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
-                    
+
                     tutFrame = tk.Frame(tutCanvas, padx=5, pady=5, bg=ui_AC2)
+
                     tutContent = [
-                        tk.Label(tutFrame, text="GETTING STARTED", anchor="ne", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold)),
-                        tk.Label(tutFrame, text="Games - Shows the available games for mapping ", anchor="e", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="Profiles - Shows the profiles you made, contains the gestures you mapped for a game", anchor="e", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="Gestures - Shows the gestures you made for mapping", anchor="e", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="Settings - Opens up the settings for you to fine tune", anchor="e", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="FAQs - Opens up the FAQ", anchor="e", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
+                        tk.Label(tutFrame, text="GETTING STARTED", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold)),
+                        tk.Label(tutFrame, text="To close, click the button labelled 'Close', or press the Escape Key", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 18, ui_Bold)),
+                        tk.Label(tutFrame, text="Games - Shows the available games for mapping ",  bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
+                        tk.Label(tutFrame, text="Profiles - Shows the profiles you made, contains the gestures you mapped for a game",  bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
+                        tk.Label(tutFrame, text="Gestures - Shows the gestures you made for mapping", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
+                        tk.Label(tutFrame, text="Settings - Opens up the settings for you to fine tune", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
+                        tk.Label(tutFrame, text="FAQs - Opens up the FAQ", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
                     ]
-                   
-                    tutFrame.pack(fill="x")
-                   
+                    closeTut = tk.Button(tutFrame, text="Close", command=tutClose, border=0, bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
+
+                    tutFrame.pack(anchor="nw")
                     for e in range(len(tutContent)):
                         tutItem = tutContent[e]
                         tutItem.pack(padx=5, pady=5, anchor="nw")
+                    closeTut.pack(padx=5, pady=5, anchor="nw")
+                    generalUI.button_hover(closeTut, ui_AH1, ui_AC2)
                     tutAct = True
                     onceMade_Tut = True
                 else:
@@ -1092,7 +1092,6 @@ class run:
                     tutAct = True
             else:
                 tutClose()
-
         except Exception as e:
             messagebox.showerror("Error", f"Failed to startup Tutorial process: {e}")
 
@@ -1103,53 +1102,45 @@ class run:
             def faqKey(key):
                 if key.keysym == "Escape":
                     faqClose()
-
+            
             # Closes the FAQ
             def faqClose():
                 global faqAct
                 faqCanvas.place_forget()
                 faqAct = False
-
+            
             # Function to Load a TXT File in the folder to faqtxt Text Element
             def txtLoader():
                 with open(f"{base_path}\\resources\\faq_text.txt", "r") as txtfile:
                     faq_text = txtfile.read()
                     faqtxt.insert(tk.END, faq_text)
-
+            
             root.bind("<Key>", faqKey)
             # Checks if FAQ UI is opened
             if not faqAct:
                 faqCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
-
                 # FAQ Frame & Scrollbar to navigate
                 faqTF = tk.Frame(faqCanvas, padx=5, pady=5, bg=ui_AC1)
                 faqFrame = tk.Frame(faqCanvas, padx=5, pady=5, bg=ui_AC3)
                 faqScroll = tk.Scrollbar(faqCanvas)
-
                 # Text Element to input FAQ Items
                 faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=ui_AC3, height=MaxRes[0], width=MaxRes[1], font=(ui_Font, 14), fg=ui_Txt, border=0, wrap="word")
-        
                 # Label and button to close the FAQ Window
                 FAQlabel = tk.Label(faqTF, text="Frequently Asked Questions", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 20, ui_Bold))
                 close_faq = tk.Button(faqTF, text="Return", command=faqClose, width=10, height=0, bg=ui_AH1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
-
                 # GUI Layout
                 faqTF.pack(side="top", anchor="nw", fill="x")
                 FAQlabel.pack(pady=5, side="left", anchor="nw")
                 close_faq.pack(padx=30, pady=15, side="right", anchor="ne")
                 generalUI.button_hover(close_faq,ui_AH1, ui_AC1)
-
                 faqFrame.pack(side="left", anchor="nw")
                 faqtxt.pack(padx=10, pady=10, side="left", fill="both")
                 faqScroll.pack(side="right", fill="y")
-
                 faqAct = True
-
                 # Loads the TXT into the faqtxt Element
                 txtLoader()
             else:
                 faqClose()
-
         except Exception as e:
             messagebox.showerror("Error", f"Failed to start FAQ Process: {e}")
 
@@ -1326,7 +1317,7 @@ class run:
 # Sets the base path to the scripts. Currently os.getcwd() since it returns the current directory the code is in without the hardcoding issue
 #base_path = f"Filepath/Folder"
 base_path = os.getcwd()
-print(base_path)
+#print(base_path)
 
 # Version Number 
 versionNum = "1.47"
@@ -1353,7 +1344,6 @@ profileDisplayArray = []
 gameDetails = []
 profileDetails = []
 gestureDetails = []
-fArray = []
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gesturesList = open(f"{base_path}\\resources\\gesturesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
