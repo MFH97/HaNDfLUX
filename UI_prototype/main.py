@@ -244,7 +244,6 @@ class gameTabFunc:
             try:
                 # Formats the filepath to fit the gamesList format
                 filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
-                #print(filepath_New)
                 if filepath_New:
                     filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
                     with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
@@ -253,7 +252,7 @@ class gameTabFunc:
                     filepath_Update = False
                     with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
                         for line in gameWrite:
-                            if not filepath_Update and gameDetails[3] in line:
+                            if not filepath_Update and f"ExeÃ· {gameItem}Ã· " in line:
                                 txt.write(filepath_Change + "\n")
                                 gameDetails[3] = filepath_New
                                 filepath_Update = True
@@ -275,10 +274,10 @@ class gameTabFunc:
             # Clears the old items
             for gItem in gameDisplay.winfo_children():
                 gItem.destroy()
-        
-            gameDetails.clear()
+                gameDetails.clear()
+            
             gItemExt = gameItem.split()
-        
+
             # Gets the new items
             with open(f"{base_path}\\resources\\gamesList.txt", "r") as gameGet:
                 for line in gameGet:
@@ -1282,23 +1281,6 @@ class run:
                     windowed_button.pack(padx=5, pady=5, side="left", anchor="w")
                     generalUI.button_hover(windowed_button, ui_AH1, ui_AC1)
 
-                    """
-                    # Scrollbar Tester
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    label.pack(padx=10, pady=2)
-                    """
                     gearAct = True
                     onceMade_Settings = True
                 else:
