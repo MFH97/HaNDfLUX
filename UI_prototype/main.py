@@ -210,7 +210,7 @@ class gameTabFunc:
                     time.sleep(1)
 
             def gameStart(proc):
-                thread = threading.Thread(target=gameCheck, args=(proc))
+                thread = threading.Thread(target=gameCheck, args=(proc,))
                 thread.daemon = True
                 thread.start()
 
@@ -244,23 +244,25 @@ class gameTabFunc:
             try:
                 # Formats the filepath to fit the gamesList format
                 filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = (("Exe files","*.exe*"),("Text files","*.txt*")))
-                filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
+                #print(filepath_New)
+                if filepath_New:
+                    filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
+                    with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
+                        gameWrite = txt.readlines()
 
-                with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
-                    gameWrite = txt.readlines()
-
-                filepath_Update = False
-                with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
-                    for line in gameWrite:
-                        if not filepath_Update and gameDetails[3] in line:
-                            txt.write(filepath_Change + "\n")
-                            gameDetails[3] = filepath_New
-                            filepath_Update = True
-                        else:
-                            txt.write(line)
-
-                # Changes the filepath in the game description
-                gameItemFile.configure(text = filepath_New)
+                    filepath_Update = False
+                    with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
+                        for line in gameWrite:
+                            if not filepath_Update and gameDetails[3] in line:
+                                txt.write(filepath_Change + "\n")
+                                gameDetails[3] = filepath_New
+                                filepath_Update = True
+                            else:
+                                txt.write(line)
+                    # Changes the filepath in the game description
+                    gameItemFile.configure(text = filepath_New)
+                else:
+                    messagebox.showinfo("Warning: ", "Select an executable application to change the filepath")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to modify Exe's Filepath: {e}")
 
@@ -327,7 +329,7 @@ class gameTabFunc:
             gameItemTxt.configure(exportselection=0, state="disabled")  
 
             gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[1], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
             gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with {gameDetails[4]} Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
@@ -929,7 +931,6 @@ class quit:
         if process is not None:
             try:
                 # Terminate process and all its children
-                #print(f"Terminating process with PID: {process.pid}")  # Debugging info
                 parent = psutil.Process(process.pid)
                 for child in parent.children(recursive=True):
                     child.kill()
@@ -1215,7 +1216,6 @@ class run:
 
                     # Debug Controls
                     debugFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
-                    #testFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC4)
             
                     debugLabel = tk.Label(debugFrame, text="DEBUG", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     debugDescLabel = tk.Label(debugFrame, text="For devs to configure the controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
@@ -1242,7 +1242,6 @@ class run:
                     gearTF.pack(side="top", anchor="nw", fill="x")
                     gearTitle.pack(padx=10, pady=10, side="left", anchor="nw")
                     debugFrame.pack(anchor="w", fill="x")
-                    #testFrame.pack(anchor="sw", fill="x")
 
                     winStateTF.pack(side="top", anchor="nw", fill="x")
                     winStateFrame.pack(anchor="w", fill="x")
@@ -1282,7 +1281,7 @@ class run:
 
                     windowed_button.pack(padx=5, pady=5, side="left", anchor="w")
                     generalUI.button_hover(windowed_button, ui_AH1, ui_AC1)
-                
+
                     """
                     # Scrollbar Tester
                     label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
@@ -1300,24 +1299,19 @@ class run:
                     label = tk.Label(testFrame, text="Scrollbar Test", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     label.pack(padx=10, pady=2)
                     """
-                    
                     gearAct = True
                     onceMade_Settings = True
                 else:
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                     gearAct = True
                     canvasResize(root.winfo_width())
-                    
             else:
                 setClose()
-  
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up Settings: {e}")
 
 # Sets the base path to the scripts. Currently os.getcwd() since it returns the current directory the code is in without the hardcoding issue
-#base_path = f"Filepath/Folder"
 base_path = os.getcwd()
-#print(base_path)
 
 # Version Number 
 versionNum = "1.47"
@@ -1477,10 +1471,7 @@ scaled_SettingsImg = settings_Img.subsample(2, 2)
 settings_button = tk.Button(uiMasterFrame, image=scaled_SettingsImg, command=run.settings, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0)
 faq_button = tk.Button(uiMasterFrame, text="FAQs", command=run.faq, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
-# Exit button - Commented code is quit button but in image form
-#quit_Img = PhotoImage(file = base_path + "\\img\\quit.png")
-#scaled_QuitImg = quit_Img.subsample(2,2)
-#exit_button = tk.Button(uiMasterFrame, image=scaled_QuitImg, command=quit.exit_program , bg=ui_AC1, fg=ui_Txt,activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+# Exit button
 exit_button = tk.Button(uiMasterFrame, text="QUIT", command=quit.exit_program , width=10, height=2, bg=ui_AC1, fg=ui_Txt,activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
 # GUI Layout and Labels

@@ -1,11 +1,15 @@
 #Continuous key-press for both hands
 import cv2
+import sys
 import numpy as np
 import mediapipe as mp
 import pydirectinput
 import pyautogui
-from tensorflow.keras.models import load_model # type: ignore
+from tensorflow.keras.models import load_model
 import time
+
+# Just to ensure stability of the software on any system
+sys.stdout.reconfigure(encoding='utf-8')
 
 # Load the gesture recognition model
 model = load_model('twoHands_model.h5')

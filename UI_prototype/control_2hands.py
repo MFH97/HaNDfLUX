@@ -2,8 +2,7 @@
 import cv2
 import numpy as np
 import mediapipe as mp
-from tensorflow.keras.models import load_model #type: ignore
-import os
+from tensorflow.keras.models import load_model
 import pydirectinput
 import traceback
 import time
@@ -22,7 +21,6 @@ def signal_handler(sig, frame):
 
 # Cleanup function to release resources
 def cleanup():
-    global cap
     if cap.isOpened():
         cap.release()
     cv2.destroyAllWindows()
@@ -33,9 +31,6 @@ def cleanup():
 signal.signal(signal.SIGTERM, signal_handler)
 signal.signal(signal.SIGINT, signal_handler)
 atexit.register(cleanup)
-
-#default_path = os.getcwd()
-#model_path = default_path + r"\twoHands_model.h5"
 
 # Load the saved Keras model for gesture recognition
 model = load_model('twoHands_model.h5')  # Ensure the model file exists

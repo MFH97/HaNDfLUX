@@ -1,16 +1,13 @@
 import cv2
 import numpy as np
 import mediapipe as mp
-from tensorflow.keras.models import load_model # type: ignore
+from tensorflow.keras.models import load_model
 import pydirectinput
 import pyautogui
 import time
 import signal
 import sys
-import traceback
 import atexit
-
-#from control_2hands import release_current_key
 
 # Termination flag
 terminate_flag = False
@@ -26,7 +23,7 @@ def cleanup():
     if cap.isOpened():
         cap.release()
     cv2.destroyAllWindows()
-    #release_current_key()
+    release_current_key()
     print("Resources released, program exiting.")
 
 # Register cleanup for exit events
