@@ -205,7 +205,7 @@ class gameTabFunc:
                 while True:
                     procs = [proc.name() for proc in psutil.process_iter()]
                     if proc not in procs:
-                        quit.release_control()
+                        #quit.release_control()
                         break
                     time.sleep(1)
 
