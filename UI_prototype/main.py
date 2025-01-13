@@ -5,16 +5,22 @@ from tkinter import PhotoImage, messagebox, filedialog
 # Additonal imports
 import pyautogui, re
 import time, threading
+from pynput.keyboard import Controller, Key
+
+
 
 class generalUI:
+
+    # Changes the colour of the button whether if it hovers or not
     def button_hover(tkb, b_Hover, b_Release ):
-        # Changes the colour of the button whether if it hovers or not
+        
         try:
             tkb.bind("<Enter>", func=lambda e: tkb.config(background=b_Hover))
             tkb.bind("<Leave>", func=lambda e: tkb.config(background=b_Release))
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change the button's colour: {e}")
 
+    # Centers the window upon changing the window settings or opening up the app
     def centerWindow(win):
         try:
             win.update_idletasks()
@@ -32,6 +38,19 @@ class generalUI:
             win.deiconify()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to center the window: {e}")
+    
+    # Triggers the on screen keyboard to display
+    def oskOpener():
+        try:
+            kbd.press(Key.cmd)
+            kbd.press(Key.ctrl_l)
+            kbd.press('o')
+
+            kbd.release(Key.cmd)
+            kbd.release(Key.ctrl_l)
+            kbd.release('o')
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open the on-screen keyboard: {e}")
 
 class gameTabFunc:
     # For Game Tab Functions
@@ -329,8 +348,10 @@ class gameTabFunc:
 
             gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
-            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with {gameDetails[4]} Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             
+            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with {gameDetails[4]} Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
             game_RunFrame.pack(padx=5, pady=5, side="bottom", fill="x")
@@ -350,7 +371,10 @@ class gameTabFunc:
             generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
             gameItemFile.pack(padx=4, pady=4, side="left", anchor="nw")
             
-            gameItemExe.pack(padx=4, pady=4, side="bottom", anchor="nw")
+            gameRelease.pack(padx=8, pady=8, side="bottom", anchor="nw")
+            generalUI.button_hover(gameRelease, ui_AH1, ui_AC1)
+            
+            gameItemExe.pack(padx=8, pady=8, side="bottom", anchor="nw")
             generalUI.button_hover(gameItemExe, ui_AH1, ui_AC1)
 
         except Exception as e:
@@ -542,9 +566,17 @@ class profileTabFunc:
             # Clears the old items
             for gItem in profileDisplay.winfo_children():
                 gItem.destroy()
-        
+
+            
             profileDetails.clear()
+            unMapped.clear()
+            unMappedDesc.clear()
             pItemExt = profileItem.split()
+            gestureMap = []
+            extractor = []
+            mappedGes = []
+            unMapGes = []
+            unMapDesc = []
         
             # Displays the new items
             with open(f"{base_path}\\resources\\gamesList.txt", "r") as gameGet:
@@ -565,16 +597,51 @@ class profileTabFunc:
             
                     elif f"GestureMapÃ· {pItemExt[0]}" in line:
                         gameGesture = line.split("Ã· ")
-                        extract = gameGesture[2].replace("\n","")
-                        profileDetails.append(extract) 
-            
+                        gestureMap = gameGesture[2:]
+                        for gesture in range(len(gestureMap)):
+                            extractor.append(gestureMap[gesture].replace("\n",""))
+                        profileDetails.append(extractor)
+                    
+                    elif f"ControlsÃ· {pItemExt[0]}" in line:
+                        gameControl = line.split("Ã· ")
+                        controlCheck = gameControl[2].replace("\n","")
+
+            # Lists mapped gestures
             with open(f"{base_path}\\resources\\gesturesList.txt", "r") as gesturesGet:
                 for line in gesturesGet:
-                    if f"ThumbImgÃ· {profileDetails[3]}" in line:
-                        gestureImg = line.split("Ã· ")
-                        extract = base_path + gestureImg[2].replace("\n","")
-                        profileDetails.append(extract)
-                        profileDetails.append(f"MAPPED GESTURE: {profileDetails[3]}")
+                    if "ThumbImgÃ· " in line:
+                        for things in profileDetails[3]:
+                            testing = rf"\b{things}Ã·"
+                            if re.search(testing, line):
+                                gestureImg = line.split("Ã· ")
+                                gestureImgForm = base_path + gestureImg[2].replace("\n","")
+                                mappedGes.append(gestureImgForm)
+
+                mapGesForm = ", ".join(profileDetails[3])
+                profileDetails.append(mappedGes)
+                profileDetails.append(f"MAPPED GESTURE(S): {mapGesForm}")
+                
+            # Lists unmapped gestures
+            if controlCheck != "Swipe":
+                with open(f"{base_path}\\resources\\gesturesList.txt", "r") as gesturesGet:
+                    for line in gesturesGet:
+                        if "ThumbImgÃ· " in line:
+                            avT = line.split("Ã· ")
+                            if avT[1].replace("\n","") not in profileDetails[3]:
+                                unMapImg = line.split("Ã· ")
+                                unMapImgForm = base_path + unMapImg[2].replace("\n","")
+                                unMapImgDesc = unMapImg[1].replace("\n","")
+                                unMapGes.append(unMapImgForm)
+                                unMapDesc.append(unMapImgDesc)
+
+                unMapDescForm = ", ".join(unMapDesc)
+                unMapped.append(unMapGes)
+                unMappedDesc.append(unMapDescForm)
+
+            # Var checks
+            #print(profileDetails[3])
+            #print(unMapped)
+            #print(unMappedDesc)
 
             # Displays the selected profile
             profile_DisplayFrame = tk.Frame(profileDisplay, bg=ui_AC2)
@@ -582,42 +649,68 @@ class profileTabFunc:
             profile_InfoFrame = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
             profile_GestureMap = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
             profile_GesturePic = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
+            profile_Unmapped = tk.Frame(profile_DisplayFrame, bg=ui_AC2)
             profileItemLabel = tk.Label(profileDisplay, text=profileDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+
+            profileScroll = tk.Scrollbar(profileDisplay, command=profileDisplay.yview)
+            profileDisplay.configure(yscrollcommand=profileScroll.set)
 
             backButton = tk.Button(profileDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             gameLink = tk.Button(profileDisplay, text="Configure Game", command=lambda: goToGame(profileDetails[0]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            gestureLink = tk.Button(profileDisplay, text="To Gesture", command=lambda: goToGesture(profileDetails[3]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
 
             profileItemImg = PhotoImage(file = profileDetails[1]).subsample(1,1)
             profileImg = tk.Label(profile_DisplayPicFrame, image=profileItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
             profileImg.image = profileItemImg
 
-            gestureImg = PhotoImage(file = profileDetails[4]).subsample(2,2)
-            gestureImgLabel = tk.Label(profile_GestureMap, text=profileDetails[5], bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
-            profileGestureImg = tk.Label(profile_GesturePic, image=gestureImg, bg=ui_AC1, fg=ui_Txt, border=0)
-            gestureImg.image = gestureImg
+            if profileDetails[3][0] == "NONE":
+                #gestureLink = tk.Button(profileDisplay, text="No gesture", state="disabled", bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                gestureImgLabel = tk.Label(profile_GestureMap, text="NO MAPPED GESTURES", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+                profileGestureImg = tk.Label(profile_GesturePic, text="", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+                profileImg.pack(padx=4, pady=4, side="left", anchor="nw")
+                profileGestureImg.pack(padx=4, pady=4, side="left", anchor="nw")
+            else:
+                for things in range(len(profileDetails[4])):
+                    #gestureLink = tk.Button(profileDisplay, text="To Gesture", command=lambda: goToGesture(profileDetails[3]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                    gestureImg = PhotoImage(file = profileDetails[4][things]).subsample(3,3)
+                    gestureImgLabel = tk.Label(profile_GestureMap, text=profileDetails[5], bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+                    profileGestureImg = tk.Label(profile_GesturePic, image=gestureImg, bg=ui_AC1, fg=ui_Txt, border=0)
+                    gestureImg.image = gestureImg
+                    profileImg.pack(padx=4, pady=4, side="left", anchor="nw")
+                    profileGestureImg.pack(padx=4, pady=4, side="left", anchor="nw")
+                    #generalUI.button_hover(gestureLink, ui_AH1, ui_AC1)
+            
+            assignGesture = "AVAILABLE GESTURES: "
+            if not unMappedDesc:
+                assignGesture = "NO AVAILABLE GESTURES"
+            else:
+                for Iter in range(len(unMappedDesc)):
+                    assignGesture += f" {unMappedDesc[Iter]} "
 
+            unMapLabel = tk.Label(profile_Unmapped, text=assignGesture, bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            
             profile_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             profile_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
             profile_GestureMap.pack(padx=5, pady=5, side="top", fill="x")
             profile_GesturePic.pack(padx=5, pady=5, side="top", fill="x")
+            profile_Unmapped.pack(padx=5, pady=5, side="top", fill="x")
             
             gestureImgLabel.pack(padx=4, pady=4, side="top", anchor="nw")
             profile_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             profileItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
 
+            unMapLabel.pack(padx=5, pady=5, side="top", anchor="nw")
             backButton.pack(padx=4, pady=4, side="left", anchor="nw")
             generalUI.button_hover(backButton, ui_AH1, ui_AC1)
 
             gameLink.pack(padx=4, pady=4, side="left", anchor="nw")
             generalUI.button_hover(gameLink, ui_AH1, ui_AC1)
-
-            gestureLink.pack(padx=4, pady=4, side="left", anchor="nw")
-            generalUI.button_hover(gestureLink, ui_AH1, ui_AC1)
-
-            profileImg.pack(padx=4, pady=4, side="left", anchor="nw")
-            profileGestureImg.pack(padx=4, pady=4, side="left", anchor="nw")
             
+            for Iter in range(len(unMapGes)):
+                availImg = PhotoImage(file = unMapGes[Iter]).subsample(3,3)
+                ImgLabel = tk.Label(profile_Unmapped, image=availImg, bg=ui_AC1, fg=ui_Txt, border=0)
+                availImg.image = availImg
+                ImgLabel.pack(padx=4, pady=4, side="left", anchor="nw")
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display the individual profile: {e}")
 
@@ -839,8 +932,7 @@ class gestureTabFunc:
             gestureItemLabel = tk.Label(gestureDisplay, text=gestureDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
             backButton = tk.Button(gestureDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            profileLink = tk.Button(gestureDisplay, text="Configure Profile", command=lambda: goToProfile(gestureDetails[3]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-
+            
             gestureItemImg = PhotoImage(file = gestureDetails[2]).subsample(1,1)
             gestureImg = tk.Label(gesture_DisplayPicFrame, image=gestureItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
             gestureImg.image = gestureItemImg
@@ -848,8 +940,18 @@ class gestureTabFunc:
             gestureDescTitle = tk.Label(gesture_InfoFrame, text="Gesture Information: ", bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             gestureDesc = tk.Label(gesture_InfoFrame, text=gestureDetails[1], bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             gesturePadding = tk.Label(gesture_InfoFrame, bg=ui_AC1, fg=ui_Txt, border=0)
+            
             gameMapTitle = tk.Label(gesture_InfoFrame, text="Currently Mapped to: ", bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            gameMap = tk.Label(gesture_InfoFrame, text=gestureDetails[3], bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+
+            # Checks if the gesture is mapped to a game profile
+            if len(gestureDetails) < 4:
+                profileLink = tk.Button(gestureDisplay, text="No profiles known", state="disabled", bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                gameMap = tk.Label(gesture_InfoFrame, text="No game", bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            else:
+                profileLink = tk.Button(gestureDisplay, text="Configure Profile", command=lambda: goToProfile(gestureDetails[3]), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                gameMap = tk.Label(gesture_InfoFrame, text=gestureDetails[3], bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+                generalUI.button_hover(profileLink, ui_AH1, ui_AC1)
+            #gameMap = tk.Label(gesture_InfoFrame, text=gestureDetails[3], bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             
             gesture_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             gesture_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -866,7 +968,6 @@ class gestureTabFunc:
             generalUI.button_hover(backButton, ui_AH1, ui_AC1)
 
             profileLink.pack(padx=4, pady=4, side="left", anchor="nw")
-            generalUI.button_hover(profileLink, ui_AH1, ui_AC1)
 
             gestureImg.pack(padx=4, pady=4, side="left", anchor="nw")
             
@@ -956,7 +1057,7 @@ class run:
                 return
             # Start MouseControl program
             process = subprocess.Popen(
-                ["python", os.path.join(base_path, "MouseControl.py")],
+                ["py", os.path.join(base_path, "MouseControl.py")],
                 shell=True
             )
 
@@ -976,7 +1077,7 @@ class run:
                 return
             # Placeholder for Two Hands Gesture Control program
             process = subprocess.Popen(
-                ["python", os.path.join(base_path, "control_2hands.py")],
+                ["py", os.path.join(base_path, "control_2hands.py")],
                 shell=True
             )
             # Debugging info
@@ -995,7 +1096,7 @@ class run:
                 return
             # Placeholder for Two Hands Gesture Control program
             process = subprocess.Popen(
-                ["python", os.path.join(base_path, "swipeControl.py")],
+                ["py", os.path.join(base_path, "swipeControl.py")],
                 shell=True
             )
             # Debugging info
@@ -1015,7 +1116,7 @@ class run:
                 return
             # Placeholder for Hybrid Gesture Control Program
             process = subprocess.Popen(
-                ["python", os.path.join(base_path, "hybrid.py")],
+                ["py", os.path.join(base_path, "hybrid.py")],
                 shell=True
             )
             # Debugging info
@@ -1034,7 +1135,7 @@ class run:
                 return
             # Placeholder for HB2 Gesture Control Program
             process = subprocess.Popen(
-                ["python", os.path.join(base_path, "hb2.py")],
+                ["py", os.path.join(base_path, "hb2.py")],
                 shell=True
             )
             # Debugging info
@@ -1044,6 +1145,44 @@ class run:
             return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run HB2 Gesture Control: {e}")
+    
+    def program6():
+        global process
+        try:
+            if process is not None:
+                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+                return
+            # Placeholder for HB2 Gesture Control Program
+            process = subprocess.Popen(
+                ["py", os.path.join(base_path, "steering.py")],
+                shell=True
+            )
+            # Debugging info
+            print(f"Started Steering 1 Gesture Control with PID: {process.pid}")
+
+            # For runGame to process
+            return process
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run Steering 1 Gesture Control: {e}")
+
+    def program7():
+        global process
+        try:
+            if process is not None:
+                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+                return
+            # Placeholder for HB2 Gesture Control Program
+            process = subprocess.Popen(
+                ["py", os.path.join(base_path, "steering2.py")],
+                shell=True
+            )
+            # Debugging info
+            print(f"Started Steering 2 Gesture Control with PID: {process.pid}")
+
+            # For runGame to process
+            return process
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run Steering 2 Gesture Control: {e}")
 
     def tutorial():
         global tutAct, MaxRes, tut_count, tutCanvas, onceMade_Tut
@@ -1154,15 +1293,15 @@ class run:
             
             def canvasConfig(e):
                 gearCanvas.configure(scrollregion=gearCanvas.bbox("all"))
+
+            def mouseScroll(e):
+                gearCanvas.yview_scroll(-1 * (e.delta // 120), "units")
             
             def canvasResize(e):
                 if not isinstance(e, int):
                     gearCanvas.itemconfig(gearSettings, width=e.width)        
                 else:
                     gearCanvas.itemconfig(gearSettings, width=e)
-            
-            def mouseScroll(e):
-                gearCanvas.yview_scroll(-1 * (e.delta // 120), "units")
 
             # Closes the settings
             def setClose():
@@ -1219,11 +1358,12 @@ class run:
                     debugLabel = tk.Label(debugFrame, text="DEBUG", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     debugDescLabel = tk.Label(debugFrame, text="For devs to configure the controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
 
-                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button5 = tk.Button(debugFrame, text="HB2", command=run.program5, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=8, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=17, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=18, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=14, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button5 = tk.Button(debugFrame, text="HB2", command=run.program5, width=8, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    button7 = tk.Button(debugFrame, text="Steering 2", command=run.program7, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
                     release_button = tk.Button(debugFrame, text="Reset Controls", command=quit.release_control, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
 
                     winStateTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
@@ -1269,6 +1409,9 @@ class run:
                     button5.pack(padx=5, pady=5, side="left", anchor="w")
                     generalUI.button_hover(button5,ui_AH1, ui_AC1)
 
+                    button7.pack(padx=5, pady=5, side="left", anchor="w")
+                    generalUI.button_hover(button7,ui_AH1, ui_AC1)
+
                     release_button.pack(padx=5, pady=5, side="left", anchor="w")
                     generalUI.button_hover(release_button, ui_AH1, ui_AC1)
 
@@ -1296,7 +1439,7 @@ class run:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.47"
+versionNum = "1.48"
 
 # For tracking UI activity and subprocesses
 tut_count = 0
@@ -1308,6 +1451,7 @@ onceMade_Quit = False
 onceMade_Settings = False
 onceMade_Tut = False
 filter = ""
+kbd = Controller()
 
 process = None
 gameProcess = None
@@ -1320,6 +1464,8 @@ profileDisplayArray = []
 gameDetails = []
 profileDetails = []
 gestureDetails = []
+unMapped = []
+unMappedDesc = []
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gesturesList = open(f"{base_path}\\resources\\gesturesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
@@ -1378,8 +1524,8 @@ gameTabFunc.run_gameMenu()
 menuGameTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
 menuGameTab = tk.Button(menuGameTabBorder, text="GAMES", command=gameTabFunc.run_gameMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 gameMasterFrame = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
-gamesDisplay = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
-gameDisplay = tk.Frame(uiDynamTabs["Game"], background=ui_AC1)
+gamesDisplay = tk.Canvas(uiDynamTabs["Game"], background=ui_AC1, highlightthickness=0)
+gameDisplay = tk.Canvas(uiDynamTabs["Game"], background=ui_AC1, highlightthickness=0)
 
 # Initialises the game tab
 gameTabFunc(gamesDisplay)
@@ -1409,8 +1555,8 @@ menuProfileTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
 menuProfileTab = tk.Button(menuProfileTabBorder, text="PROFILES", command=profileTabFunc.run_profileMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
 profileMasterFrame = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
-profilesDisplay = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
-profileDisplay = tk.Frame(uiDynamTabs["Profiles"], background=ui_AC1)
+profilesDisplay = tk.Canvas(uiDynamTabs["Profiles"], background=ui_AC1, highlightthickness=0)
+profileDisplay = tk.Canvas(uiDynamTabs["Profiles"], background=ui_AC1, highlightthickness=0)
 
 profile_SearchBorder = tk.Frame(profileMasterFrame, background=ui_AH1)
 profile_ResetBorder = tk.Frame(profileMasterFrame, background=ui_AH1)
@@ -1427,7 +1573,7 @@ menuGestureTabBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC2)
 menuGestureTab = tk.Button(menuGestureTabBorder, text="GESTURES", command=gestureTabFunc.run_gestureMenu, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
 gestureMasterFrame = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
-gesturesDisplay = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
+gesturesDisplay = tk.Canvas(uiDynamTabs["Gestures"], background=ui_AC1, highlightthickness=0)
 gestureDisplay = tk.Frame(uiDynamTabs["Gestures"], background=ui_AC1)
 
 gesture_SearchBorder = tk.Frame(gestureMasterFrame, background=ui_AH1)
