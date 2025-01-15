@@ -5,6 +5,11 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import pyautogui
 
+# this 2 libraries for the on screen keyboard and more encoding support accross various devices
+import os
+import sys
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+
 # Load the trained model
 model = load_model('mgm_v2.h5')
 
@@ -31,7 +36,7 @@ gesture_names = {
 
 # Gesture-to-key mapping
 gesture_to_key = {
-    'call': 'c',            # Clutch
+    'call': 'open_keyboard',    # To open the on-screen keyboard
     'dislike': 'q',             # Shift down
     'fist': 'space',            # E-brake
     'like': 'e',                # Shift up
@@ -44,6 +49,14 @@ gesture_to_key = {
     'stop_inverted': 'g',       # Custom key
     'three': '3'                # Custom key
 }
+
+# Function to bring up the on-screen keyboard
+def open_onscreen_keyboard():
+    try:
+        os.startfile('osk.exe')  # Launch on-screen keyboard without elevation
+    except Exception as e:
+        print(f"Failed to open on-screen keyboard: {e}")
+
 
 # Open webcam
 cap = cv2.VideoCapture(0)
@@ -75,8 +88,11 @@ while cap.isOpened():
 
             # Perform key action if gesture is mapped to a key
             if gesture_name in gesture_to_key:
-                key = gesture_to_key[gesture_name]
-                pyautogui.press(key)  # Simulate key press
+                action = gesture_to_key[gesture_name]
+                if action == 'open_keyboard':
+                    open_onscreen_keyboard()  # Call the function to open the on-screen keyboard
+                else:
+                    pyautogui.press(action)  # Simulate key press
 
             # Display the gesture name on the frame
             cv2.putText(frame, f'Gesture: {gesture_name}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
