@@ -1,0 +1,12 @@
+call=open_keyboard
+dislike=q
+fist=space
+like=e
+ok=k
+one=w
+peace=a
+peace_inverted=d
+rock=r
+stop=s
+stop_inverted=g
+three=3

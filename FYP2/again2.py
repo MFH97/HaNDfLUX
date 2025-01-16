@@ -34,21 +34,26 @@ gesture_names = {
     11: 'three'
 }
 
-# Gesture-to-key mapping
-gesture_to_key = {
-    'call': 'open_keyboard',    # To open the on-screen keyboard
-    'dislike': 'q',             # Shift down
-    'fist': 'space',            # E-brake
-    'like': 'e',                # Shift up
-    'ok': 'k',                  # Custom key
-    'one': 'w',                 # Accelerate
-    'peace': 'a',               # Steer left
-    'peace_inverted': 'd',      # Steer right
-    'rock': 'r',                # ANNA Activation
-    'stop': 's',                # Decelerate/reverse
-    'stop_inverted': 'g',       # Custom key
-    'three': '3'                # Custom key
-}
+# Function to load gesture-to-key mapping from a .txt file
+def load_gesture_to_key_mapping(file_path):
+    mapping = {}
+    try:
+        with open(file_path, 'r') as file:
+            for line in file:
+                if '=' in line:  # Ensure the line contains a valid mapping
+                    gesture, key = line.strip().split('=', 1)
+                    mapping[gesture] = key
+    except FileNotFoundError:
+        print(f"Mapping file {file_path} not found. Using default mappings.")
+    except Exception as e:
+        print(f"Error reading mapping file: {e}")
+    return mapping
+
+# Path to the mapping file
+mapping_file_path = 'gesture_key_mapping.txt'
+
+# Load gesture-to-key mapping
+gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
 
 # Function to bring up the on-screen keyboard
 def open_onscreen_keyboard():
