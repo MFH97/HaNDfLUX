@@ -5,6 +5,11 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import pyautogui
 
+# this 2 libraries for the on screen keyboard and more encoding support accross various devices
+import os
+import sys
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+
 # Load the trained model
 model = load_model('mgm_v2.h5')
 
@@ -29,21 +34,34 @@ gesture_names = {
     11: 'three'
 }
 
-# Gesture-to-key mapping
-gesture_to_key = {
-    'call': 'c',            # Clutch
-    'dislike': 'q',             # Shift down
-    'fist': 'space',            # E-brake
-    'like': 'e',                # Shift up
-    'ok': 'k',                  # Custom key
-    'one': 'w',                 # Accelerate
-    'peace': 'a',               # Steer left
-    'peace_inverted': 'd',      # Steer right
-    'rock': 'r',                # ANNA Activation
-    'stop': 's',                # Decelerate/reverse
-    'stop_inverted': 'g',       # Custom key
-    'three': '3'                # Custom key
-}
+# Function to load gesture-to-key mapping from a .txt file
+def load_gesture_to_key_mapping(file_path):
+    mapping = {}
+    try:
+        with open(file_path, 'r') as file:
+            for line in file:
+                if '=' in line:  # Ensure the line contains a valid mapping
+                    gesture, key = line.strip().split('=', 1)
+                    mapping[gesture] = key
+    except FileNotFoundError:
+        print(f"Mapping file {file_path} not found. Using default mappings.")
+    except Exception as e:
+        print(f"Error reading mapping file: {e}")
+    return mapping
+
+# Path to the mapping file
+mapping_file_path = 'gesture_key_mapping.txt'
+
+# Load gesture-to-key mapping
+gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
+
+# Function to bring up the on-screen keyboard
+def open_onscreen_keyboard():
+    try:
+        os.startfile('osk.exe')  # Launch on-screen keyboard without elevation
+    except Exception as e:
+        print(f"Failed to open on-screen keyboard: {e}")
+
 
 # Open webcam
 cap = cv2.VideoCapture(0)
@@ -75,8 +93,11 @@ while cap.isOpened():
 
             # Perform key action if gesture is mapped to a key
             if gesture_name in gesture_to_key:
-                key = gesture_to_key[gesture_name]
-                pyautogui.press(key)  # Simulate key press
+                action = gesture_to_key[gesture_name]
+                if action == 'open_keyboard':
+                    open_onscreen_keyboard()  # Call the function to open the on-screen keyboard
+                else:
+                    pyautogui.press(action)  # Simulate key press
 
             # Display the gesture name on the frame
             cv2.putText(frame, f'Gesture: {gesture_name}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
