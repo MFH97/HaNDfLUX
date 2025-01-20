@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from tensorflow.keras.models import load_model
-import pyautogui
+import pydirectinput
 import time
 
 # Load the trained model
@@ -107,11 +107,11 @@ while cap.isOpened():
                     # Trigger key press based on handedness
                     if handedness == 'Left' and gesture_name in gesture_to_key_left:
                         key = gesture_to_key_left[gesture_name]
-                        pyautogui.press(key)  # Simulate key press for left hand
+                        pydirectinput.press(key)  # Simulate key press for left hand
                         print(f"Left Hand - Pressed key: {key}")
                     elif handedness == 'Right' and gesture_name in gesture_to_key_right:
                         key = gesture_to_key_right[gesture_name]
-                        pyautogui.press(key)  # Simulate key press for right hand
+                        pydirectinput.press(key)  # Simulate key press for right hand
                         print(f"Right Hand - Pressed key: {key}")
                     last_gesture_time[handedness] = current_time  # Reset the timer
             else:
