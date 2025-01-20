@@ -5,7 +5,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 import win32api
 import win32con
-import pyautogui
+import pydirectinput
 import math
 import time
 
@@ -88,7 +88,7 @@ def open_onscreen_keyboard():
     except Exception as e:
         print(f"Failed to open on-screen keyboard: {e}")
 
-screen_width, screen_height = pyautogui.size()
+screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
 position_displacement = 1.5
 previous_base_coord = [0, 0]
@@ -107,7 +107,7 @@ def dpadCursor(index_x, index_y):
     dist_from_center = calculate_distance(screen_center_vector[0], screen_center_vector[1], index_x, index_y)
     current_speed = int(cursor_speed * (dist_from_center/100))
     #print(str(dist_from_center))
-    current_cursor_x, current_cursor_y = pyautogui.position()
+    current_cursor_x, current_cursor_y = pydirectinput.position()
     
     if not (deadzone_min_vector[0] < index_x < deadzone_max_vector[0] and deadzone_min_vector[1] < index_y < deadzone_max_vector[1]):
         #control the movement of the cursor, similar to a d-pad
@@ -211,12 +211,12 @@ while cap.isOpened():
                         key = gesture_to_key_left[gesture_name]
                         if key == 'open_keyboard':
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
                             open_onscreen_keyboard()  # Open the on-screen keyboard
                         elif key == 'mouse_movement':
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
                             # Get fingertip coordinates and move the mouse
                             index_base = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP]
@@ -226,25 +226,25 @@ while cap.isOpened():
                             previous_base_coord = [index_base.x, index_base.y]
                         elif key == 'left_click':
                             if not is_left_click_held:
-                                pyautogui.mouseDown()
+                                pydirectinput.mouseDown()
                                 is_left_click_held = True
                         else:
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pyautogui.press(key)  # Simulate key press
+                            pydirectinput.press(key)  # Simulate key press
                         
                         print(f"Left Hand - Pressed key: {key}")
                     elif handedness == 'Right' and gesture_name in gesture_to_key_right:
                         key = gesture_to_key_right[gesture_name]
                         if key == 'open_keyboard':
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
                             open_onscreen_keyboard()  # Open the on-screen keyboard
                         elif key == 'mouse_movement':
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
                             # Get fingertip coordinates and move the mouse
                             index_base = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP]
@@ -254,13 +254,13 @@ while cap.isOpened():
                             previous_base_coord = [index_base.x, index_base.y]
                         elif key == 'left_click':
                             if not is_left_click_held:
-                                pyautogui.mouseDown()
+                                pydirectinput.mouseDown()
                                 is_left_click_held = True
                         else:
                             if is_left_click_held:
-                                pyautogui.mouseUp()
+                                pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pyautogui.press(key)  # Simulate key press
+                            pydirectinput.press(key)  # Simulate key press
 
                         print(f"Right Hand - Pressed key: {key}")
                     last_gesture_time[handedness] = current_time  # Reset the timer
