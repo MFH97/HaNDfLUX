@@ -94,9 +94,10 @@ class gameTabFunc:
             # Clears the old list
             for gItem in self.winfo_children():
                 gItem.destroy()
-            
-            # Placeholder filepath for games without a proper thumbnail
-            placeThumb = base_path + f"\\img\\gameimg\\placeholder.png"
+
+            # Filepath definitions - Placeholder for Improper filepaths, and Add Game for addGameButton
+            placeThumb = base_path + "\\img\\gameimg\\placeholder.png"
+            addThumb = base_path + "\\img\\plus.png"
 
             # Fills the new list
             for gItem in range(game_Count):
@@ -118,23 +119,22 @@ class gameTabFunc:
                     thumbDisplayArray[gItem] = gameImg
                     gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
 
-                gameFrame.pack(padx=25, pady=25,side="left", anchor="w")
-                gameButton.pack()
+                gameFrame.pack(padx=25, pady=25, side="left", anchor="w")
+                gameButton.pack(padx=2, pady=2)
+                generalUI.button_hover(gameButton, ui_AH1, ui_AC1)
                 gameItem.pack()
             
             addGameF = tk.Frame(self, bg=ui_AC4)
-            addGameTxt = tk.Text(addGameF, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
-            addGameTxt.insert(tk.END, "ADD A GAME")
-            addGameTxt.configure(exportselection=0, state="disabled")
-            
-            addGameIMG = PhotoImage(file = placeThumb).subsample(1,1)
+
+            agiIMG = Image.open(addThumb)  
+            agiForm = agiIMG.resize((220, 300))
+            addGameIMG = ImageTk.PhotoImage(agiForm)
             addGameButton = tk.Button(addGameF, image=addGameIMG, command= gameTabFunc.addGame, bg=ui_AC1, fg=ui_Txt, border=0)
             addGameButton.image = addGameIMG
-            
+            generalUI.button_hover(addGameButton, ui_AH1, ui_AC1)
+
             addGameF.pack(padx=25, pady=25,side="left", anchor="w")
             addGameButton.pack()
-            addGameTxt.pack()
-
         except Exception as e:
             messagebox.showerror("Error", f"Failed to fill the game tab: {e}")
         
@@ -232,18 +232,19 @@ class gameTabFunc:
     def addGame():
         global gamesDisplay, gameMasterFrame, gameDisplay, gamesDFrame
 
-        # Goes back to the Games Tab
+        # Goes back to the Games Tab and clears the data in add game tab
         def goBack():
             global imgPath, exePath
-
-            imgPath = ""
-            exePath = ""
-
-            gameDisplay.pack_forget()
-            gameTabFunc(gamesDFrame)
-            gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
-            gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
-            gamesDisplay.create_window((0, 0), window=gamesDFrame)
+            try:
+                imgPath = ""
+                exePath = ""
+                gameDisplay.pack_forget()
+                gameTabFunc(gamesDFrame)
+                gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+                gamesDisplay.create_window((0, 0), window=gamesDFrame)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to go back to the Games Tab: {e}")
         
         # Writes the EXE filepath to gameItemFile
         def writeEXE():
@@ -289,16 +290,13 @@ class gameTabFunc:
                     imgPath = base_path + f"\\img\\gameimg\\Placeholder.png"
                 else:
                     pass
-
                 if exePath == "":
                     messagebox.showinfo("Warning","One or more fields are not filled")
                     return
-
                 if gameN == "Add game name here":
                     gameName = "SAMPLE GAME"
                 else:
                     gameName = gameN.upper()
-                
                 if gameD == "Add game description here":
                     gameDesc = "Sample Desc"
                 else:
@@ -313,8 +311,6 @@ class gameTabFunc:
                 messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
                 goBack()
                 gameTabFunc(gamesDFrame)
-                
-                pass
             except NameError:
                 messagebox.showinfo("Warning","One or more fields are not filled")
             except Exception as e:
@@ -391,12 +387,15 @@ class gameTabFunc:
 
         # Goes back to the Games Tab
         def goBack():
-            gameDisplay.pack_forget()
-            gameTabFunc(gamesDFrame)
-            gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
-            gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
-            gamesDisplay.create_window((0, 0), window=gamesDFrame)
-            gItemExt.clear()
+            try:
+                gameDisplay.pack_forget()
+                gameTabFunc(gamesDFrame)
+                gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
+                gamesDisplay.create_window((0, 0), window=gamesDFrame)
+                gItemExt.clear()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to go back to the Games Tab: {e}")
 
         # Runs the exe described in the filepath
         def runGame():
@@ -404,7 +403,7 @@ class gameTabFunc:
                 while True:
                     procs = [proc.name() for proc in psutil.process_iter()]
                     if proc not in procs:
-                        quit.release_control()
+                        #quit.release_control()
                         break
                     time.sleep(1)
 
@@ -518,10 +517,6 @@ class gameTabFunc:
                 gameItemImg = ImageTk.PhotoImage(giFormat)
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
                 gameImg.image = gameItemImg
-
-            #gameItemImg = PhotoImage(file = gameDetails[2]).subsample(1,1)
-            #gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
-            #gameImg.image = gameItemImg
 
             gameItemTxt = tk.Text(game_DisplayFrame, width=65, height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             gameItemTxt.insert(tk.END, gameDetails[1])
@@ -693,13 +688,13 @@ class bindsTabFunc:
                                     gtIMG = Image.open(imgS)  
                                     gtForm = gtIMG.resize((150, 150))
                                     gestThumb = ImageTk.PhotoImage(gtForm)
-                                    gestImg = tk.Label(imgFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
+                                    gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
                                     gestImg.image = gestThumb
                                 else:
                                     gtIMG = Image.open(base_path + f"\\img\\gestureimg\\placeholder.png")  
                                     gtForm = gtIMG.resize((150, 150))
                                     gestThumb = ImageTk.PhotoImage(gtForm)
-                                    gestImg = tk.Label(imgFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
+                                    gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
                                     gestImg.image = gestThumb
 
                                 bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
