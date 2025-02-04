@@ -334,7 +334,7 @@ class gameTabFunc:
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_AddFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
 
-            addGameLabel = tk.Text(gameDisplay, width=75, height=2, wrap="word", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            addGameLabel = tk.Text(gameDisplay, width=75, height=2, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
             addGameLabel.insert(tk.END, "Add game name here")
 
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
@@ -415,7 +415,7 @@ class gameTabFunc:
             def runControl():
                 controlIndex = controlsList.get()
                 controllerProgram = gControls[controlIndex]
-                controllerProgram()   
+                controllerProgram()
 
             try:
                 gameEXE = gameDetails[3]
@@ -456,6 +456,58 @@ class gameTabFunc:
                     messagebox.showinfo("Warning: ", "Select an executable application to change the filepath")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to modify Exe's Filepath: {e}")
+        
+        # Confirmation dialog to check if the user REALLY wants to delete the game
+        def confirmDelete():
+            try:
+                def undoDelete():
+                    dialogFrame.place_forget()
+
+                dialogFrame = tk.Canvas(gameDisplay, background=ui_AC2, highlightthickness=0)
+                
+                confirmDialog = tk.Label(dialogFrame, text="Do you want to delete this game? This is irreversible!", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                yesButton = tk.Button(dialogFrame, text="Yes", command=deleteGame, bg=ui_AH1, fg=ui_Txt, border=0, width=15, height=3, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                noButton = tk.Button(dialogFrame, text="No", command=undoDelete, bg=ui_AC1, fg=ui_Txt, border=0, width=15, height=3, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                dialogFrame.place(relx=0, rely=0, relheight=1, relwidth=1)
+                confirmDialog.pack(padx=25, pady=25, side="top", fill="x")
+
+                yesButton.pack(padx=10, pady=10)
+                generalUI.button_hover(yesButton, ui_AH2, ui_AH1)
+
+                noButton.pack(padx=10, pady=10)
+                generalUI.button_hover(noButton, ui_AH1, ui_AC1)
+
+            except Exception as e:
+                 messagebox.showerror("Error", f"Failed to load the confirmation dialog {e}")
+        
+        # Deletes the game from gameslist after confirmation
+        def deleteGame():
+            try:
+                # Gets the reference for game deletion
+                with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
+                    gameWrite = txt.readlines()
+
+                # Finds the game details and deletes it
+                with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
+                    for line in gameWrite:
+                        if f"GameÃ· {gameItem}Ã· " in line:
+                            txt.write("")
+                        elif f"DescÃ· {gameItem}Ã· " in line:
+                            txt.write("")
+                        elif f"ThumbImgÃ· {gameItem}Ã· " in line:
+                            txt.write("")
+                        elif f"ExeÃ· {gameItem}Ã· " in line:
+                            txt.write("")
+                        else:
+                            txt.write(line)
+
+                # Removes the thumbnail image and goes back to the main menu
+                os.remove(gameDetails[2])
+                goBack()
+                
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete the game in gameslist: {e}")
+
         try:
             # Hides the game selection tab
             gameMasterFrame.pack_forget()
@@ -527,6 +579,7 @@ class gameTabFunc:
             
             gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with selected controller", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameDelete = tk.Button(game_InfoFrame, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -551,12 +604,15 @@ class gameTabFunc:
             generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
             gameItemFile.pack(padx=4, pady=4, side="left", anchor="nw")
             
+            gameDelete.pack(padx=150, pady=8, side="left", anchor="nw")
+            generalUI.button_hover(gameDelete, ui_AH2, ui_AH1)
+
             gameRelease.pack(padx=8, pady=8, side="bottom", anchor="nw")
             generalUI.button_hover(gameRelease, ui_AH1, ui_AC1)
             
             gameItemExe.pack(padx=8, pady=8, side="bottom", anchor="nw")
             generalUI.button_hover(gameItemExe, ui_AH1, ui_AC1)
-
+            
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display the individual game: {e}")
       
@@ -570,7 +626,7 @@ class bindsTabFunc:
             for uiBorder in uiMasterFrame.winfo_children():
                 uiBorder.config(bg=ui_AC1)
                 menuBindsTabBorder.config(bg=ui_AH1)
-                bindsTabFunc.loadKeys()
+            bindsTabFunc.loadKeys()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display keybinds: {e}")
 
@@ -600,24 +656,71 @@ class bindsTabFunc:
             messagebox.showerror("Error", f"Failed to change active tab to Keybinds Tab: {e}")
         
     # Updates the assigned key to the pressed key
-    def updateKeys(gesture):
-        #global bindChange
+    def updateKeys(gRef, gesture):
         try:
-
+            # Checks what input has been pressed and maps it
             def keyPress(newKeybind):
-                
-                newKey = newKeybind.keysym
-                initBinds[gesture] = newKey
-                bindLabel[gesture].config(text=f"Key*: {newKey}")
-                root.unbind("<KeyPress>")
-                messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newKey}")
+                try:
+                    # If a mouse click is the new bind
+                    if newKeybind.num != "??":
+                        newKey = newKeybind.num
+                        if newKey == 1:
+                            newClick = "left_click"
+                        elif newKey == 2:
+                            newClick = "middle_click"
+                        elif newKey == 3:
+                            newClick = "right_click"
+                        else:
+                            messagebox.showerror("Error","Unknown input!")
+                        
+                        initBinds[gesture] = newClick
+                        bindLabel[gesture].config(text=f"Key*: {newClick}")
+                        messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newClick}")
+                    # Or if a keypress is the new bind
+                    elif newKeybind.keysym:
+                        newKey = newKeybind.keysym
+                        initBinds[gesture] = newKey
+                        bindLabel[gesture].config(text=f"Key*: {newKey}")
+                        messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newKey}")               
+                    else:
+                        messagebox.showerror("Error", "Unknown input!")
+                    root.unbind("<KeyPress>")
+                    root.unbind("<Button>")
+                    dialogFrame.place_forget()
+
+                except Exception as e:
+                     messagebox.showerror("Error", f"Failed to detect the input: {e}")
+
+            gMapper = controlType[gRef].get()
+            # If option is Mouse Movement
+            if gMapper == controlsList[0]:
+                initBinds[gesture] = "mouse_movement"
+                bindLabel[gesture].config(text="Key*: mouse_movement")
+                messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to Mouse Movement")
             
-            root.bind("<KeyPress>", keyPress)
-            #bindChange[gNumber].config(text="Listening...")
+            # If option is On-screen Keyboard
+            elif gMapper == controlsList[1]:
+                initBinds[gesture] = "open_keyboard"
+                bindLabel[gesture].config(text="Key*: open_keyboard")
+                messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to the On-screen Keyboard")
             
+            # If option is Detect Input
+            elif gMapper == controlsList[2]:
+                dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
+                bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+
+                dialogFrame.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                bindDialog.pack(padx=25, pady=25, fill="x")
+
+                root.bind("<KeyPress>", keyPress)
+                root.bind("<Button>", keyPress)
+            else:
+                messagebox.showerror("Error", f"Somehow this error was triggered")
+ 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update the keybind: {e}")
 
+    # Saves the keybinds to gesture_key_mapping.txt
     def saveKeys():
         global handOption
         try:
@@ -646,6 +749,7 @@ class bindsTabFunc:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save keybinds: {e}")
 
+    # Loads the keybinds from gesture_key_mapping.txt
     def loadKeys():
         global bindChange, handOption
         try:
@@ -655,18 +759,27 @@ class bindsTabFunc:
             def mouseScroll(e):
                 bindsCanvas.yview_scroll(-1 * (e.delta // 120), "units")
 
+            # Switches the hands
             def switchHands(*args):
                 activeHand = handOption.get()
                 activeHV = hControls[activeHand]
                 generateKey(activeHV)
             
+            # Main function for generating the keybinds
             def generateKey(e):
                 try:
                     # Clears the old selections
                     gNumber = 0
                     for bindings in bindFrame.values():
                         bindings.pack_forget()
+                    
+                    for keys in keyFrame.values():
+                        keys.pack_forget()
+                    
+                    for img in imgFrame.values():
+                        img.pack_forget()
 
+                    # Add a dropdown list displaying 3 options - mouse_movement, open_keyboard and detect input
                     with open(f"{base_path}\\resources\\gesture_key_mapping.txt", "r") as line:
                         for binds in line:
                             # Splits gestures and keybinds
@@ -698,7 +811,13 @@ class bindsTabFunc:
                                     gestImg.image = gestThumb
 
                                 bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                                bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda a=gesture: bindsTabFunc.updateKeys(a), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
+
+                                controlType[gNumber] = tk.StringVar(root)
+                                controlType[gNumber].set(controlsList[2])
+                                bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
+                                bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
+                                bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber, gNum= gesture: bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
+
                                 bindFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
                                 keyFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
                                 imgFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
@@ -709,7 +828,10 @@ class bindsTabFunc:
 
                                 bindChange[gNumber].pack(padx=5, side="right", anchor="e")
                                 generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
+
+                                bindCType[gNumber].pack(padx=5, side="right", anchor="e")
                                 gNumber += 1
+                    line.close()
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to generate the keybinds: {e}")
 
@@ -717,26 +839,49 @@ class bindsTabFunc:
             bindMaster = tk.Frame(bindsCanvas, padx=5, pady=5, bg=ui_AC2)
             bindsCanvas.create_window((0, 0), window=bindMaster)
 
-            handOption = tk.StringVar(root)
-            handOption.set(next(iter(hControls)))
             handOption.trace_add("write", switchHands)
-            
-            dropFrame = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
-            drop = tk.OptionMenu(dropFrame, handOption, *hControls)
-            drop.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
-
             bindMaster.bind("<Configure>", canvasConfig)
             bindsCanvas.bind_all("<MouseWheel>", mouseScroll)
-
-            dropFrame.pack(padx=20, pady=5, anchor="nw")
-            drop.pack(side="left")
+            
             generateKey(hControls["Left"])
                     
         except FileNotFoundError:
             print("No keybinds found")
-
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load the keybind menu: {e}")
+
+    # Resets the keybinds to the default mappings for gesture_key_mapping.txt
+    def resetKeys():
+        try:
+            reset = open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w')
+            reset.write('''left:call=open_keyboard
+left:dislike=q
+left:fist=space
+left:like=e
+left:ok=k
+left:one=w
+left:peace=a
+left:peace_inverted=d
+left:rock=c
+left:stop=s
+left:stop_inverted=g
+left:three=3
+right:call=r
+right:dislike=x
+right:fist=n
+right:like=v
+right:ok=m
+right:one=u
+right:peace=o
+right:peace_inverted=p
+right:rock=left_click
+right:stop=mouse_movement
+right:stop_inverted=l
+right:three=;''')
+            bindsTabFunc(bindsCanvas)
+            reset.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to reset the keys: {e}")
 
 class settingsFunc:
     # For Settings tab functions
@@ -1244,11 +1389,11 @@ class quit:
             print("No process to terminate.")  # Debugging info
             #messagebox.showinfo("Info", "No program is currently running.") - Commented to streamline UI modifiactions -Jun Hong
 
-# Sets the base path to the scripts. Currently os.getcwd() since it returns the current directory the code is in without the hardcoding issue
+# Sets the base path to the scripts.
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.5"
+versionNum = "1.51"
 
 # For tracking UI activity and subprocesses
 #gNumber = 0
@@ -1326,6 +1471,13 @@ hControls = {
     "Right": "right:"
 }
 
+# Control Type definitions for Keybinds - mouse_movement, open_keyboard and detect input
+controlsList = [
+    "Mouse Movement",
+    "On-screen Keyboard",
+    "Detect Input",
+]
+
 # Initial list for listing keybinds, will be filled with loadKeys
 initBinds = {}
 
@@ -1394,12 +1546,23 @@ keyFrame = {}
 imgFrame = {}
 bindLabel = {}
 bindAction = {}
+bindCType = {}
 bindChange = {}
+controlType = {}
 
 bindsMasterFrame = tk.Frame(uiDynamTabs["Binds"], background=ui_AC1)
 bindsLabel = tk.Label(bindsMasterFrame, text="KEYBINDS", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 saveBinds = tk.Button(bindsMasterFrame, text="Save Keybinds", command=bindsTabFunc.saveKeys, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-resetBinds = tk.Button(bindsMasterFrame, text="Reset Previous", command=bindsTabFunc.loadKeys, width=15, height=2, bg=ui_AH1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+resetBinds = tk.Button(bindsMasterFrame, text="Reset Keybinds", command=bindsTabFunc.resetKeys, width=15, height=2, bg=ui_AH1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+dropFrame = tk.Frame(bindsMasterFrame, padx=5, pady=5, bg=ui_AC2)
+
+handOption = tk.StringVar(root)
+handOption.set(next(iter(hControls)))
+drop = tk.OptionMenu(dropFrame, handOption, *hControls)
+drop.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
+
+dropFrame.pack(padx=20, pady=5, anchor="nw")
+drop.pack(side="left")
 
 generalUI.button_hover(saveBinds,ui_AH1, ui_AC2)   
 generalUI.button_hover(resetBinds,ui_AE, ui_AH1)
