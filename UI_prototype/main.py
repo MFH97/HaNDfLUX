@@ -2,7 +2,6 @@
 import subprocess, os, psutil, tkinter as tk
 from tkinter import PhotoImage, messagebox, filedialog
 
-
 # Additonal imports
 import pyautogui, re
 import time, threading
@@ -11,7 +10,7 @@ from PIL import Image, ImageTk
 # from pynput.keyboard import Controller, Key
 
 class generalUI:
-    # Changes the colour of the button whether if it hovers or not
+    # Changes the colour of the mapped button when the mouse hovers over it
     def button_hover(tkb, b_Hover, b_Release ):
         try:
             tkb.bind("<Enter>", func=lambda e: tkb.config(background=b_Hover))
@@ -26,21 +25,18 @@ class generalUI:
 
             winWidth = win.winfo_width()
             winHeight = win.winfo_height()
-
             screenWidth = win.winfo_screenwidth()
             screenHeight = win.winfo_screenheight()
 
             winX = int((screenWidth // 2) - (winWidth // 2))
             winY = int((screenHeight // 2) - (winHeight // 2))
-
             win.geometry(f"{winWidth}x{winHeight}+{winX}+{winY}")
             win.deiconify()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to center the window: {e}")
 
+# Class for Game Tab Functions
 class gameTabFunc:
-    # For Game Tab Functions
-
     # Maps the gamesDisplay frame for usage, and changes the highlighted border to Games
     def __init__(self, gFrame):
         try:  
@@ -54,7 +50,7 @@ class gameTabFunc:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display games: {e}")
     
-    # Scroll Functions for Games Tab
+    # Scroll Functions for the Games Tab
     def gamesDConfig(e):
         gamesDisplay.configure(scrollregion=gamesDisplay.bbox("all"))
 
@@ -64,7 +60,7 @@ class gameTabFunc:
     # Swaps the current Tab to the Games Tab
     def run_gameMenu():
         global menuAct, uiDynamTabs, gameDisplay, gamesDFrame
-        try:  
+        try:
             def showF(uiGame):
                 for uiTabs in uiDynamTabs.values():
                     uiTabs.pack_forget()
@@ -106,6 +102,7 @@ class gameTabFunc:
                 gameItem.insert(tk.END, gameDisplayArray[gItem])
                 gameItem.configure(exportselection=0, state="disabled")
 
+                # Checks if the image file exists
                 if os.path.isfile(thumbDisplayArray[gItem]):
                     giIMG = Image.open(thumbDisplayArray[gItem])  
                     giForm = giIMG.resize((220, 300))
@@ -113,6 +110,7 @@ class gameTabFunc:
                     thumbDisplayArray[gItem] = gameImg
                     gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
                 else:
+                    # Loads the placeholder image instead
                     giIMG = Image.open(placeThumb)  
                     giForm = giIMG.resize((220, 300))
                     gameImg = ImageTk.PhotoImage(giForm)
@@ -121,8 +119,9 @@ class gameTabFunc:
 
                 gameFrame.pack(padx=25, pady=25, side="left", anchor="w")
                 gameButton.pack(padx=2, pady=2)
-                generalUI.button_hover(gameButton, ui_AH1, ui_AC1)
                 gameItem.pack()
+
+                generalUI.button_hover(gameButton, ui_AH1, ui_AC1)
             
             addGameF = tk.Frame(self, bg=ui_AC4)
 
@@ -131,6 +130,7 @@ class gameTabFunc:
             addGameIMG = ImageTk.PhotoImage(agiForm)
             addGameButton = tk.Button(addGameF, image=addGameIMG, command= gameTabFunc.addGame, bg=ui_AC1, fg=ui_Txt, border=0)
             addGameButton.image = addGameIMG
+
             generalUI.button_hover(addGameButton, ui_AH1, ui_AC1)
 
             addGameF.pack(padx=25, pady=25,side="left", anchor="w")
@@ -148,6 +148,7 @@ class gameTabFunc:
             descDisplayArray.clear()
             thumbDisplayArray.clear()
             exeDisplayArray.clear()
+
             # Redundant Filter check
             if filter:
                 filterForm = filter.upper()
@@ -171,6 +172,7 @@ class gameTabFunc:
                         gameExe = line.split("Ã· ")
                         file = gameExe[2].replace("\n","")
                         exeDisplayArray.append(file)
+
             else:
                 # Default list filling
                 for line in txt:
@@ -198,6 +200,7 @@ class gameTabFunc:
                         gameExe = line.split("Ã· ")
                         file = gameExe[2].replace("\n","")
                         exeDisplayArray.append(file)
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display the games: {e}")
 
@@ -251,9 +254,10 @@ class gameTabFunc:
             global exePath
             try:
                 filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = [('Executables', '*.exe')])
+
                 if filepath_New:
-                    exePath = filepath_New
                     # Changes the filepath in the game description
+                    exePath = filepath_New
                     addGameFPDesc.configure(text = filepath_New)
                 else:
                     pass
@@ -334,7 +338,7 @@ class gameTabFunc:
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_AddFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
 
-            addGameLabel = tk.Text(gameDisplay, width=75, height=2, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            addGameLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
             addGameLabel.insert(tk.END, "Add game name here")
 
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
@@ -346,7 +350,7 @@ class gameTabFunc:
             addGameImg.image = addGameItemImg
             agiLabel = tk.Label(game_TutFrame, text="Click on the white area to add your own image", height=1, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
 
-            addGameTXT = tk.Text(game_DisplayFrame, width=65, height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
+            addGameTXT = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             addGameTXT.insert(tk.END, "Add game description here")
 
             addGameFP = tk.Button(game_InfoFrame, text="Configure Filepath (REQUIRED)", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
@@ -399,6 +403,7 @@ class gameTabFunc:
 
         # Runs the exe described in the filepath
         def runGame():
+            # Checks if the game is in the process list
             def gameCheck(proc):
                 while True:
                     procs = [proc.name() for proc in psutil.process_iter()]
@@ -407,11 +412,13 @@ class gameTabFunc:
                         break
                     time.sleep(1)
 
+            # Opens up an asynchronous thread for the game and gesture control to concurrently run
             def gameStart(proc):
                 thread = threading.Thread(target=gameCheck, args=(proc,))
                 thread.daemon = True
                 thread.start()
 
+            # Executes the selected gesture control
             def runControl():
                 controlIndex = controlsList.get()
                 controllerProgram = gControls[controlIndex]
@@ -450,16 +457,20 @@ class gameTabFunc:
                                 filepath_Update = True
                             else:
                                 txt.write(line)
+
                     # Changes the filepath in the game description
                     gameItemFile.configure(text = filepath_New)
+
                 else:
                     messagebox.showinfo("Warning: ", "Select an executable application to change the filepath")
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to modify Exe's Filepath: {e}")
         
-        # Confirmation dialog to check if the user REALLY wants to delete the game
+        # Confirmation dialog to check if the user wants to delete the game
         def confirmDelete():
             try:
+                # Clears the dialog and returns to the game
                 def undoDelete():
                     dialogFrame.place_forget()
 
@@ -507,21 +518,57 @@ class gameTabFunc:
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to delete the game in gameslist: {e}")
+        
+        # Edits the game's name in gameslist after the game's name is changed in gameDisplay
+        def renameGame():
+            try:
+                # Gets the reference for game rename and formats it
+                gui = gameItemLabel.get("1.0","end-1c")
+                gui = re.sub('\Ã·+','',gui.upper())
+                
+                with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
+                    gameWrite = txt.readlines()
 
+                # Finds the game details and changes them to the new name
+                with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
+                    for line in gameWrite:
+                        if f"GameÃ· {gameDetails[0]}Ã· " in line:
+                            txt.write(f"GameÃ· {gui}Ã· {gui}\n")
+
+                        elif f"DescÃ· {gameDetails[0]}Ã· " in line:
+                            txt.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
+
+                        elif f"ThumbImgÃ· {gameDetails[0]}Ã· " in line:
+                            txt.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
+
+                        elif f"ExeÃ· {gameDetails[0]}Ã· " in line:
+                            txt.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
+
+                        else:
+                            txt.write(line)
+                
+                gameItemLabel.delete('1.0', tk.END) 
+                gameItemLabel.insert(tk.END, gui)
+                messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
+                gameDetails[0] = gui
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
+
+        # Main game display
         try:
             # Hides the game selection tab
             gameMasterFrame.pack_forget()
             gamesDisplay.pack_forget()
             gameDisplay.pack(padx=10, pady=1, side="top", fill="x")
 
-            # Clears the old items
+            # Clears the old game details
             for gItem in gameDisplay.winfo_children():
                 gItem.destroy()
                 gameDetails.clear()
             
             gItemExt = gameItem.split()
 
-            # Gets the new items
+            # Gets the new game details
             with open(f"{base_path}\\resources\\gamesList.txt", "r") as gameGet:
                 for line in gameGet:
                     if f"GameÃ· {gItemExt[0]}" in line:
@@ -548,13 +595,17 @@ class gameTabFunc:
                         file = gameExe[2].replace("\n","")
                         gameDetails.append(file)
 
-            # Displays the selected game
+            # Displays the selected game and its details
             game_DisplayFrame = tk.Frame(gameDisplay, bg=ui_AC2)
             game_DisplayPicFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_RunFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
-            gameItemLabel = tk.Label(gameDisplay, text=gameDetails[0], bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
+            gameItemLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC3, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            gameItemLabel.insert(tk.END, gameDetails[0])
+
+            gameRename = tk.Button(gameDisplay, text="Rename Game", command=renameGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameDelete = tk.Button(gameDisplay, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             
             if os.path.isfile(gameDetails[2]):
@@ -570,7 +621,7 @@ class gameTabFunc:
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
                 gameImg.image = gameItemImg
 
-            gameItemTxt = tk.Text(game_DisplayFrame, width=65, height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
+            gameItemTxt = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             gameItemTxt.insert(tk.END, gameDetails[1])
             gameItemTxt.configure(exportselection=0, state="disabled")  
 
@@ -579,7 +630,6 @@ class gameTabFunc:
             
             gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with selected controller", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameDelete = tk.Button(game_InfoFrame, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -593,32 +643,32 @@ class gameTabFunc:
             gameControls.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
 
             gameControls.pack(padx=5, pady=5, side="top", anchor="nw")
-
             backButton.pack(padx=4, pady=4, side="left", anchor="w")
-            generalUI.button_hover(backButton, ui_AH1, ui_AC1)
+            
+            gameDelete.pack(padx=4, pady=4, side="right")
+            gameRename.pack(padx=4, pady=4, side="right")
 
             gameImg.pack(padx=4, pady=4, side="left", anchor="nw")
             gameItemTxt.pack(padx=4, pady=4, side="left", anchor="nw")
 
             gameItemFileP.pack(padx=4, pady=4, side="left", anchor="nw")
-            generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
             gameItemFile.pack(padx=4, pady=4, side="left", anchor="nw")
-            
-            gameDelete.pack(padx=150, pady=8, side="left", anchor="nw")
-            generalUI.button_hover(gameDelete, ui_AH2, ui_AH1)
 
             gameRelease.pack(padx=8, pady=8, side="bottom", anchor="nw")
-            generalUI.button_hover(gameRelease, ui_AH1, ui_AC1)
-            
             gameItemExe.pack(padx=8, pady=8, side="bottom", anchor="nw")
+
+            generalUI.button_hover(backButton, ui_AH1, ui_AC1)
+            generalUI.button_hover(gameDelete, ui_AH2, ui_AH1)
+            generalUI.button_hover(gameRename, ui_AH1, ui_AC1)
+            generalUI.button_hover(gameItemFileP, ui_AH1, ui_AC1)
+            generalUI.button_hover(gameRelease, ui_AH1, ui_AC1)
             generalUI.button_hover(gameItemExe, ui_AH1, ui_AC1)
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display the individual game: {e}")
-      
-class bindsTabFunc:
-    # For Keybinds Tab Functions
 
+# Class for Keybinds Tab Functions 
+class bindsTabFunc:  
     # Changes the highlighted border to Keybinds
     def __init__(self, gFrame):
         try:  
@@ -661,7 +711,7 @@ class bindsTabFunc:
             # Checks what input has been pressed and maps it
             def keyPress(newKeybind):
                 try:
-                    # If a mouse click is the new bind
+                    # If a mouse click is the new bind, sets it as the new keybind
                     if newKeybind.num != "??":
                         newKey = newKeybind.num
                         if newKey == 1:
@@ -676,7 +726,7 @@ class bindsTabFunc:
                         initBinds[gesture] = newClick
                         bindLabel[gesture].config(text=f"Key*: {newClick}")
                         messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newClick}")
-                    # Or if a keypress is the new bind
+                    # Or if a keypress is the new bind, sets that as the new keybind instead
                     elif newKeybind.keysym:
                         newKey = newKeybind.keysym
                         initBinds[gesture] = newKey
@@ -684,6 +734,8 @@ class bindsTabFunc:
                         messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newKey}")               
                     else:
                         messagebox.showerror("Error", "Unknown input!")
+                    
+                    # Removes the input detection and input detection dialog
                     root.unbind("<KeyPress>")
                     root.unbind("<Button>")
                     dialogFrame.place_forget()
@@ -691,20 +743,22 @@ class bindsTabFunc:
                 except Exception as e:
                      messagebox.showerror("Error", f"Failed to detect the input: {e}")
 
+            # Gets the dropdown list option for mapping the new input
             gMapper = controlType[gRef].get()
-            # If option is Mouse Movement
+
+            # If option is Mouse Movement, sets keybind to mouse_movement
             if gMapper == controlsList[0]:
                 initBinds[gesture] = "mouse_movement"
                 bindLabel[gesture].config(text="Key*: mouse_movement")
                 messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to Mouse Movement")
             
-            # If option is On-screen Keyboard
+            # If option is On-screen Keyboard, sets keybind to open_keyboard
             elif gMapper == controlsList[1]:
                 initBinds[gesture] = "open_keyboard"
                 bindLabel[gesture].config(text="Key*: open_keyboard")
                 messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to the On-screen Keyboard")
             
-            # If option is Detect Input
+            # If option is Detect Input, displays a dialog showing that inputs are being detected
             elif gMapper == controlsList[2]:
                 dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
                 bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
@@ -744,8 +798,8 @@ class bindsTabFunc:
             
             with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w') as newBinds:
                 newBinds.writelines(changeLines)
-
             messagebox.showinfo("Keybinds Saved", "Keybinds are saved!")
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save keybinds: {e}")
 
@@ -753,6 +807,7 @@ class bindsTabFunc:
     def loadKeys():
         global bindChange, handOption
         try:
+            # Scroll functions for the Keybinds Tab
             def canvasConfig(e):
                 bindsCanvas.configure(scrollregion=bindsCanvas.bbox("all"))
 
@@ -785,7 +840,7 @@ class bindsTabFunc:
                             # Splits gestures and keybinds
                             gesture, key = binds.strip().split("=")
 
-                            # Filters out the respective hand gestures
+                            # Filters out the respective hand gestures and displays them
                             if e in binds:
                                 initBinds[gesture] = key
                                 bindFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
@@ -827,9 +882,9 @@ class bindsTabFunc:
                                 bindLabel[gesture].pack(padx=5, side="left")
 
                                 bindChange[gNumber].pack(padx=5, side="right", anchor="e")
-                                generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
-
                                 bindCType[gNumber].pack(padx=5, side="right", anchor="e")
+
+                                generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
                                 gNumber += 1
                     line.close()
                 except Exception as e:
@@ -846,7 +901,8 @@ class bindsTabFunc:
             generateKey(hControls["Left"])
                     
         except FileNotFoundError:
-            print("No keybinds found")
+            # If the keybinds text file cannot be found
+            messagebox.showerror("Error", "No keybinds found")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load the keybind menu: {e}")
 
@@ -883,8 +939,8 @@ right:three=;''')
         except Exception as e:
             messagebox.showerror("Error", f"Failed to reset the keys: {e}")
 
+# Class for settings page functions
 class settingsFunc:
-    # For Settings tab functions
     # Display the settings
     def display_Settings():
         global gearAct, gearCanvas, onceMade_Settings, gearSettings
@@ -894,12 +950,14 @@ class settingsFunc:
                 if key.keysym == "Escape":
                     setClose()
             
+            # Scroll functions for the settings
             def canvasConfig(e):
                 gearCanvas.configure(scrollregion=gearCanvas.bbox("all"))
 
             def mouseScroll(e):
                 gearCanvas.yview_scroll(-1 * (e.delta // 120), "units")
             
+            # Resizes the canvas when the window is resized
             def canvasResize(e):
                 if not isinstance(e, int):
                     gearCanvas.itemconfig(gearSettings, width=e.width)        
@@ -912,7 +970,7 @@ class settingsFunc:
                 gearCanvas.place_forget()
                 gearAct = False
 
-            # Toggles the display mode
+            # Toggles the windows display mode
             def toggleWindowState(state):
                 # Resets the state of the display first
                 root.attributes('-fullscreen',False)
@@ -933,9 +991,10 @@ class settingsFunc:
                     print("Invalid window state")
                     pass
 
+            # Checks if the settings are currently active
             if not gearAct:
+                # Checks if it's already made
                 if not onceMade_Settings:
-                    # Settings process - Tkinter overlay to change settings
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                 
                     root.bind("<Key>", settingKey)
@@ -995,10 +1054,11 @@ class settingsFunc:
                     helperFrame.pack(anchor="w", fill="x")
             
                     closeGear.pack(padx=30, pady=10, side="right", anchor="ne")
-                    generalUI.button_hover(closeGear,ui_AH1, ui_AC1)
-
-                    #debugLabel.pack(padx=10, pady=5, anchor="nw")
-                    #debugDescLabel.pack(padx=10, pady=2, anchor="nw")
+                    
+                    """
+                    debugLabel.pack(padx=10, pady=5, anchor="nw")
+                    debugDescLabel.pack(padx=10, pady=2, anchor="nw")
+                    """
                     
                     winStateLabel.pack(padx=10, pady=5, anchor="nw")
                     winStateDescLabel.pack(padx=10, pady=2, anchor="nw")
@@ -1008,62 +1068,58 @@ class settingsFunc:
 
                     """
                     button1.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button1,ui_AH1, ui_AC1)
-
                     button2.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button2,ui_AH1, ui_AC1)
-
                     button3.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button3,ui_AH1, ui_AC1)
-
                     button4.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button4,ui_AH1, ui_AC1)
-
                     button5.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button5,ui_AH1, ui_AC1)
-
                     button7.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(button7,ui_AH1, ui_AC1)
-
                     release_button.pack(padx=5, pady=5, side="left", anchor="w")
+                    
+                    generalUI.button_hover(button1,ui_AH1, ui_AC1)
+                    generalUI.button_hover(button2,ui_AH1, ui_AC1)
+                    generalUI.button_hover(button3,ui_AH1, ui_AC1)
+                    generalUI.button_hover(button4,ui_AH1, ui_AC1)
+                    generalUI.button_hover(button5,ui_AH1, ui_AC1)
                     generalUI.button_hover(release_button, ui_AH1, ui_AC1)
                     """
 
                     fullscreen_button.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(fullscreen_button, ui_AH1, ui_AC1)
-
                     borderless_button.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(borderless_button, ui_AH1, ui_AC1)
-
                     windowed_button.pack(padx=5, pady=5, side="left", anchor="w")
-                    generalUI.button_hover(windowed_button, ui_AH1, ui_AC1)
 
                     tutorial_button.pack(padx=5, pady=5, side="left", anchor="nw")
-                    generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
-
                     faq_button.pack(padx=5, pady=5, side="left", anchor="nw")
+
+                    generalUI.button_hover(closeGear,ui_AH1, ui_AC1)
+                    generalUI.button_hover(fullscreen_button, ui_AH1, ui_AC1)
+                    generalUI.button_hover(borderless_button, ui_AH1, ui_AC1)
+                    generalUI.button_hover(windowed_button, ui_AH1, ui_AC1)
+
                     generalUI.button_hover(faq_button, ui_AH1, ui_AC1)
+                    generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
 
                     gearAct = True
                     onceMade_Settings = True
                 else:
+                    # Reopens the settings
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                     canvasResize(root.winfo_width())
                     gearAct = True
             else:
+                # Closes the settings otherwise
                 setClose()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up Settings: {e}")
 
+# Class for running programs in the UI
 class run:
-    # Class for running things in the UI
+    # Mouse Control
     def program1():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Start MouseControl program
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "MouseControl.py")],
                 shell=True
@@ -1077,13 +1133,14 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Mouse Control: {e}")
 
+    # First Two-handed Control
     def program2():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Placeholder for Two Hands Gesture Control program
+            
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "control_2hands.py")],
                 shell=True
@@ -1096,13 +1153,14 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
+    # Swipe Motion Control
     def program3():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Placeholder for Two Hands Gesture Control program
+            
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "swipeControl.py")],
                 shell=True
@@ -1116,6 +1174,7 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
+    # First Hybrid Control - Two handed & Swipe
     def program4():
         global process
         try:
@@ -1135,13 +1194,14 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Hybrid Gesture Control: {e}")
     
+    # Second Hybrid Control
     def program5():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Placeholder for HB2 Gesture Control Program
+            
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "hb2.py")],
                 shell=True
@@ -1154,6 +1214,7 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run HB2 Gesture Control: {e}")
     
+    # First Steering Control
     def program6():
         global process
         try:
@@ -1173,13 +1234,13 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Steering 1 Gesture Control: {e}")
 
+    # Second Steering Control
     def program7():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Placeholder for HB2 Gesture Control Program
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "steering2.py")],
                 shell=True
@@ -1192,13 +1253,13 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Steering 2 Gesture Control: {e}")
 
+    # Third Hybrid Control - Mouse and Two-handed
     def program8():
         global process
         try:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            # Placeholder for HB2 Gesture Control Program
             process = subprocess.Popen(
                 ["py", os.path.join(base_path, "again2.py")],
                 shell=True
@@ -1211,9 +1272,9 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Again Gesture Control: {e}")
 
+    # Shows a tutorial in the app - Video / Text
     def tutorial():
         global tutAct, MaxRes, tut_count, tutCanvas, onceMade_Tut
-        # Tutorial Process - Video / Tkinter animation on how to use the software
         try:
             # Checks if Escape key is pressed
             def tutKey(key):
@@ -1261,10 +1322,11 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to startup Tutorial process: {e}")
 
+    # Shows the Frequently Asked Questions
     def faq():
         global faqAct
         try:
-            # Checks if Escape key is pressed
+            # Checks if the escape key is pressed
             def faqKey(key):
                 if key.keysym == "Escape":
                     faqClose()
@@ -1317,8 +1379,9 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to start FAQ Process: {e}")
 
+# Class for closing the window
 class quit:
-    # Class for closing the window
+    # Main exit function
     def exit_program():
         global quitCan, quitAct, onceMade_Quit, gamesList
         try:
@@ -1343,10 +1406,11 @@ class quit:
                     noButton = tk.Button(quitCan, text="NO", command=stayIn ,width=15, height=3, bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20))
 
                     quitLabel.pack(padx=25, pady=25, anchor="center")
-                    yesButton.pack(padx=25, pady=25, anchor="center")
-                    generalUI.button_hover(yesButton, ui_AE, ui_AC2)
 
+                    yesButton.pack(padx=25, pady=25, anchor="center")
                     noButton.pack(padx=25, pady=25, anchor="center")
+
+                    generalUI.button_hover(yesButton, ui_AE, ui_AC2)
                     generalUI.button_hover(noButton, ui_AE, ui_AC2)
                     quitAct = True
                     onceMade_Quit = True
@@ -1358,16 +1422,16 @@ class quit:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up quit confirmation: {e}") 
 
+    # Opens up exit confirmation dialog
     def exit_viaKey(key):
         global quitAct
         if not quitAct:
             if key.keysym == "Escape" and quitCan.winfo_ismapped and tutCanvas.winfo_ismapped != True and faqCanvas.winfo_ismapped !=True:
                 quit.exit_program()
-                #quitAct = True
             else:
-                #print("One or more UIs are active")
                 pass
     
+    # Closes the active control window
     def release_control():
         global process
         if process is not None:
@@ -1381,13 +1445,15 @@ class quit:
                 print("Process and its children terminated successfully.")  # Debugging info
                 process = None
                 messagebox.showinfo("Info", "Running program has been terminated.")
+
             except psutil.NoSuchProcess:
                 process = None
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to terminate the program: {e}")
+
         else:
             print("No process to terminate.")  # Debugging info
-            #messagebox.showinfo("Info", "No program is currently running.") - Commented to streamline UI modifiactions -Jun Hong
+            #messagebox.showinfo("Info", "No program is currently running.")
 
 # Sets the base path to the scripts.
 base_path = os.getcwd()
@@ -1396,7 +1462,6 @@ base_path = os.getcwd()
 versionNum = "1.51"
 
 # For tracking UI activity and subprocesses
-#gNumber = 0
 tut_count = 0
 faqAct = False
 gearAct = False
@@ -1438,7 +1503,6 @@ ui_AH2 = "#FE5312"
 ui_AE = "#CC3300"
 ui_Font = "Archivo Black"
 ui_Bold = "bold"
-
 testingTurquoise = "#00FFD5"
 
 # Tracks which menu section is active
@@ -1571,7 +1635,6 @@ generalUI.button_hover(resetBinds,ui_AE, ui_AH1)
 TKlabel = tk.Label(uiMasterFrame, text=f"PROTOTYPE {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
 
 # Settings Tab - Displays the settings for the app.
-
 settingsBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC1)
 settings_button = tk.Button(settingsBorder, text="SETTINGS", command=settingsFunc.display_Settings, width=10, height=2, bg=ui_AC1, fg=ui_Txt,activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
@@ -1585,17 +1648,15 @@ TKlabel.pack(pady=5, anchor="nw")
 # Menu Tabs Layout
 menuGameTabBorder.pack(side="left", anchor="w")
 menuGameTab.pack(padx=2, pady=2, side="left", anchor="w")
-generalUI.button_hover(menuGameTab, ui_AH1, ui_AC1)
-
 menuBindsTabBorder.pack(side="left", anchor="w")
 menuBindsTab.pack(padx=2, pady=2, side="left", anchor="w")
-generalUI.button_hover(menuBindsTab, ui_AH1, ui_AC1)
-
 settingsBorder.pack(side="left", anchor="w")
 settings_button.pack(padx=2, pady=2, side="left", anchor="nw")
-generalUI.button_hover(settings_button, ui_AH1, ui_AC1)
-
 exit_button.pack(padx=5, pady=5, side="left", anchor="nw")
+
+generalUI.button_hover(menuGameTab, ui_AH1, ui_AC1)
+generalUI.button_hover(menuBindsTab, ui_AH1, ui_AC1)
+generalUI.button_hover(settings_button, ui_AH1, ui_AC1)
 generalUI.button_hover(exit_button, ui_AE, ui_AC1)
 
 uiDynamFrame.pack(side="top", fill="x")
