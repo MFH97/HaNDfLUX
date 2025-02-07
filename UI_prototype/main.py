@@ -5,10 +5,10 @@ from tkinter import PhotoImage, messagebox, filedialog
 # Additonal imports
 import pyautogui, re
 import time, threading
-from pynput import *
+from pynput.mouse import Controller
 from PIL import Image, ImageTk
-# from pynput.keyboard import Controller, Key
 
+# Class for General UI Functions
 class generalUI:
     # Changes the colour of the mapped button when the mouse hovers over it
     def button_hover(tkb, b_Hover, b_Release ):
@@ -34,6 +34,57 @@ class generalUI:
             win.deiconify()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to center the window: {e}")
+    
+    # Gets the styling for the UI
+    def getStyling():
+        global ui_AC1, ui_AC2, ui_AC3, ui_AC4, ui_AE, ui_AH1, ui_AH2, ui_AH3, ui_AC1, ui_Bold, ui_Font, ui_AC1, ui_Txt
+        try:
+            # Clears the previous items in the list
+            colourPalette = []
+            
+            # Adds new items to the list
+            with open(f"{base_path}\\resources\\config.ini", "r") as cScheme:
+                for colours in cScheme:
+                    if "ui_" in colours:
+                        Arm = colours.split("Ã· ")
+                        colourPalette.append(Arm[1].replace("\n",""))
+
+            # Assigns the values to their respective elements
+            ui_AC1 = colourPalette[0]
+            ui_AC2 = colourPalette[1]
+            ui_AC3 = colourPalette[2]
+            ui_AC4 = colourPalette[3]
+
+            ui_AE = colourPalette[4]
+
+            ui_AH1 = colourPalette[5]
+            ui_AH2 = colourPalette[6]
+            ui_AH3 = colourPalette[7]
+
+            ui_Bold = colourPalette[8]
+            ui_Font = colourPalette[9]
+            ui_Txt = colourPalette[10]
+            cScheme.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to map the styling to the respective UI Elements: {e}")
+        
+    # Gets the config for the automatiic tutorial startup
+    def startTutorial():
+        global tutStartUp
+        try:
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                for items in config:
+                    if "startupTut Ã·" in items:
+                        tutConfig = items.split("Ã· ")
+                        tutStartUp = tutConfig[1].replace("\n","")
+
+            if tutStartUp == "Enabled":
+                run.tutorial()
+            else:
+                pass
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open the tutorial UI: {e}")
 
 # Class for Game Tab Functions
 class gameTabFunc:
@@ -52,10 +103,15 @@ class gameTabFunc:
     
     # Scroll Functions for the Games Tab
     def gamesDConfig(e):
+        global onceSet_Game
         gamesDisplay.configure(scrollregion=gamesDisplay.bbox("all"))
 
+        if not onceSet_Game:
+            gamesDisplay.xview_moveto(0)
+            onceSet_Game = True
+
     def gamesDScroll(e):
-        gamesDisplay.xview_scroll(-1 * (e.delta // 120), "units")
+        gamesDisplay.xview_scroll(-1 * (e.delta // 100), "units")
 
     # Swaps the current Tab to the Games Tab
     def run_gameMenu():
@@ -78,9 +134,11 @@ class gameTabFunc:
                 gamesDisplay.bind("<Configure>", gameTabFunc.gamesDConfig)
                 gamesDisplay.bind_all("<MouseWheel>", gameTabFunc.gamesDScroll)
                 gameTabFunc(gamesDFrame)
+                
             else: 
                 # Sets Game Menu tab as the default tab first
-                showF(uiDynamTabs["Game"])      
+                showF(uiDynamTabs["Game"]) 
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to change active tab to Game Tab: {e}")
 
@@ -135,6 +193,7 @@ class gameTabFunc:
 
             addGameF.pack(padx=25, pady=25,side="left", anchor="w")
             addGameButton.pack()
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to fill the game tab: {e}")
         
@@ -315,8 +374,10 @@ class gameTabFunc:
                 messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
                 goBack()
                 gameTabFunc(gamesDFrame)
+
             except NameError:
                 messagebox.showinfo("Warning","One or more fields are not filled")
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to add games to games list: {e}")
 
@@ -398,6 +459,8 @@ class gameTabFunc:
                 gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
                 gamesDisplay.create_window((0, 0), window=gamesDFrame)
                 gItemExt.clear()
+                gameGet.close()
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to go back to the Games Tab: {e}")
 
@@ -460,6 +523,7 @@ class gameTabFunc:
 
                     # Changes the filepath in the game description
                     gameItemFile.configure(text = filepath_New)
+                    txt.close()
 
                 else:
                     messagebox.showinfo("Warning: ", "Select an executable application to change the filepath")
@@ -515,6 +579,7 @@ class gameTabFunc:
                 # Removes the thumbnail image and goes back to the main menu
                 os.remove(gameDetails[2])
                 goBack()
+                txt.close()
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to delete the game in gameslist: {e}")
@@ -551,6 +616,8 @@ class gameTabFunc:
                 gameItemLabel.insert(tk.END, gui)
                 messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
                 gameDetails[0] = gui
+                txt.close()
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
 
@@ -677,8 +744,21 @@ class bindsTabFunc:
                 uiBorder.config(bg=ui_AC1)
                 menuBindsTabBorder.config(bg=ui_AH1)
             bindsTabFunc.loadKeys()
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display keybinds: {e}")
+
+    # Scroll functions for the Keybinds Tab
+    def bindCanvasConfig(e):
+        bindsCanvas.configure(scrollregion=bindsCanvas.bbox("all"))
+
+    def bindCanvasScroll(e):
+        global onceSet_Binds
+        bindsCanvas.yview_scroll(-1 * (e.delta // 100), "units")
+        if not onceSet_Binds:
+            bindsCanvas.yview_moveto(0)
+            onceSet_Binds = True
+            print(onceSet_Binds)
 
     # Swaps the current tab to the Keybinds Tab
     def run_bindsMenu():
@@ -697,7 +777,7 @@ class bindsTabFunc:
                 bindsTabFunc(bindsCanvas)
                 bindsMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
                 bindsCanvas.pack(padx=10, pady=1, side="left", fill="both")
-                bindsMasterFrame.pack(padx=5, pady=15, side="top")
+
                 bindsLabel.pack(padx=10, pady=10, side="left", anchor="nw")
                 saveBinds.pack(padx=10, pady=10, side="left", anchor="nw")
                 resetBinds.pack(padx=10, pady=10, side="left", anchor="nw")
@@ -807,13 +887,6 @@ class bindsTabFunc:
     def loadKeys():
         global bindChange, handOption
         try:
-            # Scroll functions for the Keybinds Tab
-            def canvasConfig(e):
-                bindsCanvas.configure(scrollregion=bindsCanvas.bbox("all"))
-
-            def mouseScroll(e):
-                bindsCanvas.yview_scroll(-1 * (e.delta // 120), "units")
-
             # Switches the hands
             def switchHands(*args):
                 activeHand = handOption.get()
@@ -825,14 +898,8 @@ class bindsTabFunc:
                 try:
                     # Clears the old selections
                     gNumber = 0
-                    for bindings in bindFrame.values():
+                    for bindings in bindMaster.winfo_children():
                         bindings.pack_forget()
-                    
-                    for keys in keyFrame.values():
-                        keys.pack_forget()
-                    
-                    for img in imgFrame.values():
-                        img.pack_forget()
 
                     # Add a dropdown list displaying 3 options - mouse_movement, open_keyboard and detect input
                     with open(f"{base_path}\\resources\\gesture_key_mapping.txt", "r") as line:
@@ -886,23 +953,24 @@ class bindsTabFunc:
 
                                 generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
                                 gNumber += 1
-                    line.close()
+
+                    bindMaster.bind("<Configure>", bindsTabFunc.bindCanvasConfig)
+                    bindsCanvas.bind_all("<MouseWheel>", bindsTabFunc.bindCanvasScroll)
+
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to generate the keybinds: {e}")
 
             # Shows the keybinds menu
-            bindMaster = tk.Frame(bindsCanvas, padx=5, pady=5, bg=ui_AC2)
             bindsCanvas.create_window((0, 0), window=bindMaster)
 
             handOption.trace_add("write", switchHands)
-            bindMaster.bind("<Configure>", canvasConfig)
-            bindsCanvas.bind_all("<MouseWheel>", mouseScroll)
             
-            generateKey(hControls["Left"])
-                    
+            switchHands(hControls["Left"])
+
         except FileNotFoundError:
             # If the keybinds text file cannot be found
             messagebox.showerror("Error", "No keybinds found")
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load the keybind menu: {e}")
 
@@ -941,22 +1009,41 @@ right:three=;''')
 
 # Class for settings page functions
 class settingsFunc:
+    # Checks if Escape key is pressed
+    def settingKey(key):
+        if key.keysym == "Escape":
+            settingsFunc.setClose()
+    
+    # Closes the settings
+    def setClose():
+        global gearAct
+        gearCanvas.place_forget()
+        gearAct = False
+        if menuAct == "Keybind":
+            bindsCanvas.bind("<Configure>", bindsTabFunc.bindCanvasConfig)
+            bindsCanvas.bind_all("<MouseWheel>", bindsTabFunc.bindCanvasScroll)
+            root.bind("<Key>", quit.exit_viaKey)
+        else:
+            gamesDisplay.bind("<Configure>", gameTabFunc.gamesDConfig)
+            gamesDisplay.bind_all("<MouseWheel>", gameTabFunc.gamesDScroll)
+            root.bind("<Key>", quit.exit_viaKey)
+
+    # Scroll functions for the settings
+    def canvasConfig(e):
+        gearCanvas.configure(scrollregion=gearCanvas.bbox("all"))
+
+    def mouseScroll(e):
+        global onceSet_Settings
+        gearCanvas.yview_scroll(-1 * (e.delta // 100), "units")
+
+        if not onceSet_Settings:
+            gearCanvas.yview_moveto(0.01)
+            onceSet_Settings = True
+
     # Display the settings
     def display_Settings():
-        global gearAct, gearCanvas, onceMade_Settings, gearSettings
+        global gearAct, gearCanvas, onceMade_Settings, gearSettings, tutStartUp
         try:
-            # Checks if Escape key is pressed
-            def settingKey(key):
-                if key.keysym == "Escape":
-                    setClose()
-            
-            # Scroll functions for the settings
-            def canvasConfig(e):
-                gearCanvas.configure(scrollregion=gearCanvas.bbox("all"))
-
-            def mouseScroll(e):
-                gearCanvas.yview_scroll(-1 * (e.delta // 120), "units")
-            
             # Resizes the canvas when the window is resized
             def canvasResize(e):
                 if not isinstance(e, int):
@@ -964,66 +1051,74 @@ class settingsFunc:
                 else:
                     gearCanvas.itemconfig(gearSettings, width=e)
 
-            # Closes the settings
-            def setClose():
-                global gearAct
-                gearCanvas.place_forget()
-                gearAct = False
-
             # Toggles the windows display mode
             def toggleWindowState(state):
-                # Resets the state of the display first
-                root.attributes('-fullscreen',False)
-                root.overrideredirect(False)
-
-                # Checks what button has been pressed
-                if state == "fullscreen":
-                    root.attributes('-fullscreen',True)
-                    generalUI.centerWindow(root)
-                elif state == "borderless":
-                    root.overrideredirect(True)
-                    generalUI.centerWindow(root)
-                elif state == "windowed":
+                try:
+                    # Resets the state of the display first
                     root.attributes('-fullscreen',False)
                     root.overrideredirect(False)
-                    generalUI.centerWindow(root)
-                else:
-                    print("Invalid window state")
-                    pass
 
+                    # Checks what button has been pressed
+                    if state == "fullscreen":
+                        root.attributes('-fullscreen',True)
+                        generalUI.centerWindow(root)
+                    elif state == "borderless":
+                        root.overrideredirect(True)
+                        generalUI.centerWindow(root)
+                    elif state == "windowed":
+                        root.attributes('-fullscreen',False)
+                        root.overrideredirect(False)
+                        generalUI.centerWindow(root)
+                    else:
+                        print("Invalid window state")
+                        pass
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to toggle the window state: {e}")
+
+            # Toggles the option for tutorial to automatically start up
+            def setTutAuto():
+                global tutStartUp
+                try:
+                    with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                        for items in config:
+                            if "startupTut" in items:
+                                tutConfig = items.split("Ã· ")
+                                startConfig = tutConfig[1].replace("\n","")
+
+                    # Toggles the state in config.ini
+                    if startConfig == "Disabled":
+                        startConfig = "Enabled"
+                    else:
+                        startConfig = "Disabled"
+
+                    with open(f"{base_path}\\resources\\config.ini", "r") as ref:
+                        configWrite = ref.readlines()
+                    
+                    with open(f"{base_path}\\resources\\config.ini", "w") as mod:
+                        for item in configWrite:
+                            if f"startupTut Ã· " in item:
+                                mod.write(f"startupTut Ã· {startConfig}\n")
+                            else:
+                                mod.write(item)
+                    
+                    ref.close(), mod.close(), config.close()
+                    autoTutOpen.config(text=f"State - {startConfig}")
+
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to toggle the auto startup tutorial: {e}")
+            
             # Checks if the settings are currently active
             if not gearAct:
                 # Checks if it's already made
                 if not onceMade_Settings:
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                 
-                    root.bind("<Key>", settingKey)
-            
-                    gearMaster = tk.Frame(gearCanvas, padx=5, pady=5, bg=ui_AC1)
+                    root.bind("<Key>", settingsFunc.settingKey)
                     gearSettings = gearCanvas.create_window((0, 0), window=gearMaster)
-
-                    gearMaster.bind("<Configure>", canvasConfig)
-                    gearCanvas.bind("<Configure>", canvasResize)
-                    gearCanvas.bind_all("<MouseWheel>", mouseScroll)
 
                     gearTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC1)
                     gearTitle = tk.Label(gearTF, text="SETTINGS", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
-                    closeGear = tk.Button(gearTF, text="RETURN", command=setClose, width=10, height=0, bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
-
-                    """
-                    # Debug Controls
-                    debugFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
-                    debugLabel = tk.Label(debugFrame, text="DEBUG", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    debugDescLabel = tk.Label(debugFrame, text="For devs to configure the controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
-
-                    button1 = tk.Button(debugFrame, text="Mouse", command=run.program1, width=8, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button2 = tk.Button(debugFrame, text="Two-handed Gesture", command=run.program2, width=17, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button3 = tk.Button(debugFrame, text="Swipe Motion Gesture", command=run.program3, width=18, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button4 = tk.Button(debugFrame, text="Hybrid Gestures", command=run.program4, width=14, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button5 = tk.Button(debugFrame, text="HB2", command=run.program5, width=8, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    button7 = tk.Button(debugFrame, text="Steering 2", command=run.program7, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    release_button = tk.Button(debugFrame, text="Reset Controls", command=quit.release_control, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
-                    """
+                    closeGear = tk.Button(gearTF, text="RETURN", command=settingsFunc.setClose, width=10, height=0, bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
 
                     # Toggles window state
                     winStateTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
@@ -1035,6 +1130,13 @@ class settingsFunc:
                     borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
                     windowed_button = tk.Button(winStateFrame, text="Windowed", command=lambda:toggleWindowState("windowed"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
 
+                    miscTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    miscFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    miscLabel = tk.Label(miscTF, text="TUTORIAL START-UP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                    miscDescLabel = tk.Label(miscTF, text="Sets whether if you want to have the tutorial shown when you start up the app", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
+
+                    autoTutOpen = tk.Button(miscFrame, text=f"State - {tutStartUp}", command=setTutAuto, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+
                     helperTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     helperFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     helperLabel = tk.Label(helperTF, text="HELP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
@@ -1045,47 +1147,32 @@ class settingsFunc:
 
                     gearTF.pack(side="top", anchor="nw", fill="x")
                     gearTitle.pack(padx=10, pady=10, side="left", anchor="nw")
-                    #debugFrame.pack(anchor="w", fill="x")
 
                     winStateTF.pack(side="top", anchor="nw", fill="x")
                     winStateFrame.pack(anchor="w", fill="x")
+
+                    miscTF.pack(side="top", anchor="nw", fill="x")
+                    miscFrame.pack(anchor="w", fill="x")
 
                     helperTF.pack(side="top", anchor="nw", fill="x")
                     helperFrame.pack(anchor="w", fill="x")
             
                     closeGear.pack(padx=30, pady=10, side="right", anchor="ne")
                     
-                    """
-                    debugLabel.pack(padx=10, pady=5, anchor="nw")
-                    debugDescLabel.pack(padx=10, pady=2, anchor="nw")
-                    """
-                    
                     winStateLabel.pack(padx=10, pady=5, anchor="nw")
                     winStateDescLabel.pack(padx=10, pady=2, anchor="nw")
+
+                    miscLabel.pack(padx=10, pady=5, anchor="nw")
+                    miscDescLabel.pack(padx=10, pady=2, anchor="nw")
 
                     helperLabel.pack(padx=10, pady=5, anchor="nw")
                     helperDescLabel.pack(padx=10, pady=2, anchor="nw")
 
-                    """
-                    button1.pack(padx=5, pady=5, side="left", anchor="w")
-                    button2.pack(padx=5, pady=5, side="left", anchor="w")
-                    button3.pack(padx=5, pady=5, side="left", anchor="w")
-                    button4.pack(padx=5, pady=5, side="left", anchor="w")
-                    button5.pack(padx=5, pady=5, side="left", anchor="w")
-                    button7.pack(padx=5, pady=5, side="left", anchor="w")
-                    release_button.pack(padx=5, pady=5, side="left", anchor="w")
-                    
-                    generalUI.button_hover(button1,ui_AH1, ui_AC1)
-                    generalUI.button_hover(button2,ui_AH1, ui_AC1)
-                    generalUI.button_hover(button3,ui_AH1, ui_AC1)
-                    generalUI.button_hover(button4,ui_AH1, ui_AC1)
-                    generalUI.button_hover(button5,ui_AH1, ui_AC1)
-                    generalUI.button_hover(release_button, ui_AH1, ui_AC1)
-                    """
-
                     fullscreen_button.pack(padx=5, pady=5, side="left", anchor="w")
                     borderless_button.pack(padx=5, pady=5, side="left", anchor="w")
                     windowed_button.pack(padx=5, pady=5, side="left", anchor="w")
+
+                    autoTutOpen.pack(padx=5, pady=5, side="left", anchor="nw")
 
                     tutorial_button.pack(padx=5, pady=5, side="left", anchor="nw")
                     faq_button.pack(padx=5, pady=5, side="left", anchor="nw")
@@ -1095,6 +1182,8 @@ class settingsFunc:
                     generalUI.button_hover(borderless_button, ui_AH1, ui_AC1)
                     generalUI.button_hover(windowed_button, ui_AH1, ui_AC1)
 
+                    generalUI.button_hover(autoTutOpen, ui_AH1, ui_AC1)
+
                     generalUI.button_hover(faq_button, ui_AH1, ui_AC1)
                     generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
 
@@ -1103,11 +1192,18 @@ class settingsFunc:
                 else:
                     # Reopens the settings
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                    root.bind("<Key>", settingsFunc.settingKey)
                     canvasResize(root.winfo_width())
                     gearAct = True
+
+                gearMaster.bind("<Configure>", settingsFunc.canvasConfig)
+                gearCanvas.bind("<Configure>", canvasResize)
+                gearCanvas.bind_all("<MouseWheel>", settingsFunc.mouseScroll)
+                
+                mouse.scroll(1,0)
             else:
                 # Closes the settings otherwise
-                setClose()
+                settingsFunc.setClose()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up Settings: {e}")
 
@@ -1274,7 +1370,7 @@ class run:
 
     # Shows a tutorial in the app - Video / Text
     def tutorial():
-        global tutAct, MaxRes, tut_count, tutCanvas, onceMade_Tut
+        global tutAct, MaxRes, tutCanvas, onceMade_Tut, gearMaster
         try:
             # Checks if Escape key is pressed
             def tutKey(key):
@@ -1283,42 +1379,147 @@ class run:
 
             # Closes the tutorial
             def tutClose():
-                global tutAct
-                tutCanvas.place_forget()
-                tutAct = False
+                try:
+                    global tutAct
+                    tutCanvas.place_forget()
+                    tutAct = False
+                    
+                    # Restores scroll functionality for settings or game tab
+                    if gearAct:
+                        gearMaster.bind("<Configure>", settingsFunc.canvasConfig)
+                        gearCanvas.bind_all("<MouseWheel>", settingsFunc.mouseScroll)
+                        root.bind("<Key>", settingsFunc.settingKey)
+                    else:
+                        gamesDisplay.bind("<Configure>", gameTabFunc.gamesDConfig)
+                        gamesDisplay.bind_all("<MouseWheel>", gameTabFunc.gamesDScroll)
+                        root.bind("<Key>", quit.exit_viaKey)
+                
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to close the tutorial: {e}")
+
+            # Scroll Functions for tutorial UI
+            def tutConfig(e):
+                tutCanvas.configure(scrollregion=tutCanvas.bbox("all"))
+
+            def tutScroll(e):
+                global onceSet_Tut
+                tutCanvas.yview_scroll(-1 * (e.delta // 100), "units")
+                if not onceSet_Tut:
+                    tutCanvas.yview_moveto(0)
+                    onceSet_Tut = True
             
-            root.bind("<Key>", tutKey)
+            # Resizes the tutorial canvas when the window is resized
+            def tutResize(e):
+                if not isinstance(e, int):
+                    tutCanvas.itemconfig(tutDisplay, width=e.width)        
+                else:
+                    tutCanvas.itemconfig(tutDisplay, width=e)
+        
+            tutMenu = tk.Frame(tutMaster, bg=ui_AC1)
+            tutText = tk.Frame(tutMaster, bg=ui_AC3)    
+
             # Displays the tutorial canvas
             if not tutAct:
                 if not onceMade_Tut:
-                    tutCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                    tutCanvas.place(relheight=1, relwidth=1)
+                    root.bind("<Key>", tutKey)
                     tk.Misc.lift(tutCanvas)
+                    tutDisplay = tutCanvas.create_window((0, 0), window=tutMaster)
+                    
+                    tabIMG = Image.open(f"{base_path}\\img\\tutimg\\uiTabs.png")  
+                    tabsImg = ImageTk.PhotoImage(tabIMG)
 
-                    tutFrame = tk.Frame(tutCanvas, padx=5, pady=5, bg=ui_AC2)
+                    gtabIMG = Image.open(f"{base_path}\\img\\tutimg\\gameTab.png")  
+                    gametabImg = ImageTk.PhotoImage(gtabIMG)
 
-                    tutContent = [
-                        tk.Label(tutFrame, text="GETTING STARTED", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold)),
-                        tk.Label(tutFrame, text="To close, click the button labelled 'Close', or press the Escape Key", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 18, ui_Bold)),
-                        tk.Label(tutFrame, text="Games – Shows the supported games",  bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="Keybinds – Shows the gestures and the keys they are mapped to",  bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold)),
-                        tk.Label(tutFrame, text="Settings – Opens up the settings for you to fine tune", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 12, ui_Bold))
-                    ]
-                    closeTut = tk.Button(tutFrame, text="Close", command=tutClose, border=0, bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
+                    gaddImg = Image.open(f"{base_path}\\img\\tutimg\\addGame.png")  
+                    gameAddImg = ImageTk.PhotoImage(gaddImg)
 
-                    tutFrame.pack(anchor="nw")
-                    for e in range(len(tutContent)):
-                        tutItem = tutContent[e]
-                        tutItem.pack(padx=5, pady=5, anchor="nw")
-                    closeTut.pack(padx=5, pady=5, anchor="nw")
-                    generalUI.button_hover(closeTut, ui_AH1, ui_AC2)
+                    tutTitle = tk.Label(tutText, text="GETTING STARTED WITH HANDFLUX", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
+                    tutDesc1 = tk.Label(tutText, text="This UI can be closed by clicking on 'Close' or pressing the ESC key", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
+                    tutDesc2 = tk.Label(tutText, text="Tip: You can tell the app to not show this by going to SETTINGS", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
+                    tutUIBase = tk.Label(tutText, text="Main Menu Tabs", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutUIImg = tk.Label(tutText, image=tabsImg, bg=ui_AC1, fg=ui_Txt, border=0)
+                    tutUIImg.image = tabsImg
+
+                    tutUIG = tk.Label(tutText, text="GAMES – Shows the games from the games list text file.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutUIK = tk.Label(tutText, text="KEYBINDS – Shows the gestures and the keys they are mapped to.",  bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutUIS = tk.Label(tutText, text="SETTINGS – Opens up the settings for you to fine tune.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutUIQ = tk.Label(tutText, text="QUIT - Closes the App", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+
+                    tutGTBase = tk.Label(tutText, text="Game Tab", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutGTImg = tk.Label(tutText, image=gametabImg, bg=ui_AC1, fg=ui_Txt, border=0)
+                    tutGTDesc = tk.Label(tutText, text="Displays the games and apps you can use. The default items are listed above.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14, ui_Bold))
+                    tutGTGC1 = tk.Label(tutText, text="1. (Optional) Type the item's name in the searchbar and click on 'Search' to filter it.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutGTGC2 = tk.Label(tutText, text="2. Click on that game/app to go to that game/app.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutGTImg.image = gametabImg
+                    
+                    tutAGDesc1 = tk.Label(tutText, text="To add a game or app to the list Click on the Add a Game Button.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutAGImg = tk.Label(tutText, image=gameAddImg, bg=ui_AC1, fg=ui_Txt, border=0)
+                    tutAGDesc2 = tk.Label(tutText, text="Then do these steps to add a new item to the Games List.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutAGImg.image = gameAddImg
+
+                    tutAGS1 = tk.Label(tutText, text="1. (REQUIRED) Click on Configure Filepath to set the EXE for the app to use.", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 14))
+                    tutAGS2 = tk.Label(tutText, text="2. Type in a name for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutAGS3 = tk.Label(tutText, text="3. (Optional) Type in a description for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutAGS4 = tk.Label(tutText, text="4. (Optional) Click on the white area to add a thumbnail for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutAGS5 = tk.Label(tutText, text="5. Click on 'Add Game to Games List' to add it to the Games List.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+
+                    closeTut = tk.Button(tutMenu, text="Close", command=tutClose, border=0, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
+                    
+                    tutMenu.pack(pady=5, side="top", fill="x")
+                    tutText.pack(pady=5, side="bottom", fill="x")
+
+                    closeTut.pack(padx=10, pady=5, side="right")
+                    generalUI.button_hover(closeTut, ui_AH1, ui_AC1)
+                    
+                    tutTitle.pack(pady=5)
+                    tutDesc1.pack(pady=5)
+                    tutDesc2.pack(pady=5)
+
+                    tutUIBase.pack(pady=40)
+                    tutUIImg.pack(pady=5)
+
+                    tutUIG.pack(pady=5)
+                    tutUIK.pack(pady=5)
+                    tutUIS.pack(pady=5)
+                    tutUIQ.pack(pady=5)
+
+                    tutGTBase.pack(pady=40)
+                    tutGTImg.pack(pady=5)
+                    tutGTDesc.pack(pady=5)
+                    tutGTGC1.pack(pady=5)
+                    tutGTGC2.pack(pady=5)
+
+
+                    tutAGDesc1.pack(pady=40)
+                    tutAGImg.pack()
+                    tutAGDesc2.pack(pady=5)
+                    tutAGS1.pack(pady=5)
+                    tutAGS2.pack(pady=5)
+                    tutAGS3.pack(pady=5)
+                    tutAGS4.pack(pady=5)
+                    tutAGS5.pack(pady=5)
+
+
                     tutAct = True
                     onceMade_Tut = True
+                    mouse.scroll(1,0)
+                    
                 else:
-                    tutCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                    tutCanvas.place(relheight=1, relwidth=1)
+                    root.bind("<Key>", tutKey)
                     tk.Misc.lift(tutCanvas)
                     tutAct = True
+
+                tutMaster.bind("<Configure>", tutConfig)
+                tutCanvas.bind_all("<MouseWheel>", tutScroll)
+                tutCanvas.bind("<Configure>", tutResize)
+
             else:
-                tutClose()
+                #tutClose()
+                pass
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to startup Tutorial process: {e}")
 
@@ -1336,12 +1537,14 @@ class run:
                 global faqAct
                 faqCanvas.place_forget()
                 faqAct = False
+                root.bind("<Key>", settingsFunc.settingKey)
             
             # Function to Load a TXT File in the folder to faqtxt Text Element
             def txtLoader():
                 with open(f"{base_path}\\resources\\faq_text.txt", "r") as txtfile:
                     faq_text = txtfile.read()
                     faqtxt.insert(tk.END, faq_text)
+                    txtfile.close()
             
             root.bind("<Key>", faqKey)
             # Checks if FAQ UI is opened
@@ -1459,10 +1662,10 @@ class quit:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.51"
+versionNum = "1.52"
 
 # For tracking UI activity and subprocesses
-tut_count = 0
+tutStartUp = ""
 faqAct = False
 gearAct = False
 quitAct = False
@@ -1470,13 +1673,32 @@ tutAct = False
 onceMade_Quit = False
 onceMade_Settings = False
 onceMade_Tut = False
+onceSet_Game = False
+onceSet_Binds = False
+onceSet_Settings = False
+onceSet_Tut = False
 filter = ""
+mouse = Controller()
 
 imgPath = ""
 exePath = ""
 
 process = None
 gameProcess = None
+
+ui_AC1 = ""
+ui_AC2 = ""
+ui_AC3 = ""
+ui_AC4 = ""
+ui_AE = ""
+ui_AH1 = ""
+ui_AH2 = ""
+ui_AH3 = ""
+ui_Bold = ""
+ui_Font = ""
+ui_Txt = ""
+testingTurquoise = "#00FFD5"
+generalUI.getStyling()
 
 gameDisplayArray = []
 descDisplayArray = []
@@ -1490,20 +1712,6 @@ unMapped = []
 unMappedDesc = []
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
-
-# Temporary colour scheme variables to prevent hardcoding problems, and maybe implement a way to mod the UI layout
-ui_AC1= "#222222"
-ui_AC2 = "#333333"
-ui_AC3 = "#444444"
-ui_AC4 = "#555555"
-ui_Txt = "#CDCDCD"
-ui_AH1 = "#B83301"
-ui_AH3 = "#660000"
-ui_AH2 = "#FE5312"
-ui_AE = "#CC3300"
-ui_Font = "Archivo Black"
-ui_Bold = "bold"
-testingTurquoise = "#00FFD5"
 
 # Tracks which menu section is active
 menuAct = "Game"
@@ -1519,14 +1727,11 @@ Defined_Res = {
 
 # Gesture Controls definitions
 gControls = {
-    "Mouse" : run.program1,
-    "Two Handed" : run.program2,
+    "Hybrid (Again 2)" : run.program8,
     "Swipe" : run.program3,
-    "Hybrid 1" : run.program4,
-    "Hybrid 2" : run.program5,
-    "Steering 1" : run.program6,
-    "Steering 2" : run.program7,
-    "Again 2" : run.program8,
+    "Mouse" : run.program1,
+    "Steering" : run.program7,
+    "Two Handed" : run.program2
 }
 
 # Hand Controls definitions
@@ -1632,7 +1837,7 @@ generalUI.button_hover(saveBinds,ui_AH1, ui_AC2)
 generalUI.button_hover(resetBinds,ui_AE, ui_AH1)
 
 # GUI Labels
-TKlabel = tk.Label(uiMasterFrame, text=f"PROTOTYPE {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
+TKlabel = tk.Label(uiMasterFrame, text=f"HANDFLUX - PROTOTYPE {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
 
 # Settings Tab - Displays the settings for the app.
 settingsBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC1)
@@ -1664,9 +1869,13 @@ uiDynamFrame.pack(side="top", fill="x")
 # Global Canvases
 quitCan = tk.Canvas(root, width=1200, height=600, bg=ui_AC2, highlightthickness=0)
 tutCanvas = tk.Canvas(root, width=1200, height=600, bg=ui_AC2, highlightthickness=0)
+tutMaster = tk.Frame(tutCanvas, padx=5, pady=5, bg=ui_AC1)
 faqCanvas = tk.Canvas(root, width=1200, height=600, bg=ui_AC3, highlightthickness=0)
 gearCanvas = tk.Canvas(root, width=1200, height=600, bg=ui_AC3, highlightthickness=0)
+gearMaster = tk.Frame(gearCanvas, padx=5, pady=5, bg=ui_AC1)
 bindsCanvas= tk.Canvas(uiDynamTabs["Binds"], width=MaxRes[0], height=MaxRes[1], background=ui_AC1, highlightthickness=0)
+bindMaster = tk.Frame(bindsCanvas, padx=5, pady=5, bg=ui_AC2)
 
 # Run the tkinter event loop
+root.after(50, generalUI.startTutorial())
 root.mainloop()
