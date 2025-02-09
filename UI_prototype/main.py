@@ -7,6 +7,7 @@ import pyautogui, re
 import time, threading
 from pynput.mouse import Controller
 from PIL import Image, ImageTk
+from pygrabber.dshow_graph import FilterGraph
 
 # Class for General UI Functions
 class generalUI:
@@ -85,6 +86,26 @@ class generalUI:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open the tutorial UI: {e}")
+
+    # Gets the available cameras for using again2
+    def getCameras(camList):
+        global cam
+        try:
+            # Clear the old list
+            #camList = {}
+            graph = FilterGraph()
+            cams = graph.get_input_devices()
+            
+            if cams:
+                for cam, device in enumerate(cams):
+                    camList[cam] = device
+            else:
+                messagebox.showerror("Error", "No cameras detected! Hanflux REQUIRES a camera to function!")
+        
+            return camList
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to get the available cameras: {e}")
 
 # Class for Game Tab Functions
 class gameTabFunc:
@@ -470,7 +491,10 @@ class gameTabFunc:
             def gameCheck(proc):
                 while True:
                     procs = [proc.name() for proc in psutil.process_iter()]
-                    if proc not in procs:
+                    avt = proc.split(".")
+                    
+                    if avt[0] not in procs:
+                        print("Break")
                         #quit.release_control()
                         break
                     time.sleep(1)
@@ -495,6 +519,7 @@ class gameTabFunc:
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
                     # Starts up the respective game's control and game
+                    #quit.release_control()
                     os.startfile(gameDetails[3])
                     gameStart(gameEXE[-1])
                     runControl()
@@ -1039,10 +1064,43 @@ class settingsFunc:
         if not onceSet_Settings:
             gearCanvas.yview_moveto(0.01)
             onceSet_Settings = True
+    
+    # Toggles the option for tutorial to automatically start up
+    def setTutAuto(tutState):
+        global tutStartUp, autoTutOpen
+        try:
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                for items in config:
+                    if "startupTut" in items:
+                        tutConfig = items.split("Ã· ")
+                        startConfig = tutConfig[1].replace("\n","")
 
+            # Toggles the state in config.ini
+            if startConfig == "Disabled":
+                startConfig = "Enabled"
+            else:
+                startConfig = "Disabled"
+
+            with open(f"{base_path}\\resources\\config.ini", "r") as ref:
+                configWrite = ref.readlines()
+            
+            with open(f"{base_path}\\resources\\config.ini", "w") as mod:
+                for item in configWrite:
+                    if f"startupTut Ã· " in item:
+                        mod.write(f"startupTut Ã· {startConfig}\n")
+                    else:
+                        mod.write(item)
+            
+            ref.close(), mod.close(), config.close()
+            tutState, tutStartUp = startConfig, startConfig
+            return tutState
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to toggle the auto startup tutorial: {e}")
+    
     # Display the settings
     def display_Settings():
-        global gearAct, gearCanvas, onceMade_Settings, gearSettings, tutStartUp
+        global gearAct, gearCanvas, onceMade_Settings, gearSettings, tutStartUp, autoTutOpen
         try:
             # Resizes the canvas when the window is resized
             def canvasResize(e):
@@ -1074,39 +1132,52 @@ class settingsFunc:
                         pass
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to toggle the window state: {e}")
+            
+            # Toggles the button status
+            def setAutoButton():
+                oldState = ""
+                newState= settingsFunc.setTutAuto(oldState)
+                autoTutOpen.config(text=f"{newState}")
 
-            # Toggles the option for tutorial to automatically start up
-            def setTutAuto():
-                global tutStartUp
+            # Sets the camera for again2 to use
+            def detectCamFunc():
+                global camGet
                 try:
-                    with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                        for items in config:
-                            if "startupTut" in items:
-                                tutConfig = items.split("Ã· ")
-                                startConfig = tutConfig[1].replace("\n","")
+                    # Sets the changes
+                    def setCamFunc(cam, name):
+                        try:
+                            # Consolidates the changes
+                            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                                camWrite = config.readlines()
 
-                    # Toggles the state in config.ini
-                    if startConfig == "Disabled":
-                        startConfig = "Enabled"
-                    else:
-                        startConfig = "Disabled"
+                            with open(f"{base_path}\\resources\\config.ini", "w") as config:
+                                for line in camWrite:
+                                    if f"configCam Ã· " in line:
+                                        config.write(f"configCam Ã· {cam}\n")
+                                    else:
+                                        config.write(line)
+                            
+                            config.close()
+                            messagebox.showinfo("", f"Default Camera is now set to {name}")
+                
+                        except Exception as e:
+                            messagebox.showerror("Error", f"Failed to modify config.ini: {e}")
 
-                    with open(f"{base_path}\\resources\\config.ini", "r") as ref:
-                        configWrite = ref.readlines()
-                    
-                    with open(f"{base_path}\\resources\\config.ini", "w") as mod:
-                        for item in configWrite:
-                            if f"startupTut Ã· " in item:
-                                mod.write(f"startupTut Ã· {startConfig}\n")
-                            else:
-                                mod.write(item)
-                    
-                    ref.close(), mod.close(), config.close()
-                    autoTutOpen.config(text=f"State - {startConfig}")
+                    # Clears the old list
+                    for camItems in camDisplayFrame.winfo_children():
+                        camItems.destroy()
+
+                    # Gets the new list and displays it on the settings page
+                    generalUI.getCameras(camGet)
+                    for ind, name in camGet.items():
+                        button = tk.Button(camDisplayFrame, text=name, command=lambda camNum = ind, camName = name: setCamFunc(camNum, camName),
+                                           width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
+                        button.pack(padx=5, pady=5, side="left")
+                        generalUI.button_hover(button, ui_AH1, ui_AC1)
 
                 except Exception as e:
-                    messagebox.showerror("Error", f"Failed to toggle the auto startup tutorial: {e}")
-            
+                    messagebox.showerror("Error", f"Failed to display the new cameras: {e}")
+
             # Checks if the settings are currently active
             if not gearAct:
                 # Checks if it's already made
@@ -1130,13 +1201,23 @@ class settingsFunc:
                     borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
                     windowed_button = tk.Button(winStateFrame, text="Windowed", command=lambda:toggleWindowState("windowed"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
 
+                    # For setting the auto-start tutorial feature
                     miscTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     miscFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     miscLabel = tk.Label(miscTF, text="TUTORIAL START-UP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     miscDescLabel = tk.Label(miscTF, text="Sets whether if you want to have the tutorial shown when you start up the app", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
+                    autoTutOpen = tk.Button(miscFrame, text=f"{tutStartUp}", command=setAutoButton, width=12, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
-                    autoTutOpen = tk.Button(miscFrame, text=f"State - {tutStartUp}", command=setTutAuto, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    # For setting the camera for again2 to use
+                    camTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    camFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    camDisplayFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    camLabel = tk.Label(camTF, text="DEFAULT CAMERA", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                    camDescLabel = tk.Label(camTF, text="Set a default camera for the gesture controller to use", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
+                    camLister = tk.Button(camFrame, text="Detect Cameras", command=detectCamFunc, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    
 
+                    # For getting help / viewing the FAQ
                     helperTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     helperFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     helperLabel = tk.Label(helperTF, text="HELP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
@@ -1145,6 +1226,7 @@ class settingsFunc:
                     tutorial_button = tk.Button(helperFrame, text="HELP", command=run.tutorial, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
                     faq_button = tk.Button(helperFrame, text="FAQs", command=run.faq, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
+                    detectCamFunc()
                     gearTF.pack(side="top", anchor="nw", fill="x")
                     gearTitle.pack(padx=10, pady=10, side="left", anchor="nw")
 
@@ -1153,6 +1235,10 @@ class settingsFunc:
 
                     miscTF.pack(side="top", anchor="nw", fill="x")
                     miscFrame.pack(anchor="w", fill="x")
+
+                    camTF.pack(side="top", anchor="nw", fill="x")
+                    camFrame.pack(anchor="w", fill="x")
+                    camDisplayFrame.pack(anchor="w", fill="x")
 
                     helperTF.pack(side="top", anchor="nw", fill="x")
                     helperFrame.pack(anchor="w", fill="x")
@@ -1164,6 +1250,10 @@ class settingsFunc:
 
                     miscLabel.pack(padx=10, pady=5, anchor="nw")
                     miscDescLabel.pack(padx=10, pady=2, anchor="nw")
+
+                    camLabel.pack(padx=10, pady=5, anchor="nw")
+                    camDescLabel.pack(padx=10, pady=2, anchor="nw")
+                    camLister.pack(padx=10, pady=2, anchor="nw")
 
                     helperLabel.pack(padx=10, pady=5, anchor="nw")
                     helperDescLabel.pack(padx=10, pady=2, anchor="nw")
@@ -1184,6 +1274,8 @@ class settingsFunc:
 
                     generalUI.button_hover(autoTutOpen, ui_AH1, ui_AC1)
 
+                    generalUI.button_hover(camLister, ui_AH1, ui_AC1)
+
                     generalUI.button_hover(faq_button, ui_AH1, ui_AC1)
                     generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
 
@@ -1199,17 +1291,18 @@ class settingsFunc:
                 gearMaster.bind("<Configure>", settingsFunc.canvasConfig)
                 gearCanvas.bind("<Configure>", canvasResize)
                 gearCanvas.bind_all("<MouseWheel>", settingsFunc.mouseScroll)
-                
                 mouse.scroll(1,0)
+
             else:
                 # Closes the settings otherwise
                 settingsFunc.setClose()
+        
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open up Settings: {e}")
-
+        
 # Class for running programs in the UI
 class run:
-    # Mouse Control
+    # Default Controls - Hybrid
     def program1():
         global process
         try:
@@ -1217,7 +1310,7 @@ class run:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
             process = subprocess.Popen(
-                ["py", os.path.join(base_path, "MouseControl.py")],
+                ["py", os.path.join(base_path, "again2.py")],
                 shell=True
             )
 
@@ -1229,28 +1322,8 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Mouse Control: {e}")
 
-    # First Two-handed Control
+    # Swipe Motion Control (EXPERIMENTAL)
     def program2():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "control_2hands.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Two Hands Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
-
-    # Swipe Motion Control
-    def program3():
         global process
         try:
             if process is not None:
@@ -1262,6 +1335,26 @@ class run:
                 shell=True
             )
             # Debugging info
+            print(f"Started Two Hands Gesture Control with PID: {process.pid}")
+
+            # For runGame to process
+            return process
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
+
+    # Mouse Control (EXPERIMENTAL)
+    def program3(): 
+        global process
+        try:
+            if process is not None:
+                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
+                return
+            
+            process = subprocess.Popen(
+                ["py", os.path.join(base_path, "MouseControl.py")],
+                shell=True
+            )
+            # Debugging info
             print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
             
             # For runGame to process
@@ -1270,68 +1363,8 @@ class run:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
 
-    # First Hybrid Control - Two handed & Swipe
+    # Second Steering Control (EXPERIMENTAL)
     def program4():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            # Placeholder for Hybrid Gesture Control Program
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "hybrid.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Hybrid Gesture Control with PID: {process.pid}")
-            
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Hybrid Gesture Control: {e}")
-    
-    # Second Hybrid Control
-    def program5():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "hb2.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started HB2 Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run HB2 Gesture Control: {e}")
-    
-    # First Steering Control
-    def program6():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            # Placeholder for HB2 Gesture Control Program
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "steering.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Steering 1 Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Steering 1 Gesture Control: {e}")
-
-    # Second Steering Control
-    def program7():
         global process
         try:
             if process is not None:
@@ -1348,25 +1381,6 @@ class run:
             return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Steering 2 Gesture Control: {e}")
-
-    # Third Hybrid Control - Mouse and Two-handed
-    def program8():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "again2.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Again 2 Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Again Gesture Control: {e}")
 
     # Shows a tutorial in the app - Video / Text
     def tutorial():
@@ -1397,6 +1411,14 @@ class run:
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to close the tutorial: {e}")
 
+                        # Toggle for auto start tutorial
+            
+            # Closes the tutorial and sets the config.ini to disabled
+            def tutDis():
+                tutFuncState = ""
+                tutClose()
+                settingsFunc.setTutAuto(tutFuncState)
+
             # Scroll Functions for tutorial UI
             def tutConfig(e):
                 tutCanvas.configure(scrollregion=tutCanvas.bbox("all"))
@@ -1414,9 +1436,9 @@ class run:
                     tutCanvas.itemconfig(tutDisplay, width=e.width)        
                 else:
                     tutCanvas.itemconfig(tutDisplay, width=e)
-        
+
             tutMenu = tk.Frame(tutMaster, bg=ui_AC1)
-            tutText = tk.Frame(tutMaster, bg=ui_AC3)    
+            tutText = tk.Frame(tutMaster, bg=ui_AC3)
 
             # Displays the tutorial canvas
             if not tutAct:
@@ -1466,12 +1488,16 @@ class run:
                     tutAGS5 = tk.Label(tutText, text="5. Click on 'Add Game to Games List' to add it to the Games List.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
 
                     closeTut = tk.Button(tutMenu, text="Close", command=tutClose, border=0, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
+                    hideTut = tk.Button(tutMenu, text="Do not show again", command=tutDis, border=0, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
                     
                     tutMenu.pack(pady=5, side="top", fill="x")
                     tutText.pack(pady=5, side="bottom", fill="x")
 
                     closeTut.pack(padx=10, pady=5, side="right")
+                    hideTut.pack(padx=10, pady=5, side="right")
+
                     generalUI.button_hover(closeTut, ui_AH1, ui_AC1)
+                    generalUI.button_hover(hideTut, ui_AH1, ui_AC1)
                     
                     tutTitle.pack(pady=5)
                     tutDesc1.pack(pady=5)
@@ -1491,7 +1517,6 @@ class run:
                     tutGTGC1.pack(pady=5)
                     tutGTGC2.pack(pady=5)
 
-
                     tutAGDesc1.pack(pady=40)
                     tutAGImg.pack()
                     tutAGDesc2.pack(pady=5)
@@ -1500,7 +1525,6 @@ class run:
                     tutAGS3.pack(pady=5)
                     tutAGS4.pack(pady=5)
                     tutAGS5.pack(pady=5)
-
 
                     tutAct = True
                     onceMade_Tut = True
@@ -1662,10 +1686,11 @@ class quit:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.52"
+versionNum = "1.53"
 
 # For tracking UI activity and subprocesses
 tutStartUp = ""
+autoTutOpen = ""
 faqAct = False
 gearAct = False
 quitAct = False
@@ -1710,8 +1735,10 @@ profileDetails = []
 gestureDetails = []
 unMapped = []
 unMappedDesc = []
+camGet = {}
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
+generalUI.getCameras(camGet)
 
 # Tracks which menu section is active
 menuAct = "Game"
@@ -1727,11 +1754,10 @@ Defined_Res = {
 
 # Gesture Controls definitions
 gControls = {
-    "Hybrid (Again 2)" : run.program8,
-    "Swipe" : run.program3,
-    "Mouse" : run.program1,
-    "Steering" : run.program7,
-    "Two Handed" : run.program2
+    "Default Controls" : run.program1,
+    "(EXPERIMENTAL) Swipe" : run.program2,
+    "(EXPERIMENTAL) Mouse" : run.program3,
+    "(EXPERIMENTAL) Steering" : run.program4
 }
 
 # Hand Controls definitions

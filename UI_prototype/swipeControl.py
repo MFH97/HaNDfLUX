@@ -4,7 +4,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import pydirectinput
-import time
+import time, os
 from tensorflow.keras.models import load_model
 
 
@@ -213,7 +213,14 @@ def main():
 
     adaptive_threshold = BASE_THRESHOLD
 
-    cap = cv2.VideoCapture(0)
+    base_path = os.getcwd()
+    with open(f"{base_path}\\resources\\config.ini", "r") as config:
+        for items in config:
+            if "configCam" in items:
+                camUse = items.split("Ã· ")
+                activeCam = camUse[1].replace("\n","")
+        config.close()
+    cap = cv2.VideoCapture(int(activeCam))
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     cap.set(cv2.CAP_PROP_FPS, 60)  # Set FPS to 60

@@ -5,7 +5,7 @@ import mediapipe as mp
 import pydirectinput
 import pyautogui
 from tensorflow.keras.models import load_model
-import time
+import time, os
 
 # Load the gesture recognition model
 model = load_model('twoHands_model.h5')
@@ -61,7 +61,14 @@ def determine_thumb_direction(thumb_tip, thumb_ip):
     return None  # No valid direction detected
 
 # Webcam setup
-cap = cv2.VideoCapture(0)
+base_path = os.getcwd()
+with open(f"{base_path}\\resources\\config.ini", "r") as config:
+    for items in config:
+        if "configCam" in items:
+            camUse = items.split("Ã· ")
+            activeCam = camUse[1].replace("\n","")
+    config.close()
+cap = cv2.VideoCapture(int(activeCam))
 if not cap.isOpened():
     print("Error: Could not access the webcam.")
     exit()

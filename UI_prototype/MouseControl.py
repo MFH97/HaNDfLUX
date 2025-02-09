@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import win32api
 import win32con
-import pyautogui
+import pyautogui, os
 import math
 import signal
 import sys
@@ -32,7 +32,15 @@ atexit.register(cleanup)
 # Initialize Mediapipe and webcam
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
-video = cv2.VideoCapture(0)
+
+base_path = os.getcwd()
+with open(f"{base_path}\\resources\\config.ini", "r") as config:
+    for items in config:
+        if "configCam" in items:
+            camUse = items.split("Ã· ")
+            activeCam = camUse[1].replace("\n","")
+    config.close()
+video = cv2.VideoCapture(int(activeCam))
 
 if not video.isOpened():
     print("Error: Could not access the webcam.")
