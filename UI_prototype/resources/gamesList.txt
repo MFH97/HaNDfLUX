@@ -1,7 +1,7 @@
-Game÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL
-Desc÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL÷ Taiko no Tatsujin: Rhythm Festival is a drum-based rhythm game featuring songs from genres such as Anime and VOCALOID, and also a variety of game modes! Have fun playing solo or online!
-ThumbImg÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL÷ BASE\img\gameimg\Taiko.png
-Exe÷ TAIKO NO TATSUJIN: RHYTHM FESTIVAL÷ C:/Games/Game.exe
+Game÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL
+Desc÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ Taiko no Tatsujin: Rhythm Festival is a drum-based rhythm game featuring songs from genres such as Anime and VOCALOID, and also a variety of game modes! Have fun playing solo or online!
+ThumbImg÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ BASE\img\gameimg\Taiko.png
+Exe÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ C:/Games/Game.exe
 
 Game÷ FORZA HORIZON 5÷ FORZA HORIZON 5
 Desc÷ FORZA HORIZON 5÷ Explore the vibrant open world landscapes of Mexico with limitless, fun driving action in the world's greatest cars. Join a thrilling game of chase with our new 5v1 Multiplayer Experience: Hide & Seek.

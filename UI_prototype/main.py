@@ -65,7 +65,7 @@ class generalUI:
             ui_Bold = colourPalette[8]
             ui_Font = colourPalette[9]
             ui_Txt = colourPalette[10]
-            cScheme.close()
+            #cScheme.close()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to map the styling to the respective UI Elements: {e}")
         
@@ -92,7 +92,6 @@ class generalUI:
         global cam
         try:
             # Clear the old list
-            #camList = {}
             graph = FilterGraph()
             cams = graph.get_input_devices()
             
@@ -106,6 +105,124 @@ class generalUI:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to get the available cameras: {e}")
+
+    # Gets the gesture profiles
+    def loadProfiles(profileControls):
+        try:
+            # Clears the old list
+            profileControls.clear()
+
+            # Adds in the new list
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                for items in config:
+                    if "profileMap Ã·" in items:
+                        profileItems = items.split("Ã· ")
+                        profileItems = profileItems[1].split(" â”¼ ")
+                        profileItems[-1] = profileItems[-1].replace("\n","")
+            
+            for item in range(len(profileItems)):
+                profileControls[profileItems[item].capitalize()] = profileItems[item]
+            
+            return profileControls
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load the gesture profiles: {e}")
+
+    # Adds a gesture profile for the created game
+    def addProfile(profileControl):
+        global pControls
+        try:
+            pControls.update({profileControl: profileControl})
+
+            addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
+            
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                addRef = config.readlines()
+
+            with open(f"{base_path}\\resources\\config.ini", 'w') as add:
+                for items in addRef:
+                    if "profileMap Ã·" in items:
+                        add.write(f"profileMap Ã· {addition}\n")
+                    else:
+                        add.write(items)
+            
+            with open(f"{base_path}\\resources\\gkm_backup.txt", 'r') as addReference:
+                newKeys = addReference.readlines()
+
+            with open(f"{base_path}\\resources\\profiles\\{profileControl}.txt", 'w') as appendKeys:
+                appendKeys.writelines(newKeys)
+        
+            return pControls
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add the profile: {e}")
+
+    # Edits the gesture profile name after editing the game's name
+    def editProfile(profileControl, newProfile):
+        global pControls
+        try:
+            # Changes the profile's name
+            pControls[profileControl.capitalize()] = newProfile
+            addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
+
+            # Consolidates that change in config.ini
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                editRef = config.readlines()
+
+            with open(f"{base_path}\\resources\\config.ini", 'w') as add:
+                for items in editRef:
+                    if "profileMap Ã·" in items:
+                        add.write(f"profileMap Ã· {addition}\n")
+                    else:
+                        add.write(items)
+
+            # Renames the text file for that gesture profile
+            os.rename(f"{base_path}\\resources\\profiles\\{profileControl}.txt" , f"{base_path}\\resources\\profiles\\{newProfile}.txt")
+            return pControls
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to add the profile: {e}")
+     
+    # Removes the selected gesture profile
+    def deleteProfile(profileControl):
+        global pControls
+        try:
+            # Removes that particular item
+            del pControls[profileControl.capitalize()]
+
+            remainder = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
+            
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                configRef = config.readlines()
+
+            with open(f"{base_path}\\resources\\config.ini", 'w') as delete:
+                for items in configRef:
+                    if "profileMap" in items:
+                        delete.write(f"profileMap Ã· {remainder}\n")
+                    else:
+                        delete.write(items)
+
+            os.remove(f"{base_path}\\resources\\profiles\\{profileControl}.txt")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to delete the profile: {e}")
+
+    def loadGameProfile(profileControl):
+        global tutStartUp
+        try:
+            with open(f"{base_path}\\resources\\profiles\\{profileControl}.txt", 'r') as openRef:
+                controls = openRef.readlines()
+
+            with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w') as openControls:
+                openControls.writelines(controls)
+            
+            print(f"{profileControl} profile is now being used for the current game")
+        
+            openRef.close()
+            openControls.close()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load the game profile: {e}")
 
 # Class for Game Tab Functions
 class gameTabFunc:
@@ -369,6 +486,8 @@ class gameTabFunc:
                 gameN = addGameLabel.get("1.0","end-1c")
                 gameD = addGameTXT.get("1.0","end-1c")
 
+                gameN = re.sub(r'[]\\\/:*?÷"<>|[]' , "" ,  gameN)
+
                 # Checks the fields from the entered data
                 if imgPath == "":
                     imgPath = base_path + f"\\img\\gameimg\\Placeholder.png"
@@ -387,13 +506,16 @@ class gameTabFunc:
                     gameDesc = gameD
 
                 addGList = open(f"{base_path}\\resources\\gamesList.txt", "a")
-                addGList.write(f"\n \nGameÃ· {gameName}Ã· {gameName} \n")
-                addGList.write(f"DescÃ· {gameName}Ã· {gameDesc} \n")
-                addGList.write(f"ThumbImgÃ· {gameName}Ã· {imgPath} \n")
+                addGList.write(f"\n \nGameÃ· {gameName}Ã· {gameName}\n")
+                addGList.write(f"DescÃ· {gameName}Ã· {gameDesc}\n")
+                addGList.write(f"ThumbImgÃ· {gameName}Ã· {imgPath}\n")
                 addGList.write(f"ExeÃ· {gameName}Ã· {exePath}")
                 addGList.close()
-                messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
+
+                generalUI.addProfile(gameN.lower())
                 goBack()
+                
+                messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
                 gameTabFunc(gamesDFrame)
 
             except NameError:
@@ -491,10 +613,8 @@ class gameTabFunc:
             def gameCheck(proc):
                 while True:
                     procs = [proc.name() for proc in psutil.process_iter()]
-                    avt = proc.split(".")
                     
-                    if avt[0] not in procs:
-                        print("Break")
+                    if proc not in procs:
                         #quit.release_control()
                         break
                     time.sleep(1)
@@ -518,11 +638,12 @@ class gameTabFunc:
                 if len(gameDetails[3]) == 0 or gameDetails[3] == "Filepath":
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
-                    # Starts up the respective game's control and game
-                    #quit.release_control()
+                    # Starts up the respective game's control, gesture profile and game
                     os.startfile(gameDetails[3])
+                    generalUI.loadGameProfile(gameDetails[0].lower())
                     gameStart(gameEXE[-1])
                     runControl()
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to run the game: {e}")
 
@@ -582,66 +703,78 @@ class gameTabFunc:
         
         # Deletes the game from gameslist after confirmation
         def deleteGame():
-            try:
+            try:             
                 # Gets the reference for game deletion
-                with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
-                    gameWrite = txt.readlines()
+                with open(f"{base_path}\\resources\\gamesList.txt", "r") as delRefer:
+                    gameWrite = delRefer.readlines()
 
+                print(gameItem)
                 # Finds the game details and deletes it
-                with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
+                with open(f"{base_path}\\resources\\gamesList.txt", "w") as deletion:
                     for line in gameWrite:
-                        if f"GameÃ· {gameItem}Ã· " in line:
-                            txt.write("")
-                        elif f"DescÃ· {gameItem}Ã· " in line:
-                            txt.write("")
-                        elif f"ThumbImgÃ· {gameItem}Ã· " in line:
-                            txt.write("")
-                        elif f"ExeÃ· {gameItem}Ã· " in line:
-                            txt.write("")
+                        if f"GameÃ· {gameItem}Ã·" in line:
+                            deletion.write("")
+                        elif f"DescÃ· {gameItem}Ã·" in line:
+                            deletion.write("")
+                        elif f"ThumbImgÃ· {gameItem}Ã·" in line:
+                            deletion.write("")
+                        elif f"ExeÃ· {gameItem}Ã·" in line:
+                            deletion.write("")
                         else:
-                            txt.write(line)
+                            deletion.write(line)
+                
+                delRefer.close()
+                deletion.close()
+                
+                # Removes the thumbnail image and goes back to the main menu IF it is not in the base directory
+                if baseImg == "BASE":
+                    pass
+                else:
+                    #os.remove(gameDetails[2])
+                    pass
 
-                # Removes the thumbnail image and goes back to the main menu
-                os.remove(gameDetails[2])
+                generalUI.deleteProfile(gameItem)
                 goBack()
-                txt.close()
                 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to delete the game in gameslist: {e}")
         
         # Edits the game's name in gameslist after the game's name is changed in gameDisplay
-        def renameGame():
+        def renameGame(game):
             try:
                 # Gets the reference for game rename and formats it
                 gui = gameItemLabel.get("1.0","end-1c")
-                gui = re.sub('\Ã·+','',gui.upper())
+                gui = re.sub(r'[]\\\/:*?÷"<>|[]' , "" , gui.upper())
                 
-                with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
-                    gameWrite = txt.readlines()
+                with open(f"{base_path}\\resources\\gamesList.txt", "r") as renameRef:
+                    gameWrite = renameRef.readlines()
 
                 # Finds the game details and changes them to the new name
-                with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
+                with open(f"{base_path}\\resources\\gamesList.txt", "w") as edit:
                     for line in gameWrite:
-                        if f"GameÃ· {gameDetails[0]}Ã· " in line:
-                            txt.write(f"GameÃ· {gui}Ã· {gui}\n")
+                        if f"GameÃ· {game}Ã·" in line:
+                            edit.write(f"GameÃ· {gui}Ã· {gui}\n")
 
-                        elif f"DescÃ· {gameDetails[0]}Ã· " in line:
-                            txt.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
+                        elif f"DescÃ· {game}Ã·" in line:
+                            edit.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
 
-                        elif f"ThumbImgÃ· {gameDetails[0]}Ã· " in line:
-                            txt.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
+                        elif f"ThumbImgÃ· {game}Ã·" in line:
+                            edit.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
 
-                        elif f"ExeÃ· {gameDetails[0]}Ã· " in line:
-                            txt.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
+                        elif f"ExeÃ· {game}Ã·" in line:
+                            edit.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
 
                         else:
-                            txt.write(line)
+                            edit.write(line)
                 
                 gameItemLabel.delete('1.0', tk.END) 
                 gameItemLabel.insert(tk.END, gui)
-                messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
                 gameDetails[0] = gui
-                txt.close()
+                generalUI.editProfile(game.lower(), gui.lower())
+
+                messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
+                renameRef.close()
+                edit.close()
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
@@ -657,7 +790,8 @@ class gameTabFunc:
             for gItem in gameDisplay.winfo_children():
                 gItem.destroy()
                 gameDetails.clear()
-            
+            baseImg = ""
+
             gItemExt = gameItem.split()
 
             # Gets the new game details
@@ -678,6 +812,7 @@ class gameTabFunc:
                             txt = gameThumb[2].replace("\n","")
                             txt2 = txt.replace("BASE","")
                             file = base_path + txt2
+                            baseImg = "BASE"
                         else:
                             file = gameThumb[2].replace("\n","")
                         gameDetails.append(file)
@@ -696,7 +831,7 @@ class gameTabFunc:
             gameItemLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC3, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
             gameItemLabel.insert(tk.END, gameDetails[0])
 
-            gameRename = tk.Button(gameDisplay, text="Rename Game", command=renameGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameRename = tk.Button(gameDisplay, text="Rename Game", command=lambda gameN=gameDetails[0]: renameGame(gameN), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             gameDelete = tk.Button(gameDisplay, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             
@@ -783,7 +918,6 @@ class bindsTabFunc:
         if not onceSet_Binds:
             bindsCanvas.yview_moveto(0)
             onceSet_Binds = True
-            print(onceSet_Binds)
 
     # Swaps the current tab to the Keybinds Tab
     def run_bindsMenu():
@@ -879,10 +1013,14 @@ class bindsTabFunc:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update the keybind: {e}")
 
-    # Saves the keybinds to gesture_key_mapping.txt
+    # Saves the keybinds to the active gesture profile
     def saveKeys():
         global handOption
         try:
+            # Checks which profile is to be changed
+            activeProfile = profileOption.get()
+            activePR = pControls[activeProfile]
+
             # Reset the changes
             changeArray = []
 
@@ -891,7 +1029,7 @@ class bindsTabFunc:
                 newBind = f"{gesture}={key}\n"
                 changeArray.append(newBind)
 
-            with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'r') as baseLine:
+            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'r') as baseLine:
                 changeLines = baseLine.readlines()
             
             if handOption.get() == "Left":
@@ -901,25 +1039,27 @@ class bindsTabFunc:
                 for change in range(len(changeLines[13:])):
                     changeLines[change] = changeArray[change]
             
-            with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w') as newBinds:
+            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'w') as newBinds:
                 newBinds.writelines(changeLines)
             messagebox.showinfo("Keybinds Saved", "Keybinds are saved!")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save keybinds: {e}")
 
-    # Loads the keybinds from gesture_key_mapping.txt
+    # Loads the keybinds from the geasture profile dropdown list
     def loadKeys():
         global bindChange, handOption
         try:
             # Switches the hands
-            def switchHands(*args):
+            def switchThing(*args):
                 activeHand = handOption.get()
+                activeProfile = profileOption.get()
                 activeHV = hControls[activeHand]
-                generateKey(activeHV)
+                activePR = pControls[activeProfile]
+                generateKey(activeHV, activePR)
             
             # Main function for generating the keybinds
-            def generateKey(e):
+            def generateKey(e, f):
                 try:
                     # Clears the old selections
                     gNumber = 0
@@ -927,7 +1067,7 @@ class bindsTabFunc:
                         bindings.pack_forget()
 
                     # Add a dropdown list displaying 3 options - mouse_movement, open_keyboard and detect input
-                    with open(f"{base_path}\\resources\\gesture_key_mapping.txt", "r") as line:
+                    with open(f"{base_path}\\resources\\profiles\\{f}.txt", "r") as line:
                         for binds in line:
                             # Splits gestures and keybinds
                             gesture, key = binds.strip().split("=")
@@ -988,9 +1128,10 @@ class bindsTabFunc:
             # Shows the keybinds menu
             bindsCanvas.create_window((0, 0), window=bindMaster)
 
-            handOption.trace_add("write", switchHands)
+            handOption.trace_add("write", switchThing)
+            profileOption.trace_add("write", switchThing)
             
-            switchHands(hControls["Left"])
+            switchThing(hControls["Left"], pControls["Default"])
 
         except FileNotFoundError:
             # If the keybinds text file cannot be found
@@ -999,38 +1140,27 @@ class bindsTabFunc:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load the keybind menu: {e}")
 
-    # Resets the keybinds to the default mappings for gesture_key_mapping.txt
+    # Resets the keybinds to the default mappings for the active gesture profile
     def resetKeys():
         try:
-            reset = open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w')
-            reset.write('''left:call=open_keyboard
-left:dislike=q
-left:fist=space
-left:like=e
-left:ok=k
-left:one=w
-left:peace=a
-left:peace_inverted=d
-left:rock=c
-left:stop=s
-left:stop_inverted=g
-left:three=3
-right:call=r
-right:dislike=x
-right:fist=n
-right:like=v
-right:ok=m
-right:one=u
-right:peace=o
-right:peace_inverted=p
-right:rock=left_click
-right:stop=mouse_movement
-right:stop_inverted=l
-right:three=;''')
-            bindsTabFunc(bindsCanvas)
-            reset.close()
+            activeProfile = profileOption.get()
+            activePR = pControls[activeProfile]
+
+            with open(f"{base_path}\\resources\\gkm_backup.txt", 'r') as referReset:
+                resetBase = referReset.readlines()
+           
+            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'w') as resetActual:
+                resetActual.writelines(resetBase)
+            
+            referReset.close()
+            resetActual.close()
+            bindsTabFunc.loadKeys()
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to reset the keys: {e}")
+
+    def getDeleteDetail():
+        pass
 
 # Class for settings page functions
 class settingsFunc:
@@ -1215,7 +1345,6 @@ class settingsFunc:
                     camLabel = tk.Label(camTF, text="DEFAULT CAMERA", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     camDescLabel = tk.Label(camTF, text="Set a default camera for the gesture controller to use", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
                     camLister = tk.Button(camFrame, text="Detect Cameras", command=detectCamFunc, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    
 
                     # For getting help / viewing the FAQ
                     helperTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
@@ -1686,7 +1815,7 @@ class quit:
 base_path = os.getcwd()
 
 # Version Number 
-versionNum = "1.53"
+versionNum = "1.54"
 
 # For tracking UI activity and subprocesses
 tutStartUp = ""
@@ -1707,6 +1836,7 @@ mouse = Controller()
 
 imgPath = ""
 exePath = ""
+baseImg = ""
 
 process = None
 gameProcess = None
@@ -1736,6 +1866,7 @@ gestureDetails = []
 unMapped = []
 unMappedDesc = []
 camGet = {}
+profileControls = {}
 gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
 gameTabFunc.gameDisplay(gamesList, filter)
 generalUI.getCameras(camGet)
@@ -1775,6 +1906,10 @@ controlsList = [
 
 # Initial list for listing keybinds, will be filled with loadKeys
 initBinds = {}
+
+# Initial list for listing the profiles, will be filled with profiles
+pControls = {}
+generalUI.loadProfiles(pControls)
 
 # Initialises the tkinter root window with 1280 x 720 as the default
 root = tk.Tk()
@@ -1849,15 +1984,21 @@ bindsMasterFrame = tk.Frame(uiDynamTabs["Binds"], background=ui_AC1)
 bindsLabel = tk.Label(bindsMasterFrame, text="KEYBINDS", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 saveBinds = tk.Button(bindsMasterFrame, text="Save Keybinds", command=bindsTabFunc.saveKeys, width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 resetBinds = tk.Button(bindsMasterFrame, text="Reset Keybinds", command=bindsTabFunc.resetKeys, width=15, height=2, bg=ui_AH1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-dropFrame = tk.Frame(bindsMasterFrame, padx=5, pady=5, bg=ui_AC2)
 
+dropFrame = tk.Frame(bindsMasterFrame, padx=5, pady=5, bg=ui_AC2)
 handOption = tk.StringVar(root)
 handOption.set(next(iter(hControls)))
-drop = tk.OptionMenu(dropFrame, handOption, *hControls)
-drop.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
+handDrop = tk.OptionMenu(dropFrame, handOption, *hControls)
+handDrop.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
+
+profileOption = tk.StringVar(root)
+profileOption.set(next(iter(pControls)))
+profileDrop = tk.OptionMenu(dropFrame, profileOption, *pControls)
+profileDrop.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
 
 dropFrame.pack(padx=20, pady=5, anchor="nw")
-drop.pack(side="left")
+handDrop.pack(padx=10, side="left")
+profileDrop.pack(padx=10, side="left")
 
 generalUI.button_hover(saveBinds,ui_AH1, ui_AC2)   
 generalUI.button_hover(resetBinds,ui_AE, ui_AH1)
