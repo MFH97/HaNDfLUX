@@ -207,12 +207,20 @@ class generalUI:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to delete the profile: {e}")
 
+     # Loads the game gesture profile
     def loadGameProfile(profileControl):
         global tutStartUp
         try:
-            with open(f"{base_path}\\resources\\profiles\\{profileControl}.txt", 'r') as openRef:
-                controls = openRef.readlines()
-
+            fileRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
+            
+            # Checks if the game gesture profile exists, and uses the default if it does not exist.
+            if os.path.exists(fileRef):
+                with open(fileRef, 'r') as openRef:
+                    controls = openRef.readlines()
+            else:
+                with open(f"{base_path}\\resources\\profiles\\default.txt", "r") as openRef:
+                    controls = openRef.readlines()
+            
             with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w') as openControls:
                 openControls.writelines(controls)
             
