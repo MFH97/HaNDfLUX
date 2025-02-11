@@ -38,17 +38,21 @@ class generalUI:
     
     # Gets the styling for the UI
     def getStyling():
-        global ui_AC1, ui_AC2, ui_AC3, ui_AC4, ui_AE, ui_AH1, ui_AH2, ui_AH3, ui_AC1, ui_Bold, ui_Font, ui_AC1, ui_Txt
+        global ui_AC1, ui_AC2, ui_AC3, ui_AC4, ui_AE, ui_AH1, ui_AH2, ui_AH3, ui_AC1, ui_Bold, ui_Font, ui_AC1, ui_Txt, configRef
         try:
             # Clears the previous items in the list
             colourPalette = []
             
             # Adds new items to the list
-            with open(f"{base_path}\\resources\\config.ini", "r") as cScheme:
-                for colours in cScheme:
-                    if "ui_" in colours:
-                        Arm = colours.split("Ã· ")
-                        colourPalette.append(Arm[1].replace("\n",""))
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as cScheme:
+                    for colours in cScheme:
+                        if "ui_" in colours:
+                            Arm = colours.split("Ã· ")
+                            colourPalette.append(Arm[1].replace("\n",""))
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
 
             # Assigns the values to their respective elements
             ui_AC1 = colourPalette[0]
@@ -65,24 +69,31 @@ class generalUI:
             ui_Bold = colourPalette[8]
             ui_Font = colourPalette[9]
             ui_Txt = colourPalette[10]
-            #cScheme.close()
+            cScheme.close()
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to map the styling to the respective UI Elements: {e}")
         
     # Gets the config for the automatiic tutorial startup
     def startTutorial():
-        global tutStartUp
+        global tutStartUp, configRef
         try:
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                for items in config:
-                    if "startupTut Ã·" in items:
-                        tutConfig = items.split("Ã· ")
-                        tutStartUp = tutConfig[1].replace("\n","")
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as config:
+                    for items in config:
+                        if "startupTut Ã·" in items:
+                            tutConfig = items.split("Ã· ")
+                            tutStartUp = tutConfig[1].replace("\n","")
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
 
             if tutStartUp == "Enabled":
                 run.tutorial()
             else:
                 pass
+
+            config.close()
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open the tutorial UI: {e}")
@@ -108,21 +119,27 @@ class generalUI:
 
     # Gets the gesture profiles
     def loadProfiles(profileControls):
+        global configRef
         try:
             # Clears the old list
             profileControls.clear()
 
             # Adds in the new list
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                for items in config:
-                    if "profileMap Ã·" in items:
-                        profileItems = items.split("Ã· ")
-                        profileItems = profileItems[1].split(" â”¼ ")
-                        profileItems[-1] = profileItems[-1].replace("\n","")
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as config:
+                    for items in config:
+                        if "profileMap Ã·" in items:
+                            profileItems = items.split("Ã· ")
+                            profileItems = profileItems[1].split(" â”¼ ")
+                            profileItems[-1] = profileItems[-1].replace("\n","")
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
             
             for item in range(len(profileItems)):
                 profileControls[profileItems[item].capitalize()] = profileItems[item]
             
+            config.close()
             return profileControls
 
         except Exception as e:
@@ -130,28 +147,44 @@ class generalUI:
 
     # Adds a gesture profile for the created game
     def addProfile(profileControl):
-        global pControls
+        global pControls, configRef
         try:
             pControls.update({profileControl: profileControl})
 
             addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
-            
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                addRef = config.readlines()
 
-            with open(f"{base_path}\\resources\\config.ini", 'w') as add:
-                for items in addRef:
-                    if "profileMap Ã·" in items:
-                        add.write(f"profileMap Ã· {addition}\n")
-                    else:
-                        add.write(items)
+            backupRef = f"{base_path}\\resources\\gkm_backup.txt"
+            profileRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
             
-            with open(f"{base_path}\\resources\\gkm_backup.txt", 'r') as addReference:
-                newKeys = addReference.readlines()
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as config:
+                    addRef = config.readlines()
 
-            with open(f"{base_path}\\resources\\profiles\\{profileControl}.txt", 'w') as appendKeys:
-                appendKeys.writelines(newKeys)
+                with open(configRef, 'w') as add:
+                    for items in addRef:
+                        if "profileMap Ã·" in items:
+                            add.write(f"profileMap Ã· {addition}\n")
+                        else:
+                            add.write(items)
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
+            
+            if os.path.isfile(backupRef):
+                with open(backupRef, 'r') as addReference:
+                    newKeys = addReference.readlines()
+            else:
+                messagebox.showerror("Error", "The backup mapping cannot be found!")
+                return False
+
+            if os.path.isfile(profileRef):
+                with open(profileRef, 'w') as appendKeys:
+                    appendKeys.writelines(newKeys)
+            else:
+                messagebox.showerror("Error", "The profile's control cannot be found!")
+                return False
         
+            config.close(), add.close(), addReference.close(), appendKeys.close()
             return pControls
 
         except Exception as e:
@@ -159,25 +192,38 @@ class generalUI:
 
     # Edits the gesture profile name after editing the game's name
     def editProfile(profileControl, newProfile):
-        global pControls
+        global pControls, configRef
         try:
             # Changes the profile's name
             pControls[profileControl.capitalize()] = newProfile
             addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
-
+            
             # Consolidates that change in config.ini
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                editRef = config.readlines()
+            oldRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
+            newRef = f"{base_path}\\resources\\profiles\\{newProfile}.txt"
 
-            with open(f"{base_path}\\resources\\config.ini", 'w') as add:
-                for items in editRef:
-                    if "profileMap Ã·" in items:
-                        add.write(f"profileMap Ã· {addition}\n")
-                    else:
-                        add.write(items)
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as config:
+                    editRef = config.readlines()
+
+                with open(configRef, 'w') as add:
+                    for items in editRef:
+                        if "profileMap Ã·" in items:
+                            add.write(f"profileMap Ã· {addition}\n")
+                        else:
+                            add.write(items)
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
 
             # Renames the text file for that gesture profile
-            os.rename(f"{base_path}\\resources\\profiles\\{profileControl}.txt" , f"{base_path}\\resources\\profiles\\{newProfile}.txt")
+            if os.path.isfile(oldRef):
+                os.rename(oldRef, newRef)
+            else:
+                messagebox.showerror("Error", "The original profile control cannot be found!")
+                return False
+            
+            config.close(), add.close()
             return pControls
 
         except Exception as e:
@@ -207,24 +253,31 @@ class generalUI:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to delete the profile: {e}")
 
-     # Loads the game gesture profile
+    # Loads the game gesture profile
     def loadGameProfile(profileControl):
         global tutStartUp
         try:
             fileRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
+            defaultRef = f"{base_path}\\resources\\profiles\\default.txt"
+            gkmRef = f"{base_path}\\resources\\gesture_key_mapping.txt"
             
             # Checks if the game gesture profile exists, and uses the default if it does not exist.
             if os.path.exists(fileRef):
                 with open(fileRef, 'r') as openRef:
                     controls = openRef.readlines()
-            else:
-                with open(f"{base_path}\\resources\\profiles\\default.txt", "r") as openRef:
+            elif os.path.isfile(defaultRef):
+                with open(defaultRef, "r") as openRef:
                     controls = openRef.readlines()
+            else:
+                messagebox.showerror("Error", "Profile Controls and Default Controls cannot be found!")
+                return False
             
-            with open(f"{base_path}\\resources\\gesture_key_mapping.txt", 'w') as openControls:
-                openControls.writelines(controls)
-            
-            print(f"{profileControl} profile is now being used for the current game")
+            if os.path.isfile(gkmRef):
+                with open(gkmRef, 'w') as openControls:
+                    openControls.writelines(controls)
+            else:
+                messagebox.showerror("Error", "gesture_key_mapping.txt cannot be found!")
+                return False
         
             openRef.close()
             openControls.close()
@@ -236,11 +289,18 @@ class generalUI:
 class gameTabFunc:
     # Maps the gamesDisplay frame for usage, and changes the highlighted border to Games
     def __init__(self, gFrame):
+        global gameListRef
         try:  
             self.gFrame = gFrame
-            gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
+            if os.path.isfile(gameListRef):
+                gamesList = open(gameListRef, "r")
+            else:
+                messagebox.showerror("Error", "The games list cannot be found!")
+                return False
+            
             gameTabFunc.gameDisplay(gamesList, filter)
             gameTabFunc.id_Game(gFrame)
+
             for uiBorder in uiMasterFrame.winfo_children():
                 uiBorder.config(bg=ui_AC1)
                 menuGameTabBorder.config(bg=ui_AH1)
@@ -302,6 +362,7 @@ class gameTabFunc:
             # Fills the new list
             for gItem in range(game_Count):
                 gameFrame = tk.Frame(self, bg=ui_AC4)
+                gameBorder = tk.Frame(gameFrame, bg=ui_AC4)
                 gameItem = tk.Text(gameFrame, bg=ui_AC4, fg=ui_Txt, height=3, width=20, border=0, wrap="word", font=(ui_Font, 10))
                 gameItem.insert(tk.END, gameDisplayArray[gItem])
                 gameItem.configure(exportselection=0, state="disabled")
@@ -312,20 +373,21 @@ class gameTabFunc:
                     giForm = giIMG.resize((220, 300))
                     gameImg = ImageTk.PhotoImage(giForm)
                     thumbDisplayArray[gItem] = gameImg
-                    gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
                 else:
                     # Loads the placeholder image instead
                     giIMG = Image.open(placeThumb)  
                     giForm = giIMG.resize((220, 300))
                     gameImg = ImageTk.PhotoImage(giForm)
                     thumbDisplayArray[gItem] = gameImg
-                    gameButton = tk.Button(gameFrame, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
 
                 gameFrame.pack(padx=25, pady=25, side="left", anchor="w")
-                gameButton.pack(padx=2, pady=2)
+                gameBorder.pack()
+                gameButton.pack(padx=10,pady=10)
                 gameItem.pack()
 
-                generalUI.button_hover(gameButton, ui_AH1, ui_AC1)
+                generalUI.button_hover(gameBorder, ui_AH1, ui_AC4)
             
             addGameF = tk.Frame(self, bg=ui_AC4)
 
@@ -411,11 +473,16 @@ class gameTabFunc:
 
     # Filters the output of gameDisplay
     def filterGame():
-        global gamesList, gamesDisplay, gamesDFrame
+        global gamesList, gamesDisplay, gamesDFrame, gameListRef
         try:
             filter = gameSearchBar.get()
             if filter !="":
-                gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
+                if os.path.isfile(gameListRef):
+                    gamesList = open(gameListRef, "r")
+                else:
+                    messagebox.showerror("Error", "The games list cannot be found!")
+                    return False
+                
                 gameTabFunc.gameDisplay(gamesList, filter)
                 gameTabFunc.id_Game(gamesDFrame)
                 gameSearchBar.delete(0, "end")
@@ -426,10 +493,15 @@ class gameTabFunc:
     
     # Resets the filters in filterGame
     def resetFilter():
-        global gamesList, gamesDisplay, gamesDFrame
+        global gamesList, gamesDisplay, gamesDFrame, gameListRef
         try:
             filter = ""
-            gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
+            if os.path.isfile(gameListRef):
+                gamesList = open(gameListRef, "r")
+            else:
+                messagebox.showerror("Error", "The games listcannot be found!")
+                return False
+            
             gameTabFunc.gameDisplay(gamesList, filter)
             gameTabFunc.id_Game(gamesDFrame)
             gameSearchBar.delete(0, "end")
@@ -488,7 +560,7 @@ class gameTabFunc:
 
         # Adds the game to games list
         def addToGL():
-            global imgPath, exePath
+            global imgPath, exePath, gameListRef
             try:
                 # Retrieves the data entered
                 gameN = addGameLabel.get("1.0","end-1c")
@@ -513,7 +585,12 @@ class gameTabFunc:
                 else:
                     gameDesc = gameD
 
-                addGList = open(f"{base_path}\\resources\\gamesList.txt", "a")
+                if os.path.isfile(gameListRef):
+                    addGList = open(gameListRef, "a")
+                else:
+                    messagebox.showerror("Error", "The games list cannot be found!")
+                    return False
+                
                 addGList.write(f"\n \nGameÃ· {gameName}Ã· {gameName}\n")
                 addGList.write(f"DescÃ· {gameName}Ã· {gameDesc}\n")
                 addGList.write(f"ThumbImgÃ· {gameName}Ã· {imgPath}\n")
@@ -555,7 +632,14 @@ class gameTabFunc:
 
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
 
-            agiIMG = Image.open(base_path + f"\\img\\gameimg\\Placeholder.png")  
+            placeHolder = base_path + f"\\img\\gameimg\\Placeholder.png"
+
+            if os.path.isfile(placeHolder):
+                agiIMG = Image.open(placeHolder)
+            else:
+                messagebox.showerror("Error", "The placeholder image cannot be found!")
+                return False
+            
             agiForm = agiIMG.resize((220, 300))
             addGameItemImg = ImageTk.PhotoImage(agiForm)
             addGameImg = tk.Button(game_DisplayPicFrame, image=addGameItemImg, command=writeIMG, bg=ui_AC1, fg=ui_Txt, border=0)
@@ -599,7 +683,7 @@ class gameTabFunc:
 
     # Displays that specific game 
     def game_Describe(gameItem):
-        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList, process, gControls, gamesDFrame
+        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList, process, gControls, gamesDFrame, gameListRef
 
         # Goes back to the Games Tab
         def goBack():
@@ -657,27 +741,33 @@ class gameTabFunc:
 
         # Experimental function to write the filepath for an EXE to the gamesList
         def writeEXE():
+            global gameListRef
             try:
                 # Formats the filepath to fit the gamesList format
                 filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = [('Execitables', '*.exe')])
                 if filepath_New:
-                    filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
-                    with open(f"{base_path}\\resources\\gamesList.txt", "r") as txt:
-                        gameWrite = txt.readlines()
 
-                    filepath_Update = False
-                    with open(f"{base_path}\\resources\\gamesList.txt", "w") as txt:
-                        for line in gameWrite:
-                            if not filepath_Update and f"ExeÃ· {gameItem}Ã· " in line:
-                                txt.write(filepath_Change + "\n")
-                                gameDetails[3] = filepath_New
-                                filepath_Update = True
-                            else:
-                                txt.write(line)
+                    filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
+                    if os.path.isfile(gameListRef):
+                        with open(gameListRef, "r") as gameGets:
+                            gameWrite = gameGets.readlines()
+
+                        filepath_Update = False
+                        with open(gameListRef, "w") as writeList:
+                            for line in gameWrite:
+                                if not filepath_Update and f"ExeÃ· {gameItem}Ã· " in line:
+                                    writeList.write(filepath_Change + "\n")
+                                    gameDetails[3] = filepath_New
+                                    filepath_Update = True
+                                else:
+                                    writeList.write(line)
+                    else:
+                        messagebox.showerror("Error", "The games list cannot be found!")
+                        return False
 
                     # Changes the filepath in the game description
                     gameItemFile.configure(text = filepath_New)
-                    txt.close()
+                    gameGets.close(), writeList.close()
 
                 else:
                     messagebox.showinfo("Warning: ", "Select an executable application to change the filepath")
@@ -711,28 +801,31 @@ class gameTabFunc:
         
         # Deletes the game from gameslist after confirmation
         def deleteGame():
+            global gameListRef
             try:             
                 # Gets the reference for game deletion
-                with open(f"{base_path}\\resources\\gamesList.txt", "r") as delRefer:
-                    gameWrite = delRefer.readlines()
+                if os.path.isfile(gameListRef):
+                    with open(gameListRef, "r") as delRefer:
+                        gameWrite = delRefer.readlines()
 
-                print(gameItem)
-                # Finds the game details and deletes it
-                with open(f"{base_path}\\resources\\gamesList.txt", "w") as deletion:
-                    for line in gameWrite:
-                        if f"GameÃ· {gameItem}Ã·" in line:
-                            deletion.write("")
-                        elif f"DescÃ· {gameItem}Ã·" in line:
-                            deletion.write("")
-                        elif f"ThumbImgÃ· {gameItem}Ã·" in line:
-                            deletion.write("")
-                        elif f"ExeÃ· {gameItem}Ã·" in line:
-                            deletion.write("")
-                        else:
-                            deletion.write(line)
+                    # Finds the game details and deletes it
+                    with open(gameListRef, "w") as deletion:
+                        for line in gameWrite:
+                            if f"GameÃ· {gameItem}Ã·" in line:
+                                deletion.write("")
+                            elif f"DescÃ· {gameItem}Ã·" in line:
+                                deletion.write("")
+                            elif f"ThumbImgÃ· {gameItem}Ã·" in line:
+                                deletion.write("")
+                            elif f"ExeÃ· {gameItem}Ã·" in line:
+                                deletion.write("")
+                            else:
+                                deletion.write(line)
+                else:
+                    messagebox.showerror("Error", "The games list cannot be found!")
+                    return False
                 
-                delRefer.close()
-                deletion.close()
+                delRefer.close(), deletion.close()
                 
                 # Removes the thumbnail image and goes back to the main menu IF it is not in the base directory
                 if baseImg == "BASE":
@@ -749,31 +842,32 @@ class gameTabFunc:
         
         # Edits the game's name in gameslist after the game's name is changed in gameDisplay
         def renameGame(game):
+            global gameListRef
             try:
                 # Gets the reference for game rename and formats it
                 gui = gameItemLabel.get("1.0","end-1c")
                 gui = re.sub(r'[]\\\/:*?÷"<>|[]' , "" , gui.upper())
                 
-                with open(f"{base_path}\\resources\\gamesList.txt", "r") as renameRef:
-                    gameWrite = renameRef.readlines()
+                if os.path.isfile(gameListRef):
+                    with open(gameListRef, "r") as renameRef:
+                        gameWrite = renameRef.readlines()
 
-                # Finds the game details and changes them to the new name
-                with open(f"{base_path}\\resources\\gamesList.txt", "w") as edit:
-                    for line in gameWrite:
-                        if f"GameÃ· {game}Ã·" in line:
-                            edit.write(f"GameÃ· {gui}Ã· {gui}\n")
-
-                        elif f"DescÃ· {game}Ã·" in line:
-                            edit.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
-
-                        elif f"ThumbImgÃ· {game}Ã·" in line:
-                            edit.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
-
-                        elif f"ExeÃ· {game}Ã·" in line:
-                            edit.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
-
-                        else:
-                            edit.write(line)
+                    # Finds the game details and changes them to the new name
+                    with open(gameListRef, "w") as edit:
+                        for line in gameWrite:
+                            if f"GameÃ· {game}Ã·" in line:
+                                edit.write(f"GameÃ· {gui}Ã· {gui}\n")
+                            elif f"DescÃ· {game}Ã·" in line:
+                                edit.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
+                            elif f"ThumbImgÃ· {game}Ã·" in line:
+                                edit.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
+                            elif f"ExeÃ· {game}Ã·" in line:
+                                edit.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
+                            else:
+                                edit.write(line)
+                else:
+                    messagebox.showerror("Error", "The games list cannot be found!")
+                    return False
                 
                 gameItemLabel.delete('1.0', tk.END) 
                 gameItemLabel.insert(tk.END, gui)
@@ -781,8 +875,7 @@ class gameTabFunc:
                 generalUI.editProfile(game.lower(), gui.lower())
 
                 messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
-                renameRef.close()
-                edit.close()
+                renameRef.close(), edit.close()
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
@@ -803,32 +896,36 @@ class gameTabFunc:
             gItemExt = gameItem.split()
 
             # Gets the new game details
-            with open(f"{base_path}\\resources\\gamesList.txt", "r") as gameGet:
-                for line in gameGet:
-                    if f"GameÃ· {gItemExt[0]}" in line:
-                        gameName = line.split("Ã· ")
-                        gameDetails.append(gameName[2].replace("\n",""))
-                
-                    elif f"DescÃ· {gItemExt[0]}" in line:
-                        gameDesc = line.split("Ã· ")
-                        gameDetails.append(gameDesc[2].replace("\n",""))
-                
-                    elif f"ThumbImgÃ· {gItemExt[0]}" in line:
-                        gameThumb = line.split("Ã· ")
-                        baseCheck = gameThumb[2].startswith("BASE")
-                        if baseCheck:
-                            txt = gameThumb[2].replace("\n","")
-                            txt2 = txt.replace("BASE","")
-                            file = base_path + txt2
-                            baseImg = "BASE"
-                        else:
-                            file = gameThumb[2].replace("\n","")
-                        gameDetails.append(file)
+            if os.path.isfile(gameListRef):
+                with open(gameListRef, "r") as gameGet:
+                    for line in gameGet:
+                        if f"GameÃ· {gItemExt[0]}" in line:
+                            gameName = line.split("Ã· ")
+                            gameDetails.append(gameName[2].replace("\n",""))
                     
-                    elif f"ExeÃ· {gItemExt[0]}" in line:
-                        gameExe = line.split("Ã· ")
-                        file = gameExe[2].replace("\n","")
-                        gameDetails.append(file)
+                        elif f"DescÃ· {gItemExt[0]}" in line:
+                            gameDesc = line.split("Ã· ")
+                            gameDetails.append(gameDesc[2].replace("\n",""))
+                    
+                        elif f"ThumbImgÃ· {gItemExt[0]}" in line:
+                            gameThumb = line.split("Ã· ")
+                            baseCheck = gameThumb[2].startswith("BASE")
+                            if baseCheck:
+                                txt = gameThumb[2].replace("\n","")
+                                txt2 = txt.replace("BASE","")
+                                file = base_path + txt2
+                                baseImg = "BASE"
+                            else:
+                                file = gameThumb[2].replace("\n","")
+                            gameDetails.append(file)
+                        
+                        elif f"ExeÃ· {gItemExt[0]}" in line:
+                            gameExe = line.split("Ã· ")
+                            file = gameExe[2].replace("\n","")
+                            gameDetails.append(file)
+            else:
+                messagebox.showerror("Error", "The games list cannot be found!")
+                return False
 
             # Displays the selected game and its details
             game_DisplayFrame = tk.Frame(gameDisplay, bg=ui_AC2)
@@ -843,6 +940,7 @@ class gameTabFunc:
             gameDelete = tk.Button(gameDisplay, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             
+            placeHolder = base_path + f"\\img\\gameimg\\Placeholder.png"
             if os.path.isfile(gameDetails[2]):
                 giIMG = Image.open(gameDetails[2])  
                 giFormat = giIMG.resize((220, 300))
@@ -850,7 +948,11 @@ class gameTabFunc:
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
                 gameImg.image = gameItemImg
             else:
-                giIMG = Image.open(base_path + f"\\img\\gameimg\\Placeholder.png")  
+                if os.path.isfile(placeHolder):
+                    giIMG = Image.open(placeHolder)
+                else:
+                    messagebox.showerror("Error", "The placeholder image cannot be found!")
+                    return False
                 giFormat = giIMG.resize((220, 300))
                 gameItemImg = ImageTk.PhotoImage(giFormat)
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
@@ -942,10 +1044,10 @@ class bindsTabFunc:
                 menuAct = "Keybind"
                 bindsCanvas.pack_forget()
                 bindsTabFunc(bindsCanvas)
-                bindsMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
+                bindsMasterFrame.pack(padx=5, pady=15, side="top", fill="both")
                 bindsCanvas.pack(padx=10, pady=1, side="left", fill="both")
 
-                bindsLabel.pack(padx=10, pady=10, side="left", anchor="nw")
+                bindsLabel.pack(padx=10, pady=15, side="left", anchor="nw")
                 saveBinds.pack(padx=10, pady=10, side="left", anchor="nw")
                 resetBinds.pack(padx=10, pady=10, side="left", anchor="nw")
                 
@@ -1037,18 +1139,25 @@ class bindsTabFunc:
                 newBind = f"{gesture}={key}\n"
                 changeArray.append(newBind)
 
-            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'r') as baseLine:
-                changeLines = baseLine.readlines()
-            
-            if handOption.get() == "Left":
-                for change in range(len(changeLines[0:12])):
-                    changeLines[change] = changeArray[change]
+            profileRef = f"{base_path}\\resources\\profiles\\{activePR}.txt"
+            if os.path.isfile(profileRef):
+                with open(profileRef, 'r') as baseLine:
+                    changeLines = baseLine.readlines()
+                
+                if handOption.get() == "Left":
+                    for change in range(len(changeLines[0:12])):
+                        changeLines[change] = changeArray[change]
+                else:
+                    for change in range(len(changeLines[13:])):
+                        changeLines[change] = changeArray[change]
+                
+                with open(profileRef, 'w') as newBinds:
+                    newBinds.writelines(changeLines)
+
             else:
-                for change in range(len(changeLines[13:])):
-                    changeLines[change] = changeArray[change]
+                messagebox.showerror("Error", "The gesture profile cannot be found!")
+                return False
             
-            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'w') as newBinds:
-                newBinds.writelines(changeLines)
             messagebox.showinfo("Keybinds Saved", "Keybinds are saved!")
 
         except Exception as e:
@@ -1074,58 +1183,69 @@ class bindsTabFunc:
                     for bindings in bindMaster.winfo_children():
                         bindings.pack_forget()
 
+                    
                     # Add a dropdown list displaying 3 options - mouse_movement, open_keyboard and detect input
-                    with open(f"{base_path}\\resources\\profiles\\{f}.txt", "r") as line:
-                        for binds in line:
-                            # Splits gestures and keybinds
-                            gesture, key = binds.strip().split("=")
+                    activeRef = f"{base_path}\\resources\\profiles\\{f}.txt"
+                    if os.path.isfile(activeRef):
+                        with open(activeRef, "r") as line:
+                            for binds in line:
+                                # Splits gestures and keybinds
+                                gesture, key = binds.strip().split("=")
 
-                            # Filters out the respective hand gestures and displays them
-                            if e in binds:
-                                initBinds[gesture] = key
-                                bindFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
-                                keyFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
-                                imgFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
+                                # Filters out the respective hand gestures and displays them
+                                if e in binds:
+                                    initBinds[gesture] = key
+                                    bindFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
+                                    keyFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
+                                    imgFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
 
-                                gestureFormat = gesture.split(":")
-                                bindAction = tk.Label(bindFrame[gNumber], text=f"{gestureFormat[0].capitalize()} Hand: {gestureFormat[1].capitalize()}", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+                                    gestureFormat = gesture.split(":")
+                                    bindAction = tk.Label(bindFrame[gNumber], text=f"{gestureFormat[0].capitalize()} Hand: {gestureFormat[1].capitalize()}", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
-                                # Checks if the image file exists
-                                imgS = base_path + f"\\img\\gestureimg\\{gestureFormat[1]}.png"
-                                if os.path.isfile(imgS):
-                                    gtIMG = Image.open(imgS)  
-                                    gtForm = gtIMG.resize((150, 150))
-                                    gestThumb = ImageTk.PhotoImage(gtForm)
-                                    gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
-                                    gestImg.image = gestThumb
-                                else:
-                                    gtIMG = Image.open(base_path + f"\\img\\gestureimg\\placeholder.png")  
-                                    gtForm = gtIMG.resize((150, 150))
-                                    gestThumb = ImageTk.PhotoImage(gtForm)
-                                    gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
-                                    gestImg.image = gestThumb
+                                    # Checks if the image file exists
+                                    imgS = base_path + f"\\img\\gestureimg\\{gestureFormat[1]}.png"
+                                    placeHolder = base_path + f"\\img\\gestureimg\\placeholder.png"
+                                    if os.path.isfile(imgS):
+                                        gtIMG = Image.open(imgS)  
+                                        gtForm = gtIMG.resize((150, 150))
+                                        gestThumb = ImageTk.PhotoImage(gtForm)
+                                        gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
+                                        gestImg.image = gestThumb
+                                    else:
+                                        if os.path.isfile(placeHolder):
+                                            gtIMG = Image.open(placeHolder)
+                                        else:
+                                            messagebox.showerror("Error", "The placeholder image cannot be found!")
+                                            return False
+                                        gtForm = gtIMG.resize((150, 150))
+                                        gestThumb = ImageTk.PhotoImage(gtForm)
+                                        gestImg = tk.Label(keyFrame[gNumber], image=gestThumb, bg=ui_AC1, fg=ui_Txt, border=0)
+                                        gestImg.image = gestThumb
 
-                                bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                                    bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
 
-                                controlType[gNumber] = tk.StringVar(root)
-                                controlType[gNumber].set(controlsList[2])
-                                bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
-                                bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
-                                bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber, gNum= gesture: bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
+                                    controlType[gNumber] = tk.StringVar(root)
+                                    controlType[gNumber].set(controlsList[2])
+                                    bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
+                                    bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
+                                    bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber, gNum= gesture: bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
 
-                                bindFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
-                                keyFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
-                                imgFrame[gNumber].pack(padx=10, pady=5, anchor="nw")
-                                
-                                bindAction.pack(padx=5, side="left")
-                                gestImg.pack(padx=5, pady=5, side="left", anchor="nw")
-                                bindLabel[gesture].pack(padx=5, side="left")
+                                    bindFrame[gNumber].pack(padx=20, pady=5, anchor="nw", fill="x")
+                                    keyFrame[gNumber].pack(padx=20, pady=5, anchor="nw", fill="x")
+                                    imgFrame[gNumber].pack(padx=20, pady=5, anchor="nw", fill="x")
+                                    
+                                    bindAction.pack(padx=5, side="left")
+                                    gestImg.pack(padx=5, pady=5, side="left", anchor="nw")
+                                    bindLabel[gesture].pack(padx=5, side="left")
 
-                                bindChange[gNumber].pack(padx=5, side="right", anchor="e")
-                                bindCType[gNumber].pack(padx=5, side="right", anchor="e")
+                                    bindChange[gNumber].pack(padx=5, side="right", anchor="e")
+                                    bindCType[gNumber].pack(padx=5, side="right", anchor="e")
 
-                                generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
-                                gNumber += 1
+                                    generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
+                                    gNumber += 1
+                    else:
+                        messagebox.showerror("Error", "The gesture profile cannot be found!")
+                        return False
 
                     bindMaster.bind("<Configure>", bindsTabFunc.bindCanvasConfig)
                     bindsCanvas.bind_all("<MouseWheel>", bindsTabFunc.bindCanvasScroll)
@@ -1153,15 +1273,24 @@ class bindsTabFunc:
         try:
             activeProfile = profileOption.get()
             activePR = pControls[activeProfile]
+            gkmRef = f"{base_path}\\resources\\gkm_backup.txt"
+            profileRef = f"{base_path}\\resources\\profiles\\{activePR}.txt"
 
-            with open(f"{base_path}\\resources\\gkm_backup.txt", 'r') as referReset:
-                resetBase = referReset.readlines()
-           
-            with open(f"{base_path}\\resources\\profiles\\{activePR}.txt", 'w') as resetActual:
-                resetActual.writelines(resetBase)
+            if os.path.isfile(gkmRef):
+                with open(gkmRef, 'r') as referReset:
+                    resetBase = referReset.readlines()
+            else:
+                messagebox.showerror("Error", "The backup gesture reference cannot be found!")
+                return False
+
+            if os.path.isfile(profileRef):
+                with open(profileRef, 'w') as resetActual:
+                    resetActual.writelines(resetBase)
+            else:
+                messagebox.showerror("Error", "The gesture profile cannot be found!")
+                return False
             
-            referReset.close()
-            resetActual.close()
+            referReset.close(), resetActual.close()
             bindsTabFunc.loadKeys()
 
         except Exception as e:
@@ -1205,29 +1334,33 @@ class settingsFunc:
     
     # Toggles the option for tutorial to automatically start up
     def setTutAuto(tutState):
-        global tutStartUp, autoTutOpen
+        global tutStartUp, autoTutOpen, configRef
         try:
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                for items in config:
-                    if "startupTut" in items:
-                        tutConfig = items.split("Ã· ")
-                        startConfig = tutConfig[1].replace("\n","")
+            if os.path.isfile(configRef):
+                with open(configRef, "r") as config:
+                    for items in config:
+                        if "startupTut" in items:
+                            tutConfig = items.split("Ã· ")
+                            startConfig = tutConfig[1].replace("\n","")
 
-            # Toggles the state in config.ini
-            if startConfig == "Disabled":
-                startConfig = "Enabled"
-            else:
-                startConfig = "Disabled"
-
-            with open(f"{base_path}\\resources\\config.ini", "r") as ref:
-                configWrite = ref.readlines()
+                # Toggles the state in config.ini
+                if startConfig == "Disabled":
+                    startConfig = "Enabled"
+                else:
+                    startConfig = "Disabled"
+                
+                with open(configRef, "r") as ref:
+                    configWrite = ref.readlines()
             
-            with open(f"{base_path}\\resources\\config.ini", "w") as mod:
-                for item in configWrite:
-                    if f"startupTut Ã· " in item:
-                        mod.write(f"startupTut Ã· {startConfig}\n")
-                    else:
-                        mod.write(item)
+                with open(configRef, "w") as mod:
+                    for item in configWrite:
+                        if f"startupTut Ã· " in item:
+                            mod.write(f"startupTut Ã· {startConfig}\n")
+                        else:
+                            mod.write(item)
+            else:
+                messagebox.showerror("Error", "config.ini cannot be found!")
+                return False
             
             ref.close(), mod.close(), config.close()
             tutState, tutStartUp = startConfig, startConfig
@@ -1283,19 +1416,24 @@ class settingsFunc:
                 try:
                     # Sets the changes
                     def setCamFunc(cam, name):
+                        global configRef
                         try:
                             # Consolidates the changes
-                            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                                camWrite = config.readlines()
+                            if os.path.isfile(configRef):
+                                with open(configRef, "r") as configGet:
+                                    camWrite = configGet.readlines()
 
-                            with open(f"{base_path}\\resources\\config.ini", "w") as config:
-                                for line in camWrite:
-                                    if f"configCam Ã· " in line:
-                                        config.write(f"configCam Ã· {cam}\n")
-                                    else:
-                                        config.write(line)
+                                with open(configRef, "w") as configWrite:
+                                    for line in camWrite:
+                                        if f"configCam Ã· " in line:
+                                            configWrite.write(f"configCam Ã· {cam}\n")
+                                        else:
+                                            configWrite.write(line)
+                            else:
+                                messagebox.showerror("Error", "config.ini cannot be found!")
+                                return False
                             
-                            config.close()
+                            configGet.close(), configWrite.close()
                             messagebox.showinfo("", f"Default Camera is now set to {name}")
                 
                         except Exception as e:
@@ -1585,14 +1723,29 @@ class run:
                     tk.Misc.lift(tutCanvas)
                     tutDisplay = tutCanvas.create_window((0, 0), window=tutMaster)
                     
-                    tabIMG = Image.open(f"{base_path}\\img\\tutimg\\uiTabs.png")  
-                    tabsImg = ImageTk.PhotoImage(tabIMG)
+                    uiTabsPNG = f"{base_path}\\img\\tutimg\\uiTabs.png"
+                    if os.path.isfile(uiTabsPNG):
+                        tabIMG = Image.open(uiTabsPNG)  
+                        tabsImg = ImageTk.PhotoImage(tabIMG)
+                    else:
+                        messagebox.showerror("Error", "The uiTabs image cannot be found!")
+                        return False
 
-                    gtabIMG = Image.open(f"{base_path}\\img\\tutimg\\gameTab.png")  
-                    gametabImg = ImageTk.PhotoImage(gtabIMG)
+                    gameTabPNG = f"{base_path}\\img\\tutimg\\gameTab.png"
+                    if os.path.isfile(gameTabPNG):
+                        gtabIMG = Image.open(gameTabPNG)  
+                        gametabImg = ImageTk.PhotoImage(gtabIMG)
+                    else:
+                        messagebox.showerror("Error", "The gameTab image cannot be found!")
+                        return False
 
-                    gaddImg = Image.open(f"{base_path}\\img\\tutimg\\addGame.png")  
-                    gameAddImg = ImageTk.PhotoImage(gaddImg)
+                    addGamePNG = f"{base_path}\\img\\tutimg\\addGame.png"
+                    if os.path.isfile(addGamePNG):
+                        gaddImg = Image.open(addGamePNG)  
+                        gameAddImg = ImageTk.PhotoImage(gaddImg)
+                    else:
+                        messagebox.showerror("Error", "The addGame image cannot be found!")
+                        return False
 
                     tutTitle = tk.Label(tutText, text="GETTING STARTED WITH HANDFLUX", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
                     tutDesc1 = tk.Label(tutText, text="This UI can be closed by clicking on 'Close' or pressing the ESC key", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
@@ -1702,10 +1855,15 @@ class run:
             
             # Function to Load a TXT File in the folder to faqtxt Text Element
             def txtLoader():
-                with open(f"{base_path}\\resources\\faq_text.txt", "r") as txtfile:
-                    faq_text = txtfile.read()
-                    faqtxt.insert(tk.END, faq_text)
-                    txtfile.close()
+                faqRef = f"{base_path}\\resources\\faq_text.txt"
+                if os.path.isfile(faqRef):
+                    with open(faqRef, "r") as txtfile:
+                        faq_text = txtfile.read()
+                        faqtxt.insert(tk.END, faq_text)
+                        txtfile.close()
+                else:
+                    messagebox.showerror("Error", "The FAQ Text file cannot be found!")
+                    return False
             
             root.bind("<Key>", faqKey)
             # Checks if FAQ UI is opened
@@ -1821,6 +1979,8 @@ class quit:
 
 # Sets the base path to the scripts.
 base_path = os.getcwd()
+configRef = f"{base_path}\\resources\\config.ini"
+gameListRef = f"{base_path}\\resources\\gamesList.txt"
 
 # Version Number 
 versionNum = "1.54"
@@ -1875,7 +2035,14 @@ unMapped = []
 unMappedDesc = []
 camGet = {}
 profileControls = {}
-gamesList = open(f"{base_path}\\resources\\gamesList.txt", "r")
+
+# Checks for gameslist file existence
+if os.path.isfile(gameListRef):
+    gamesList = open(gameListRef, "r")
+else:
+    messagebox.showerror("Error", "The games list cannot be found!")
+    exit()
+
 gameTabFunc.gameDisplay(gamesList, filter)
 generalUI.getCameras(camGet)
 
