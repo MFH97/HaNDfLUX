@@ -13,9 +13,8 @@ import time
 import os
 import sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
-
-# Load the trained model
 base_path = os.getcwd()
+
 modelPath = f"{base_path}\\resources\\mgm_v2.h5"
 model = load_model(modelPath)
 
@@ -69,7 +68,7 @@ def load_gesture_to_key_mapping(file_path):
     return mappings
 
 # Path to the mapping file
-mapping_file_path = f'{base_path}\\resources\\gesture_key_mapping.txt'
+mapping_file_path = 'resources/gesture_key_mapping.txt'
 
 # Load gesture-to-key mapping
 gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
@@ -140,6 +139,7 @@ def select_camera():
     print("Searching for available cameras...")
     index = 0
     available_cameras = []
+    activeCam = ""
     
     while True:
         cap = cv2.VideoCapture(index)
@@ -163,11 +163,13 @@ def select_camera():
         try:
             with open(f"{base_path}\\resources\\config.ini", "r") as config:
                 for items in config:
-                    if "configCam" in items:
+                    if ("configCam" in items):
                         camUse = items.split("Ã· ")
                         activeCam = camUse[1].replace("\n","")
+                        print(activeCam)
                 config.close()
             
+            #selected_cam = int(input("\nEnter the camera index you want to use: "))
             selected_cam = int(activeCam)
             if selected_cam in available_cameras:
                 print(f"Using Camera {selected_cam}")
@@ -180,6 +182,7 @@ def select_camera():
 # Select the camera
 camera_index = select_camera()
 cap = cv2.VideoCapture(camera_index)
+key = ""
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -242,7 +245,7 @@ while cap.isOpened():
                             if is_left_click_held:
                                 pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pydirectinput.press(key)  # Simulate key press
+                            pydirectinput.keyDown(key)  # Simulate key press
                         
                         print(f"Left Hand - Pressed key: {key}")
                     elif handedness == 'Right' and gesture_name in gesture_to_key_right:
@@ -270,12 +273,13 @@ while cap.isOpened():
                             if is_left_click_held:
                                 pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pydirectinput.press(key)  # Simulate key press
+                            pydirectinput.keyDown(key)  # Simulate key press
 
                         print(f"Right Hand - Pressed key: {key}")
                     last_gesture_time[handedness] = current_time  # Reset the timer
             else:
                 # Update the gesture and reset the timer for the hand
+                pydirectinput.keyUp(key)
                 last_gesture[handedness] = gesture_name
                 last_gesture_time[handedness] = current_time
 
@@ -284,7 +288,9 @@ while cap.isOpened():
 
             # Draw landmarks on the hand
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-
+    else:
+        pydirectinput.keyUp(key)
+        
     cv2.imshow('Hand Gesture Recognition', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit
