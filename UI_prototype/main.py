@@ -1183,7 +1183,6 @@ class bindsTabFunc:
                     for bindings in bindMaster.winfo_children():
                         bindings.pack_forget()
 
-                    
                     # Add a dropdown list displaying 3 options - mouse_movement, open_keyboard and detect input
                     activeRef = f"{base_path}\\resources\\profiles\\{f}.txt"
                     if os.path.isfile(activeRef):
