@@ -149,9 +149,7 @@ class generalUI:
     def addProfile(profileControl):
         global pControls, configRef
         try:
-            print(profileControl)
             pControls.update({profileControl.capitalize(): profileControl})
-            print(pControls)
 
             addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
 
@@ -183,6 +181,7 @@ class generalUI:
                 appendKeys.writelines(newKeys)
         
             config.close(), add.close(), addReference.close(), appendKeys.close()
+            bindsTabFunc.refreshList(pControls)
             return pControls
 
         except Exception as e:
@@ -222,6 +221,7 @@ class generalUI:
                 return False
             
             config.close(), add.close()
+            bindsTabFunc.refreshList(pControls)
             return pControls
 
         except Exception as e:
@@ -248,7 +248,8 @@ class generalUI:
                         delete.write(items)
 
             os.remove(f"{base_path}\\resources\\profiles\\{profileControl}.txt")
-            generalUI.loadProfiles(pControls)
+            bindsTabFunc.refreshList(pControls)
+            return pControls
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to delete the profile: {e}")
@@ -1295,8 +1296,17 @@ class bindsTabFunc:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to reset the keys: {e}")
 
-    def getDeleteDetail():
-        pass
+    # Refreshes the gesture profile dropdown list
+    def refreshList(pControlList):
+        global pControls, profileDrop
+        try:
+            profileOption.set(next(iter(pControls)))
+            profileDrop["menu"].delete(0, "end")
+            for items in pControls:
+                profileDrop["menu"].add_command(label=items, command=tk._setit(profileOption, items))
+            pass
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to refresh the dropdown list: {e}")
 
 # Class for settings page functions
 class settingsFunc:
