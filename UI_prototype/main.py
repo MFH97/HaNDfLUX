@@ -149,7 +149,9 @@ class generalUI:
     def addProfile(profileControl):
         global pControls, configRef
         try:
-            pControls.update({profileControl: profileControl})
+            print(profileControl)
+            pControls.update({profileControl.capitalize(): profileControl})
+            print(pControls)
 
             addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
 
@@ -176,13 +178,9 @@ class generalUI:
             else:
                 messagebox.showerror("Error", "The backup mapping cannot be found!")
                 return False
-
-            if os.path.isfile(profileRef):
-                with open(profileRef, 'w') as appendKeys:
-                    appendKeys.writelines(newKeys)
-            else:
-                messagebox.showerror("Error", "The profile's control cannot be found!")
-                return False
+            
+            with open(profileRef, 'w') as appendKeys:
+                appendKeys.writelines(newKeys)
         
             config.close(), add.close(), addReference.close(), appendKeys.close()
             return pControls
@@ -231,24 +229,26 @@ class generalUI:
      
     # Removes the selected gesture profile
     def deleteProfile(profileControl):
-        global pControls
+        global pControls, configRef
         try:
+            
             # Removes that particular item
             del pControls[profileControl.capitalize()]
 
             remainder = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
             
-            with open(f"{base_path}\\resources\\config.ini", "r") as config:
-                configRef = config.readlines()
+            with open(configRef, "r") as config:
+                configGet = config.readlines()
 
-            with open(f"{base_path}\\resources\\config.ini", 'w') as delete:
-                for items in configRef:
-                    if "profileMap" in items:
+            with open(configRef, 'w') as delete:
+                for items in configGet:
+                    if "profileMap Ã·" in items:
                         delete.write(f"profileMap Ã· {remainder}\n")
                     else:
                         delete.write(items)
 
             os.remove(f"{base_path}\\resources\\profiles\\{profileControl}.txt")
+            generalUI.loadProfiles(pControls)
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to delete the profile: {e}")
@@ -597,7 +597,7 @@ class gameTabFunc:
                 addGList.write(f"ExeÃ· {gameName}Ã· {exePath}")
                 addGList.close()
 
-                generalUI.addProfile(gameN.lower())
+                generalUI.addProfile(gameName.lower())
                 goBack()
                 
                 messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
