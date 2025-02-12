@@ -15,7 +15,9 @@ import sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
 # Load the trained model
-model = load_model('mgm_v2.h5')
+base_path = os.getcwd()
+modelPath = f"{base_path}\\resources\\mgm_v2.h5"
+model = load_model(modelPath)
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
@@ -67,9 +69,7 @@ def load_gesture_to_key_mapping(file_path):
     return mappings
 
 # Path to the mapping file
-base_path = os.getcwd()
 mapping_file_path = f'{base_path}\\resources\\gesture_key_mapping.txt'
-
 
 # Load gesture-to-key mapping
 gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
@@ -153,6 +153,7 @@ def select_camera():
     if not available_cameras:
         print("No cameras found!")
         sys.exit(1)
+        cv2.destroyAllWindows()
     
     print("\nAvailable Cameras:")
     for cam in available_cameras:
@@ -168,7 +169,6 @@ def select_camera():
                 config.close()
             
             selected_cam = int(activeCam)
-            #selected_cam = int(input("\nEnter the camera index you want to use: "))
             if selected_cam in available_cameras:
                 print(f"Using Camera {selected_cam}")
                 return selected_cam
