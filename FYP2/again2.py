@@ -13,9 +13,10 @@ import time
 import os
 import sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+base_path = os.getcwd()
 
-# Load the trained model
-model = load_model('mgm_v2.h5')
+modelPath = f"{base_path}\\resources\\mgm_v2.h5"
+model = load_model(modelPath)
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
@@ -67,7 +68,7 @@ def load_gesture_to_key_mapping(file_path):
     return mappings
 
 # Path to the mapping file
-mapping_file_path = 'gesture_key_mapping.txt'
+mapping_file_path = 'resources/gesture_key_mapping.txt'
 
 # Load gesture-to-key mapping
 gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
@@ -138,6 +139,7 @@ def select_camera():
     print("Searching for available cameras...")
     index = 0
     available_cameras = []
+    activeCam = ""
     
     while True:
         cap = cv2.VideoCapture(index)
@@ -151,6 +153,7 @@ def select_camera():
     if not available_cameras:
         print("No cameras found!")
         sys.exit(1)
+        cv2.destroyAllWindows()
     
     print("\nAvailable Cameras:")
     for cam in available_cameras:
@@ -158,7 +161,16 @@ def select_camera():
     
     while True:
         try:
-            selected_cam = int(input("\nEnter the camera index you want to use: "))
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
+                for items in config:
+                    if ("configCam" in items):
+                        camUse = items.split("Ã· ")
+                        activeCam = camUse[1].replace("\n","")
+                        print(activeCam)
+                config.close()
+            
+            #selected_cam = int(input("\nEnter the camera index you want to use: "))
+            selected_cam = int(activeCam)
             if selected_cam in available_cameras:
                 print(f"Using Camera {selected_cam}")
                 return selected_cam
