@@ -1134,6 +1134,7 @@ class bindsTabFunc:
 
             # Reset the changes
             changeArray = []
+            rightStart = 12
 
             # Consolidates the changes
             for gesture, key in initBinds.items():
@@ -1148,9 +1149,10 @@ class bindsTabFunc:
                 if handOption.get() == "Left":
                     for change in range(len(changeLines[0:12])):
                         changeLines[change] = changeArray[change]
-                else:
+                elif handOption.get() == "Right":
                     for change in range(len(changeLines[13:])):
-                        changeLines[change] = changeArray[change]
+                        changeLines[rightStart] = changeArray[rightStart]
+                        rightStart += 1
                 
                 with open(profileRef, 'w') as newBinds:
                     newBinds.writelines(changeLines)
