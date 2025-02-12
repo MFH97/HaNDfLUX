@@ -170,6 +170,7 @@ def select_camera():
 # Select the camera
 camera_index = select_camera()
 cap = cv2.VideoCapture(camera_index)
+key = ""
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -232,7 +233,7 @@ while cap.isOpened():
                             if is_left_click_held:
                                 pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pydirectinput.press(key)  # Simulate key press
+                            pydirectinput.keyDown(key)  # Simulate key press
                         
                         print(f"Left Hand - Pressed key: {key}")
                     elif handedness == 'Right' and gesture_name in gesture_to_key_right:
@@ -260,12 +261,13 @@ while cap.isOpened():
                             if is_left_click_held:
                                 pydirectinput.mouseUp()
                                 is_left_click_held = False
-                            pydirectinput.press(key)  # Simulate key press
+                            pydirectinput.keyDown(key)  # Simulate key press
 
                         print(f"Right Hand - Pressed key: {key}")
                     last_gesture_time[handedness] = current_time  # Reset the timer
             else:
                 # Update the gesture and reset the timer for the hand
+                pydirectinput.keyUp(key)
                 last_gesture[handedness] = gesture_name
                 last_gesture_time[handedness] = current_time
 
@@ -274,7 +276,9 @@ while cap.isOpened():
 
             # Draw landmarks on the hand
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-
+    else:
+        pydirectinput.keyUp(key)
+        
     cv2.imshow('Hand Gesture Recognition', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit
