@@ -68,7 +68,7 @@ def load_gesture_to_key_mapping(file_path):
     return mappings
 
 # Path to the mapping file
-mapping_file_path = 'resources/gesture_key_mapping.txt'
+mapping_file_path = f'{base_path}\\resources\\gesture_key_mapping.txt'
 
 # Load gesture-to-key mapping
 gesture_to_key = load_gesture_to_key_mapping(mapping_file_path)
@@ -89,8 +89,15 @@ def open_onscreen_keyboard():
     except Exception as e:
         print(f"Failed to open on-screen keyboard: {e}")
 
+with open(f"{base_path}\\resources\\config.ini", "r") as config:
+    for items in config:
+        if ("senseSlider" in items):
+            senseGet = items.split("Ã· ")
+            senseRef = senseGet[1].replace("\n","")
+    config.close()
+
 screen_width, screen_height = pydirectinput.size()
-cursor_speed = 5
+cursor_speed = int(senseRef)
 position_displacement = 1.5
 previous_base_coord = [0, 0]
 is_left_click_held = False

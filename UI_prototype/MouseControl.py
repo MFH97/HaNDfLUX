@@ -39,7 +39,12 @@ with open(f"{base_path}\\resources\\config.ini", "r") as config:
         if "configCam" in items:
             camUse = items.split("Ã· ")
             activeCam = camUse[1].replace("\n","")
+        
+        if "senseSlider" in items:
+            senseGet = items.split("Ã· ")
+            senseRef= senseGet[1].replace("\n","")
     config.close()
+
 video = cv2.VideoCapture(int(activeCam))
 
 if not video.isOpened():
@@ -47,7 +52,7 @@ if not video.isOpened():
     sys.exit(1)
 
 screen_width, screen_height = pyautogui.size()
-cursor_speed = 5
+cursor_speed = int(senseRef)
 position_displacement = 1.5
 previous_base_coord = [0, 0]
 

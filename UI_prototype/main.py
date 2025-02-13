@@ -1465,6 +1465,51 @@ class settingsFunc:
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to display the new cameras: {e}")
 
+            # Gets the sensitivity setting from config.ini
+            def senseGet():
+                global configRef
+                try:
+                    if os.path.isfile(configRef):
+                        with open(configRef, "r") as configGet:
+                            for line in configGet:
+                                if f"senseSlider Ã·" in line:
+                                    senseInt = line.split("Ã· ")
+                                    senseRef = (senseInt[1].replace("\n",""))
+                    else:
+                        messagebox.showerror("Error", "config.ini cannot be found!")
+                        return False
+                    
+                    sensSlider.set(senseRef)
+
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to get the sensitivity valuesi: {e}")
+            
+            # Edits the sensitivity setting in config.ini
+            def senseEdit():
+                global configRef
+                try:
+                    newVal = sensSlider.get()
+                    # Consolidates the changes
+                    if os.path.isfile(configRef):
+                        with open(configRef, "r") as configGet:
+                            camWrite = configGet.readlines()
+
+                        with open(configRef, "w") as configWrite:
+                            for line in camWrite:
+                                if f"senseSlider Ã· " in line:
+                                    configWrite.write(f"senseSlider Ã· {newVal}\n")
+                                else:
+                                    configWrite.write(line)
+                    else:
+                        messagebox.showerror("Error", "config.ini cannot be found!")
+                        return False
+                    
+                    messagebox.showinfo("Note", f"Sensitivity has now been set to {newVal}")
+                    configGet.close(), configWrite.close()
+
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to modify config.ini: {e}")
+
             # Checks if the settings are currently active
             if not gearAct:
                 # Checks if it's already made
@@ -1503,6 +1548,15 @@ class settingsFunc:
                     camDescLabel = tk.Label(camTF, text="Set a default camera for the gesture controller to use", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
                     camLister = tk.Button(camFrame, text="Detect Cameras", command=detectCamFunc, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
+                    # Modifies the sensitivity settings in config.ini
+                    sensTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    sensFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
+                    sensLabel = tk.Label(sensTF, text="SENSITIVITY", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                    sensDescLabel = tk.Label(sensTF, text="Sets the sensitivity of the mouse for the respective gesture controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
+                    sensSlider = tk.Scale(sensFrame, bg=ui_AC2, fg=ui_Txt, highlightthickness=0, highlightcolor=ui_AH2, troughcolor=ui_Txt, length=800, width=30, orient="horizontal", from_=5, to=50, font=(ui_Font, 12))
+                    sensEditor = tk.Button(sensFrame, text="Set Sensitivity", command=senseEdit, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    senseGet()
+
                     # For getting help / viewing the FAQ
                     helperTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     helperFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
@@ -1526,6 +1580,9 @@ class settingsFunc:
                     camFrame.pack(anchor="w", fill="x")
                     camDisplayFrame.pack(anchor="w", fill="x")
 
+                    sensTF.pack(side="top", anchor="nw", fill="x")
+                    sensFrame.pack(anchor="w", fill="x")
+
                     helperTF.pack(side="top", anchor="nw", fill="x")
                     helperFrame.pack(anchor="w", fill="x")
             
@@ -1540,6 +1597,11 @@ class settingsFunc:
                     camLabel.pack(padx=10, pady=5, anchor="nw")
                     camDescLabel.pack(padx=10, pady=2, anchor="nw")
                     camLister.pack(padx=10, pady=2, anchor="nw")
+
+                    sensLabel.pack(padx=10, pady=5, anchor="nw")
+                    sensDescLabel.pack(padx=10, pady=2, anchor="nw")
+                    sensSlider.pack(padx=10, pady=2)
+                    sensEditor.pack(padx=10, pady=10)
 
                     helperLabel.pack(padx=10, pady=5, anchor="nw")
                     helperDescLabel.pack(padx=10, pady=2, anchor="nw")
@@ -1561,6 +1623,8 @@ class settingsFunc:
                     generalUI.button_hover(autoTutOpen, ui_AH1, ui_AC1)
 
                     generalUI.button_hover(camLister, ui_AH1, ui_AC1)
+
+                    generalUI.button_hover(sensEditor, ui_AH1, ui_AC1)
 
                     generalUI.button_hover(faq_button, ui_AH1, ui_AC1)
                     generalUI.button_hover(tutorial_button, ui_AH1, ui_AC1)
@@ -1994,7 +2058,7 @@ configRef = f"{base_path}\\resources\\config.ini"
 gameListRef = f"{base_path}\\resources\\gamesList.txt"
 
 # Version Number 
-versionNum = "1.54"
+versionNum = "1.55"
 
 # For tracking UI activity and subprocesses
 tutStartUp = ""
@@ -2099,8 +2163,9 @@ generalUI.loadProfiles(pControls)
 
 # Initialises the tkinter root window with 1280 x 720 as the default
 root = tk.Tk()
-root.title(f"Handflux - GUI Prototype {versionNum}")
+root.title(f"Handflux {versionNum}")
 root.geometry(f"{Defined_Res['1280x720'][0]}x{Defined_Res['1280x720'][1]}")
+root.iconbitmap("handflux.ico")
 root.maxsize(MaxRes[0],MaxRes[1])
 root.minsize(1280,720)
 root.configure(background=ui_AC1)
@@ -2190,7 +2255,7 @@ generalUI.button_hover(saveBinds,ui_AH1, ui_AC2)
 generalUI.button_hover(resetBinds,ui_AE, ui_AH1)
 
 # GUI Labels
-TKlabel = tk.Label(uiMasterFrame, text=f"HANDFLUX - PROTOTYPE {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
+TKlabel = tk.Label(uiMasterFrame, text=f"HANDFLUX {versionNum}", anchor="ne", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
 
 # Settings Tab - Displays the settings for the app.
 settingsBorder = tk.Frame(uiMasterFrame, pady=1, bg=ui_AC1)
