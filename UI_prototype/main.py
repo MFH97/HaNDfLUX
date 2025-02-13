@@ -571,17 +571,17 @@ class gameTabFunc:
 
                 # Checks the fields from the entered data
                 if imgPath == "":
-                    imgPath = base_path + f"\\img\\gameimg\\Placeholder.png"
+                    imgPath = f"BASE\\img\\gameimg\\Placeholder.png"
                 else:
                     pass
                 if exePath == "":
                     messagebox.showinfo("Warning","One or more fields are not filled")
                     return
-                if gameN == "Add game name here":
+                if gameN == "Add game name here" or gameN == "":
                     gameName = "SAMPLE GAME"
                 else:
                     gameName = gameN.upper()
-                if gameD == "Add game description here":
+                if gameD == "Add game description here" or gameD == "":
                     gameDesc = "Sample Desc"
                 else:
                     gameDesc = gameD
@@ -609,6 +609,14 @@ class gameTabFunc:
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to add games to games list: {e}")
+
+        # Clears the text in game name
+        def selectName(e):
+            addGameLabel.delete("1.0","end")
+
+        # Clears the text in game description
+        def selectDesc(e):
+            addGameTXT.delete("1.0","end")
 
         try:
             # Hides the game selection tab
@@ -649,6 +657,9 @@ class gameTabFunc:
 
             addGameTXT = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             addGameTXT.insert(tk.END, "Add game description here")
+
+            addGameLabel.bind("<Button-1>", selectName)
+            addGameTXT.bind("<Button-1>", selectDesc)
 
             addGameFP = tk.Button(game_InfoFrame, text="Configure Filepath (REQUIRED)", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
             addGameFPDesc = tk.Label(game_InfoFrame, text="Filepath", wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
@@ -812,15 +823,7 @@ class gameTabFunc:
                     # Finds the game details and deletes it
                     with open(gameListRef, "w") as deletion:
                         for line in gameWrite:
-                            if f"GameÃ· {gameItem}Ã·" in line:
-                                deletion.write("")
-                            elif f"DescÃ· {gameItem}Ã·" in line:
-                                deletion.write("")
-                            elif f"ThumbImgÃ· {gameItem}Ã·" in line:
-                                deletion.write("")
-                            elif f"ExeÃ· {gameItem}Ã·" in line:
-                                deletion.write("")
-                            else:
+                            if f"{gameItem}Ã·" not in line:
                                 deletion.write(line)
                 else:
                     messagebox.showerror("Error", "The games list cannot be found!")
@@ -832,7 +835,7 @@ class gameTabFunc:
                 if baseImg == "BASE":
                     pass
                 else:
-                    #os.remove(gameDetails[2])
+                    os.remove(gameDetails[2])
                     pass
 
                 generalUI.deleteProfile(gameItem)
