@@ -1,5 +1,5 @@
 Q - How do I install this app?
-A - Simple, just extract the .exe from the zip folder, or run the .exe after using the installer.
+A - Simply extract the "Handflux" Folder from the .zip, and run the .exe file.
 
 Q - Lorem Ipsum
 A - Dolor sit appmet

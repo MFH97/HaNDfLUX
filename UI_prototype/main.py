@@ -536,7 +536,7 @@ class gameTabFunc:
                 if filepath_New:
                     # Changes the filepath in the game description
                     exePath = filepath_New
-                    addGameFPDesc.configure(text = filepath_New)
+                    addGameFP.configure(text = filepath_New)
                 else:
                     pass
             except Exception as e:
@@ -570,13 +570,13 @@ class gameTabFunc:
                 gameN = re.sub(r'[]\\\/:*?÷"<>|[]' , "" ,  gameN)
 
                 # Checks the fields from the entered data
-                if imgPath == "":
-                    imgPath = f"BASE\\img\\gameimg\\Placeholder.png"
+                if imgPath == "" or imgPath == f"{base_path}\\img\\gameimg\\PlaceHolder.png":
+                    imgPath = f"BASE/img/gameimg/Placeholder.png"
                 else:
                     pass
                 if exePath == "":
                     messagebox.showinfo("Warning","One or more fields are not filled")
-                    return
+                    return False
                 if gameN == "Add game name here" or gameN == "":
                     gameName = "SAMPLE GAME"
                 else:
@@ -601,7 +601,7 @@ class gameTabFunc:
                 generalUI.addProfile(gameName.lower())
                 goBack()
                 
-                messagebox.showinfo("You have added a Game to the list!","Feel free to go back to the main menu")
+                messagebox.showinfo("You have added a Game to the list!","You can now assign controls to the game!")
                 gameTabFunc(gamesDFrame)
 
             except NameError:
@@ -612,11 +612,13 @@ class gameTabFunc:
 
         # Clears the text in game name
         def selectName(e):
-            addGameLabel.delete("1.0","end")
+            if addGameLabel.get("1.0","end-1c") == "Add game name here":
+                addGameLabel.delete("1.0","end")
 
         # Clears the text in game description
         def selectDesc(e):
-            addGameTXT.delete("1.0","end")
+            if addGameTXT.get("1.0","end-1c") == "Add game description here":
+                addGameTXT.delete("1.0","end")
 
         try:
             # Hides the game selection tab
@@ -662,8 +664,6 @@ class gameTabFunc:
             addGameTXT.bind("<Button-1>", selectDesc)
 
             addGameFP = tk.Button(game_InfoFrame, text="Configure Filepath (REQUIRED)", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            addGameFPDesc = tk.Label(game_InfoFrame, text="Filepath", wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
-
             addGameButton = tk.Button(game_AddFrame, text="Add Game to Games List", command=addToGL, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
@@ -682,7 +682,6 @@ class gameTabFunc:
             addGameTXT .pack(padx=4, pady=4, side="left", anchor="nw")
             
             addGameFP.pack(padx=4, pady=4, side="left", anchor="w")
-            addGameFPDesc.pack(padx=4, pady=4, side="left", anchor="w")
             generalUI.button_hover(addGameFP, ui_AH1, ui_AC1)
 
             agiLabel.pack(padx=4, pady=4, side="top", anchor="nw")
@@ -695,7 +694,7 @@ class gameTabFunc:
 
     # Displays that specific game 
     def game_Describe(gameItem):
-        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList, process, gControls, gamesDFrame, gameListRef
+        global gamesDisplay, gameMasterFrame, gameDetails, gameDisplay, gameProcess, gamesList, process, gamesDFrame, gameListRef, textR
 
         # Goes back to the Games Tab
         def goBack():
@@ -729,24 +728,19 @@ class gameTabFunc:
                 thread.daemon = True
                 thread.start()
 
-            # Executes the selected gesture control
-            def runControl():
-                controlIndex = controlsList.get()
-                controllerProgram = gControls[controlIndex]
-                controllerProgram()
-
             try:
-                gameEXE = gameDetails[3]
+                gameEXE = gameDetails[2]
                 gameEXE = gameEXE.split("/")
 
-                if len(gameDetails[3]) == 0 or gameDetails[3] == "Filepath":
+                if len(gameDetails[2]) == 0 or gameDetails[2] == "Filepath":
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
                     # Starts up the respective game's control, gesture profile and game
-                    os.startfile(gameDetails[3])
+                    os.startfile(gameDetails[2])
+                    run.program1()
                     generalUI.loadGameProfile(gameDetails[0].lower())
                     gameStart(gameEXE[-1])
-                    runControl()
+                    
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to run the game: {e}")
@@ -769,7 +763,7 @@ class gameTabFunc:
                             for line in gameWrite:
                                 if not filepath_Update and f"ExeÃ· {gameItem}Ã· " in line:
                                     writeList.write(filepath_Change + "\n")
-                                    gameDetails[3] = filepath_New
+                                    gameDetails[2] = filepath_New
                                     filepath_Update = True
                                 else:
                                     writeList.write(line)
@@ -814,17 +808,26 @@ class gameTabFunc:
         # Deletes the game from gameslist after confirmation
         def deleteGame():
             global gameListRef
-            try:             
+            try:
+                delTextR = False
+                gameWrite = []
                 # Gets the reference for game deletion
                 if os.path.isfile(gameListRef):
                     with open(gameListRef, "r") as delRefer:
-                        gameWrite = delRefer.readlines()
+                        for line in delRefer:
+                            if f"GameÃ· {gameItem}Ã·" in line:
+                                delTextR = True
+                                continue
+                            
+                            if f"ExeÃ· {gameItem}Ã·" in line:
+                                delTextR = False
+                                continue
+                            
+                            if not delTextR:
+                                gameWrite.append(line)
 
-                    # Finds the game details and deletes it
                     with open(gameListRef, "w") as deletion:
-                        for line in gameWrite:
-                            if f"{gameItem}Ã·" not in line:
-                                deletion.write(line)
+                        deletion.writelines(gameWrite)
                 else:
                     messagebox.showerror("Error", "The games list cannot be found!")
                     return False
@@ -835,7 +838,7 @@ class gameTabFunc:
                 if baseImg == "BASE":
                     pass
                 else:
-                    os.remove(gameDetails[2])
+                    os.remove(gameDetails[1])
                     pass
 
                 generalUI.deleteProfile(gameItem)
@@ -854,21 +857,14 @@ class gameTabFunc:
                 
                 if os.path.isfile(gameListRef):
                     with open(gameListRef, "r") as renameRef:
-                        gameWrite = renameRef.readlines()
+                        gameWrite = renameRef.read()
 
-                    # Finds the game details and changes them to the new name
-                    with open(gameListRef, "w") as edit:
-                        for line in gameWrite:
-                            if f"GameÃ· {game}Ã·" in line:
-                                edit.write(f"GameÃ· {gui}Ã· {gui}\n")
-                            elif f"DescÃ· {game}Ã·" in line:
-                                edit.write(f"DescÃ· {gui}Ã· {gameDetails[1]}\n")
-                            elif f"ThumbImgÃ· {game}Ã·" in line:
-                                edit.write(f"ThumbImgÃ· {gui}Ã· {gameDetails[2]}\n")
-                            elif f"ExeÃ· {game}Ã·" in line:
-                                edit.write(f"ExeÃ· {gui}Ã· {gameDetails[3]}\n")
-                            else:
-                                edit.write(line)
+                    editToken = f"GameÃ· {gui}Ã· {gui}\nDescÃ· {gui}Ã· {gameDetails[3]}\nThumbImgÃ· {gui}Ã· {gameDetails[1]}\nExeÃ· {gui}Ã· {gameDetails[2]}"
+                    gameEdit = re.sub(rf"(GameÃ·\ {game}Ã·\s*)(.*?)(\s*ExeÃ·\ {game}Ã·)", re.escape(editToken), gameWrite, flags=re.DOTALL)
+                    gameEdit = gameEdit.replace("\\n","\n").replace("\\","")
+
+                    with open(gameListRef, "w") as renameSet:
+                        renameSet.write(gameEdit)
                 else:
                     messagebox.showerror("Error", "The games list cannot be found!")
                     return False
@@ -879,7 +875,7 @@ class gameTabFunc:
                 generalUI.editProfile(game.lower(), gui.lower())
 
                 messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
-                renameRef.close(), edit.close()
+                renameRef.close(), renameSet.close()
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
@@ -896,6 +892,8 @@ class gameTabFunc:
                 gItem.destroy()
                 gameDetails.clear()
             baseImg = ""
+            textR = False
+            textDesc = []
 
             gItemExt = gameItem.split()
 
@@ -907,26 +905,44 @@ class gameTabFunc:
                             gameName = line.split("Ã· ")
                             gameDetails.append(gameName[2].replace("\n",""))
                     
-                        elif f"DescÃ· {gItemExt[0]}" in line:
-                            gameDesc = line.split("Ã· ")
-                            gameDetails.append(gameDesc[2].replace("\n",""))
-                    
-                        elif f"ThumbImgÃ· {gItemExt[0]}" in line:
+                        if f"ThumbImgÃ· {gItemExt[0]}" in line:
                             gameThumb = line.split("Ã· ")
                             baseCheck = gameThumb[2].startswith("BASE")
                             if baseCheck:
                                 txt = gameThumb[2].replace("\n","")
                                 txt2 = txt.replace("BASE","")
-                                file = base_path + txt2
+                                file = base_path.replace("\\","/") + txt2
                                 baseImg = "BASE"
                             else:
                                 file = gameThumb[2].replace("\n","")
                             gameDetails.append(file)
                         
-                        elif f"ExeÃ· {gItemExt[0]}" in line:
+                        if f"ExeÃ· {gItemExt[0]}" in line:
                             gameExe = line.split("Ã· ")
                             file = gameExe[2].replace("\n","")
                             gameDetails.append(file)
+                
+                with open(gameListRef, "r") as gameDescGet:
+                    for line in gameDescGet:
+                        if f"DescÃ· {gItemExt[0]}" in line:
+                            textR = True
+                            baseLine = line.split("Ã· ")
+                            baseDesc = baseLine[2].replace(f"\n" , "")
+                            textDesc.append(baseDesc)
+                            continue
+
+                        if f"ThumbImgÃ·" in line:
+                            textR = False
+                            continue
+
+                        if textR:
+                            textDesc.append(line.strip())
+                
+                textExt = "\n".join(textDesc)
+                gameDetails.append(textExt.replace(f"DescÃ· {gItemExt[0]}Ã· " , ""))
+
+                gameGet.close(), gameDescGet.close()
+
             else:
                 messagebox.showerror("Error", "The games list cannot be found!")
                 return False
@@ -945,8 +961,8 @@ class gameTabFunc:
             backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
             
             placeHolder = base_path + f"\\img\\gameimg\\Placeholder.png"
-            if os.path.isfile(gameDetails[2]):
-                giIMG = Image.open(gameDetails[2])  
+            if os.path.isfile(gameDetails[1]):
+                giIMG = Image.open(gameDetails[1])  
                 giFormat = giIMG.resize((220, 300))
                 gameItemImg = ImageTk.PhotoImage(giFormat)
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
@@ -957,19 +973,20 @@ class gameTabFunc:
                 else:
                     messagebox.showerror("Error", "The placeholder image cannot be found!")
                     return False
+                
                 giFormat = giIMG.resize((220, 300))
                 gameItemImg = ImageTk.PhotoImage(giFormat)
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
                 gameImg.image = gameItemImg
 
             gameItemTxt = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
-            gameItemTxt.insert(tk.END, gameDetails[1])
+            gameItemTxt.insert(tk.END, gameDetails[3])
             gameItemTxt.configure(exportselection=0, state="disabled")  
 
             gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[3], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[2], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
             
-            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with selected controller", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with Gesture Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, height=3, activebackground=ui_AH1, font=(ui_Font, 12))
             gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
@@ -978,12 +995,6 @@ class gameTabFunc:
             game_InfoFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             gameItemLabel.pack(padx=5, pady=5, side="top", anchor="nw")
 
-            controlsList = tk.StringVar(root)
-            controlsList.set(next(iter(gControls)))
-            gameControls = tk.OptionMenu(game_RunFrame, controlsList, *gControls.keys())
-            gameControls.configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
-
-            gameControls.pack(padx=5, pady=5, side="top", anchor="nw")
             backButton.pack(padx=4, pady=4, side="left", anchor="w")
             
             gameDelete.pack(padx=4, pady=4, side="right")
@@ -1105,14 +1116,8 @@ class bindsTabFunc:
                 bindLabel[gesture].config(text="Key*: mouse_movement")
                 messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to Mouse Movement")
             
-            # If option is On-screen Keyboard, sets keybind to open_keyboard
-            elif gMapper == controlsList[1]:
-                initBinds[gesture] = "open_keyboard"
-                bindLabel[gesture].config(text="Key*: open_keyboard")
-                messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to the On-screen Keyboard")
-            
             # If option is Detect Input, displays a dialog showing that inputs are being detected
-            elif gMapper == controlsList[2]:
+            elif gMapper == controlsList[1]:
                 dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
                 bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
 
@@ -1137,7 +1142,7 @@ class bindsTabFunc:
 
             # Reset the changes
             changeArray = []
-            rightStart = 12
+            rightStart = 11
 
             # Consolidates the changes
             for gesture, key in initBinds.items():
@@ -1150,10 +1155,10 @@ class bindsTabFunc:
                     changeLines = baseLine.readlines()
                 
                 if handOption.get() == "Left":
-                    for change in range(len(changeLines[0:12])):
+                    for change in range(len(changeLines[0:11])):
                         changeLines[change] = changeArray[change]
                 elif handOption.get() == "Right":
-                    for change in range(len(changeLines[13:])):
+                    for change in range(len(changeLines[12:])):
                         changeLines[rightStart] = changeArray[rightStart]
                         rightStart += 1
                 
@@ -1230,7 +1235,7 @@ class bindsTabFunc:
                                     bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
 
                                     controlType[gNumber] = tk.StringVar(root)
-                                    controlType[gNumber].set(controlsList[2])
+                                    controlType[gNumber].set(controlsList[1])
                                     bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
                                     bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
                                     bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber, gNum= gesture: bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
@@ -1662,10 +1667,7 @@ class run:
             if process is not None:
                 messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
                 return
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "again2.py")],
-                shell=True
-            )
+            process = subprocess.Popen(["py", os.path.join(base_path, "CC3.py")], shell=True)
 
             # Debugging info 
             print(f"Started Mouse Control with PID: {process.pid}")
@@ -1674,66 +1676,6 @@ class run:
             return process
         except Exception as e:
             messagebox.showerror("Error", f"Failed to run Mouse Control: {e}")
-
-    # Swipe Motion Control (EXPERIMENTAL)
-    def program2():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "swipeControl.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Two Hands Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
-
-    # Mouse Control (EXPERIMENTAL)
-    def program3(): 
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "MouseControl.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Swipe Motion Gesture Control with PID: {process.pid}")
-            
-            # For runGame to process
-            return process
-        
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Two Hands Gesture Control: {e}")
-
-    # Second Steering Control (EXPERIMENTAL)
-    def program4():
-        global process
-        try:
-            if process is not None:
-                messagebox.showwarning("Warning", "Another program is already running. Please stop it first.")
-                return
-            process = subprocess.Popen(
-                ["py", os.path.join(base_path, "steering2.py")],
-                shell=True
-            )
-            # Debugging info
-            print(f"Started Steering 2 Gesture Control with PID: {process.pid}")
-
-            # For runGame to process
-            return process
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to run Steering 2 Gesture Control: {e}")
 
     # Shows a tutorial in the app - Video / Text
     def tutorial():
@@ -2061,7 +2003,7 @@ configRef = f"{base_path}\\resources\\config.ini"
 gameListRef = f"{base_path}\\resources\\gamesList.txt"
 
 # Version Number 
-versionNum = "1.55"
+versionNum = "1.56"
 
 # For tracking UI activity and subprocesses
 tutStartUp = ""
@@ -2077,6 +2019,7 @@ onceSet_Game = False
 onceSet_Binds = False
 onceSet_Settings = False
 onceSet_Tut = False
+textR = False
 filter = ""
 mouse = Controller()
 
@@ -2136,14 +2079,6 @@ Defined_Res = {
     "1920x1080": [1920,1080],
 }
 
-# Gesture Controls definitions
-gControls = {
-    "Default Controls" : run.program1,
-    "(EXPERIMENTAL) Swipe" : run.program2,
-    "(EXPERIMENTAL) Mouse" : run.program3,
-    "(EXPERIMENTAL) Steering" : run.program4
-}
-
 # Hand Controls definitions
 hControls = {
     "Left": "left:",
@@ -2153,7 +2088,6 @@ hControls = {
 # Control Type definitions for Keybinds - mouse_movement, open_keyboard and detect input
 controlsList = [
     "Mouse Movement",
-    "On-screen Keyboard",
     "Detect Input",
 ]
 

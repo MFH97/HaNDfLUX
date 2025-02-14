@@ -16,4 +16,4 @@ Exe÷ SOLITAIRE÷ C:/Games/Game.exe
 Game÷ ASPHALT LEGENDS UNITE÷ ASPHALT LEGENDS UNITE
 Desc÷ ASPHALT LEGENDS UNITE÷ Spark your competitive soul with Asphalt Legends UNITE and feel the collective heartbeat of the road! Join forces with other players to speed through intense arcade races, perform jaw-dropping stunts, and charge towards victory while driving the finest hypercars!
 ThumbImg÷ ASPHALT LEGENDS UNITE÷ BASE\img\gameimg\Asphalt.png
-Exe÷ ASPHALT LEGENDS UNITE÷ C:/Games/Game.exe
+Exe÷ ASPHALT LEGENDS UNITE÷ D:/SteamGame/steamapps/common/Asphalt 9 Legends/Asphalt9_Steam_x64_rtl.exe
