@@ -3,16 +3,12 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from tensorflow.keras.models import load_model
-import win32api
-import win32con
-import pydirectinput
-import pyautogui  # Ensure pyautogui is imported
-import math
-import time
+import win32api, win32con
+import pydirectinput, pyautogui  # Ensure pyautogui is imported
+import math, time
 
 # this 2 libraries for the on-screen keyboard and more encoding support across various devices
-import os
-import sys
+import os, sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 base_path = os.getcwd()
 
@@ -42,7 +38,7 @@ debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
-position_displacement = float(posRef)
+position_displacement = posRef
 previous_base_coord = [0, 0]
 is_left_click_held = False
 
@@ -129,7 +125,7 @@ def positionCursor(index_x, index_y, index_base, previous_base_coord):
     offset_x = int((index_x - center_pos[0]) * position_displacement)
     offset_y = int((index_y - center_pos[1]) * position_displacement)
     
-    if deadzone_dist > 0.005:
+    if deadzone_dist > 0.006:
         # Move cursor
         win32api.SetCursorPos(((index_x + offset_x), (index_y + offset_y)))
             
@@ -249,13 +245,6 @@ while cap.isOpened():
     frame = cv2.flip(frame, 1)
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(frame_rgb)
-
-    LEFT_ZONE = 0.42  # Left zone size
-    RIGHT_ZONE = 0.58 # Right zone size
-
-    previous_zone = "Idle"
-    previous_palm_x = None  # Store the previous x-coordinate
-    last_keypress_time = 0  # To prevent repeated key presses
     
     cv2.putText(frame, f'Current Control: {controller_state}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     if controller_state == "Keyboard":
@@ -336,11 +325,11 @@ while cap.isOpened():
                 # Click mouse if fingers are close enough
                 if distance < 0.05:
                     if not is_left_click_held:
-                        pydirectinput.mouseDown()
+                        pyautogui.mouseDown()
                         is_left_click_held = True
                 else:
                     if is_left_click_held:
-                        pydirectinput.mouseUp()
+                        pyautogui.mouseUp()
                         is_left_click_held = False
                         
             if controller_state == "Keyboard" and gesture_name != "three":
@@ -390,22 +379,12 @@ while cap.isOpened():
                 if selected_key_pressed == True and gesture_name != "like":
                     selected_key_pressed = False
 
-            
-             # Add steering logic here                 
+                        
             if controller_state == "Steering" and gesture_name != "three":
-                # Check if left hand "stop" gesture is performed
-                if handedness == "Left" and gesture_name == "stop":
-                    pydirectinput.press('s')  # Simulate pressing the 's' key for stop
-                    print("Left hand stop gesture detected. Pressing 's' to stop.")
-
-                # Check if left hand "fist" gesture is performed
-                if handedness == "Left" and gesture_name == "fist":
-                    pydirectinput.press(' ')  # Simulate pressing the ' ' key for spacebar
-                    print("Left hand fist gesture detected. Pressing ' ' to Boost.")
-                #Right hand steering control
+                # Add steering logic here (from your previous code)
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     hand_label = handedness.classification[0].label  # 'Left' or 'Right'
-                    
+
                     if hand_label == "Right":
                         thumb_tip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP]
                         thumb_ip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP]
@@ -422,16 +401,16 @@ while cap.isOpened():
                         if key in ["w", "a", "d"]:
                             if current_right_key != key:
                                 release_right_key()
-                                pydirectinput.keyDown(key)
+                                pyautogui.keyDown(key)
                                 current_right_key = key
                                 last_press_time = time.time()
                                 print(f"Right hand pressed steering key: {key}")
                             elif time.time() - (last_press_time or 0) > 0.1:
-                                pydirectinput.keyDown(key)
+                                pyautogui.keyDown(key)
                                 last_press_time = time.time()
                                 print(f"Continuously pressing steering key: {key}")
                         else:
-                            release_right_key()# steering ends here
+                            release_right_key()
 
             if controller_state == "Default" and gesture_name != "three":
                 # Process gesture and trigger actions
@@ -469,54 +448,51 @@ while cap.isOpened():
             
             # The Swiping logic here
             if controller_state == "Swiping" and gesture_name != "three":
-                height, width, _ = frame.shape
-                left_line_x = int(width * LEFT_ZONE)
-                right_line_x = int(width * RIGHT_ZONE)
+                for hand_landmarks in results.multi_hand_landmarks:
+                    wrist_x = int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x * screen_width)
 
-                hand_landmarks = results.multi_hand_landmarks[0]
-                palm_x = int(hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].x * width)
+                    # Use index fingertip for more accuracy
+                    index_fingertip = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
+                    fingertip_coords = [(int(index_fingertip.x * screen_width) - wrist_x, 
+                                        int(index_fingertip.y * screen_height))]
 
-                # Draw zones (unchanged)
-                cv2.line(frame, (left_line_x, 0), (left_line_x, height), (255, 0, 0), 2)
-                cv2.line(frame, (right_line_x, 0), (right_line_x, height), (0, 0, 255), 2)
+                    current_time = time.time()
 
-                current_time = time.time()
+                    if previous_fingertip_coords is not None and previous_time is not None:
+                        delta_time = max(current_time - previous_time, 0.001)  # Prevent division by zero
 
-                # Improved Swiping Logic: Check for crossing boundaries
-                if previous_palm_x is not None:  # Need a previous value to compare
-                    if palm_x < left_line_x and previous_palm_x >= left_line_x:  # Crossed Left
-                        if previous_zone != "Left" and current_time - last_keypress_time > 0.1: # Debounce
-                            pydirectinput.press('d')
-                            print("Left Zone Entered: Pressing 'D'")
-                            previous_zone = "Left"
-                            last_keypress_time = current_time
+                        # Calculate velocity (change in x over time)
+                        velocities = [
+                            ((c[0] - p[0]) / delta_time) if delta_time > 0 else 0
+                            for c, p in zip(fingertip_coords, previous_fingertip_coords)
+                        ]
+                        velocity_x = np.mean(velocities) if velocities else 0  # Moving average for stability
 
-                    elif palm_x > right_line_x and previous_palm_x <= right_line_x: # Crossed Right
-                        if previous_zone != "Right" and current_time - last_keypress_time > 0.1: # Debounce
-                            pydirectinput.press('j')
-                            print("Right Zone Entered: Pressing 'J'")
-                            previous_zone = "Right"
-                            last_keypress_time = current_time
+                        # ** Fast Direction Locking Without Delay **
+                        if velocity_x < -velocity_threshold:
+                            if not is_d_pressed:  # Only press if it's not already pressed
+                                pydirectinput.press('d')  
+                                print("Swiped Left: Pressing 'D'")
+                            is_d_pressed = True
+                            is_k_pressed = False
 
-                elif palm_x < left_line_x:
-                    if previous_zone != "Left" and current_time - last_keypress_time > 0.1: # Debounce
-                        pydirectinput.press('d')
-                        print("Left Zone Entered: Pressing 'D'")
-                        previous_zone = "Left"
-                        last_keypress_time = current_time
+                        elif velocity_x > velocity_threshold:
+                            if not is_k_pressed:  # Only press if it's not already pressed
+                                pydirectinput.press('j')
+                                print("Swiped Right: Pressing 'J'")
+                            is_k_pressed = True
+                            is_d_pressed = False
 
-                elif palm_x > right_line_x:
-                    if previous_zone != "Right" and current_time - last_keypress_time > 0.1: # Debounce
-                        pydirectinput.press('j')
-                        print("Right Zone Entered: Pressing 'J'")
-                        previous_zone = "Right"
-                        last_keypress_time = current_time
+                        else:
+                            is_d_pressed = False
+                            is_k_pressed = False
 
+                    # Update previous positions and time
+                    previous_fingertip_coords = fingertip_coords
+                    previous_time = current_time
 
-                else:
-                    previous_zone = "Idle"
-
-                previous_palm_x = palm_x  # Update previous position for the next frame
+                    # Add minimal sleep to prevent freezing
+                    time.sleep(0.0001)
 
     else:
         c_start_time = 0

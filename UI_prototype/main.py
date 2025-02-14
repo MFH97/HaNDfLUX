@@ -192,8 +192,8 @@ class generalUI:
         global pControls, configRef
         try:
             # Changes the profile's name
-            pControls.update({profileControl.capitalize():newProfile})
-            #pControls[profileControl.capitalize()] = newProfile
+            #pControls.update({profileControl.capitalize():newProfile})
+            pControls[newProfile.capitalize()] = pControls.pop(profileControl.capitalize())
             append = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
             
             # Consolidates that change in config.ini
@@ -870,7 +870,6 @@ class gameTabFunc:
                 # Gets the reference for game rename and formats it
                 gui = gameItemLabel.get("1.0","end-1c")
                 gui = re.sub(r'[]\\\/:*?÷"<>|[]' , "" , gui.upper())
-                print(gui)
 
                 if os.path.exists(f"{base_path}\\resources\\profiles\\{gui.lower()}.txt") or gui in game:
                     messagebox.showerror("Error", "The renamed game already exists!")
@@ -903,7 +902,6 @@ class gameTabFunc:
 
         # Main game display
         try:
-            print(gameItem)
             # Hides the game selection tab
             gameMasterFrame.pack_forget()
             gamesDisplay.pack_forget()
@@ -1075,7 +1073,7 @@ class bindsTabFunc:
 
     # Swaps the current tab to the Keybinds Tab
     def run_bindsMenu():
-        global menuAct, uiDynamTabs
+        global menuAct, uiDynamTabs, pControls
         try:
             # Swaps the current Tab for the Profile Tab - Shows the profiles the user set
             def showF(uiBinds):
@@ -1088,6 +1086,7 @@ class bindsTabFunc:
                 menuAct = "Keybind"
                 bindsCanvas.pack_forget()
                 bindsTabFunc(bindsCanvas)
+                generalUI.loadProfiles(pControls)
                 bindsMasterFrame.pack(padx=5, pady=15, side="top", fill="both")
                 bindsCanvas.pack(padx=10, pady=1, side="left", fill="both")
 
@@ -1344,8 +1343,10 @@ class bindsTabFunc:
     def refreshList(pControlList):
         global pControls, profileDrop
         try:
+            print(pControls)
             profileOption.set(next(iter(pControls)))
             profileDrop["menu"].delete(0, "end")
+
             for items in pControls:
                 profileDrop["menu"].add_command(label=items, command=tk._setit(profileOption, items))
             pass
