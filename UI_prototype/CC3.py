@@ -1,4 +1,4 @@
-# Test using 'mgm_v2.h5' final testing
+# Test using FAHIQ bUGS
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -42,7 +42,7 @@ debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
-position_displacement = float(posRef)
+#position_displacement = float(posRef)
 previous_base_coord = [0, 0]
 is_left_click_held = False
 
@@ -384,8 +384,18 @@ while cap.isOpened():
                     selected_key_pressed = False
 
                         
+            # Add steering logic here            
             if controller_state == "Steering" and gesture_name != "three":
-                # Add steering logic here (from your previous code)
+                # Check if left hand "stop" gesture is performed
+                if handedness == "Left" and gesture_name == "stop":
+                    pydirectinput.press('s')  # Simulate pressing the 's' key for stop
+                    print("Left hand stop gesture detected. Pressing 's' to stop.")
+
+                # Check if left hand "fist" gesture is performed
+                if handedness == "Left" and gesture_name == "fist":
+                    pydirectinput.press(' ')  # Simulate pressing the ' ' key for spacebar
+                    print("Left hand fist gesture detected. Pressing ' ' to Boost.")
+                #Right hand steering control
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     hand_label = handedness.classification[0].label  # 'Left' or 'Right'
 
@@ -405,17 +415,16 @@ while cap.isOpened():
                         if key in ["w", "a", "d"]:
                             if current_right_key != key:
                                 release_right_key()
-                                pyautogui.keyDown(key)
+                                pydirectinput.keyDown(key)
                                 current_right_key = key
                                 last_press_time = time.time()
                                 print(f"Right hand pressed steering key: {key}")
                             elif time.time() - (last_press_time or 0) > 0.1:
-                                pyautogui.keyDown(key)
+                                pydirectinput.keyDown(key)
                                 last_press_time = time.time()
                                 print(f"Continuously pressing steering key: {key}")
                         else:
-                            release_right_key()
-
+                            release_right_key()# steering ends here
             if controller_state == "Default" and gesture_name != "three":
                 # Process gesture and trigger actions
                 current_time = time.time() * 1000  # Current time in milliseconds
