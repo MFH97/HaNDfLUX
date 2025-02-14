@@ -192,8 +192,9 @@ class generalUI:
         global pControls, configRef
         try:
             # Changes the profile's name
-            pControls[profileControl.capitalize()] = newProfile
-            addition = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
+            pControls.update({profileControl.capitalize():newProfile})
+            #pControls[profileControl.capitalize()] = newProfile
+            append = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
             
             # Consolidates that change in config.ini
             oldRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
@@ -206,7 +207,7 @@ class generalUI:
                 with open(configRef, 'w') as add:
                     for items in editRef:
                         if "profileMap Ã·" in items:
-                            add.write(f"profileMap Ã· {addition}\n")
+                            add.write(f"profileMap Ã· {append}\n")
                         else:
                             add.write(items)
             else:
@@ -716,7 +717,6 @@ class gameTabFunc:
                 gameMasterFrame.pack(padx=5, pady=15, side="top", fill="x")
                 gamesDisplay.pack(padx=10, pady=1, side="top", fill="x")
                 gamesDisplay.create_window((0, 0), window=gamesDFrame)
-                gItemExt.clear()
                 gameGet.close()
 
             except Exception as e:
@@ -870,34 +870,40 @@ class gameTabFunc:
                 # Gets the reference for game rename and formats it
                 gui = gameItemLabel.get("1.0","end-1c")
                 gui = re.sub(r'[]\\\/:*?÷"<>|[]' , "" , gui.upper())
-                
-                if os.path.isfile(gameListRef):
-                    with open(gameListRef, "r") as renameRef:
-                        gameWrite = renameRef.read()
+                print(gui)
 
-                    editToken = f"GameÃ· {gui}Ã· {gui}\nDescÃ· {gui}Ã· {gameDetails[3]}\nThumbImgÃ· {gui}Ã· {gameDetails[1]}\nExeÃ· {gui}Ã· {gameDetails[2]}"
-                    gameEdit = re.sub(rf"(GameÃ·\ {game}Ã·\s*)(.*?)(\s*ExeÃ·\ {game}Ã·)", re.escape(editToken), gameWrite, flags=re.DOTALL)
-                    gameEdit = gameEdit.replace("\\n","\n").replace("\\","")
-
-                    with open(gameListRef, "w") as renameSet:
-                        renameSet.write(gameEdit)
-                else:
-                    messagebox.showerror("Error", "The games list cannot be found!")
+                if os.path.exists(f"{base_path}\\resources\\profiles\\{gui.lower()}.txt") or gui in game:
+                    messagebox.showerror("Error", "The renamed game already exists!")
                     return False
-                
-                gameItemLabel.delete('1.0', tk.END) 
-                gameItemLabel.insert(tk.END, gui)
-                gameDetails[0] = gui
-                generalUI.editProfile(game.lower(), gui.lower())
+                else:
+                    if os.path.isfile(gameListRef):
+                        with open(gameListRef, "r") as renameRef:
+                            gameWrite = renameRef.read()
 
-                messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
-                renameRef.close(), renameSet.close()
+                        editToken = f"GameÃ· {gui}Ã· {gui}\nDescÃ· {gui}Ã· {gameDetails[3]}\nThumbImgÃ· {gui}Ã· {gameDetails[1]}\nExeÃ· {gui}Ã· {gameDetails[2]}"
+                        gameEdit = re.sub(rf"(GameÃ·\ {game}Ã·\s*)(.*?)(\s*ExeÃ·\ {game}Ã·)", re.escape(editToken), gameWrite, flags=re.DOTALL)
+                        gameEdit = gameEdit.replace("\\n","\n").replace("\\","")
+
+                        with open(gameListRef, "w") as renameSet:
+                            renameSet.write(gameEdit)
+                    else:
+                        messagebox.showerror("Error", "The games list cannot be found!")
+                        return False
+                    
+                    gameItemLabel.delete('1.0', tk.END) 
+                    gameItemLabel.insert(tk.END, gui)
+                    gameDetails[0] = gui
+                    generalUI.editProfile(game.lower(), gui.lower())
+
+                    messagebox.showinfo("Success!", f"The game is now renamed to {gui}")
+                    renameRef.close(), renameSet.close()
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to edit the game's name: {e}")
 
         # Main game display
         try:
+            print(gameItem)
             # Hides the game selection tab
             gameMasterFrame.pack_forget()
             gamesDisplay.pack_forget()
@@ -911,17 +917,15 @@ class gameTabFunc:
             textR = False
             textDesc = []
 
-            gItemExt = gameItem.split()
-
             # Gets the new game details
             if os.path.isfile(gameListRef):
                 with open(gameListRef, "r") as gameGet:
                     for line in gameGet:
-                        if f"GameÃ· {gItemExt[0]}" in line:
+                        if f"GameÃ· {gameItem}" in line:
                             gameName = line.split("Ã· ")
                             gameDetails.append(gameName[2].replace("\n",""))
                     
-                        if f"ThumbImgÃ· {gItemExt[0]}" in line:
+                        if f"ThumbImgÃ· {gameItem}" in line:
                             gameThumb = line.split("Ã· ")
                             baseCheck = gameThumb[2].startswith("BASE")
                             if baseCheck:
@@ -933,14 +937,14 @@ class gameTabFunc:
                                 file = gameThumb[2].replace("\n","")
                             gameDetails.append(file)
                         
-                        if f"ExeÃ· {gItemExt[0]}" in line:
+                        if f"ExeÃ· {gameItem}" in line:
                             gameExe = line.split("Ã· ")
                             file = gameExe[2].replace("\n","")
                             gameDetails.append(file)
                 
                 with open(gameListRef, "r") as gameDescGet:
                     for line in gameDescGet:
-                        if f"DescÃ· {gItemExt[0]}" in line:
+                        if f"DescÃ· {gameItem}" in line:
                             textR = True
                             baseLine = line.split("Ã· ")
                             baseDesc = baseLine[2].replace(f"\n" , "")
@@ -955,7 +959,7 @@ class gameTabFunc:
                             textDesc.append(line.strip())
                 
                 textExt = "\n".join(textDesc)
-                gameDetails.append(textExt.replace(f"DescÃ· {gItemExt[0]}Ã· " , ""))
+                gameDetails.append(textExt.replace(f"DescÃ· {gameItem}Ã· " , ""))
 
                 gameGet.close(), gameDescGet.close()
 
@@ -1687,8 +1691,8 @@ class settingsFunc:
                 else:
                     # Reopens the settings
                     gearCanvas.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+                    gearCanvas.coords(gearSettings, 0, 0)
                     root.bind("<Key>", settingsFunc.settingKey)
-                    canvasResize(root.winfo_width())
                     gearAct = True
 
                 gearMaster.bind("<Configure>", settingsFunc.canvasConfig)
