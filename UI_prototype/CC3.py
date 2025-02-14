@@ -21,9 +21,9 @@ model = load_model(modelPath)
 
 with open(f"{base_path}\\resources\\config.ini", "r") as config:
     for items in config:
-        if ("senseSlider" in items):
-            senseGet = items.split("Ã· ")
-            senseRef = senseGet[1].replace("\n","")
+        if ("posDisplace" in items):
+            setGet = items.split("Ã· ")
+            posRef = setGet[1].replace("\n","")
     config.close()
 
 # Initialize MediaPipe Hands
@@ -40,8 +40,8 @@ last_gesture_time = {'Left': 0, 'Right': 0}
 debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
-cursor_speed = int(senseRef)
-position_displacement = 1.25
+cursor_speed = 5
+position_displacement = posRef
 previous_base_coord = [0, 0]
 is_left_click_held = False
 

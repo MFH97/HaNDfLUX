@@ -155,7 +155,7 @@ class generalUI:
 
             backupRef = f"{base_path}\\resources\\gkm_backup.txt"
             profileRef = f"{base_path}\\resources\\profiles\\{profileControl}.txt"
-            
+
             if os.path.isfile(configRef):
                 with open(configRef, "r") as config:
                     addRef = config.readlines()
@@ -176,7 +176,7 @@ class generalUI:
             else:
                 messagebox.showerror("Error", "The backup mapping cannot be found!")
                 return False
-            
+
             with open(profileRef, 'w') as appendKeys:
                 appendKeys.writelines(newKeys)
         
@@ -374,14 +374,16 @@ class gameTabFunc:
                     giForm = giIMG.resize((220, 300))
                     gameImg = ImageTk.PhotoImage(giForm)
                     thumbDisplayArray[gItem] = gameImg
-                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]),
+                                           bg=ui_AC1, fg=ui_Txt, border=0)
                 else:
                     # Loads the placeholder image instead
                     giIMG = Image.open(placeThumb)  
                     giForm = giIMG.resize((220, 300))
                     gameImg = ImageTk.PhotoImage(giForm)
                     thumbDisplayArray[gItem] = gameImg
-                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]), bg=ui_AC1, fg=ui_Txt, border=0)
+                    gameButton = tk.Button(gameBorder, image=gameImg, command=lambda gIter=gItem: gameTabFunc.game_Describe(gameDisplayArray[gIter]),
+                                           bg=ui_AC1, fg=ui_Txt, border=0)
 
                 gameFrame.pack(padx=25, pady=25, side="left", anchor="w")
                 gameBorder.pack()
@@ -531,7 +533,8 @@ class gameTabFunc:
         def writeEXE():
             global exePath
             try:
-                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = [('Executables', '*.exe')])
+                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",
+                                                          filetypes = [('Executables', '*.exe')])
 
                 if filepath_New:
                     # Changes the filepath in the game description
@@ -546,7 +549,8 @@ class gameTabFunc:
         def writeIMG():
             global imgPath
             try:
-                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes=[('Image files', '*.png *.jpg *.jpeg')])
+                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",
+                                                          filetypes=[('Image files', '*.png *.jpg *.jpeg')])
                 if filepath_New:
                     imgPath = filepath_New
                     newImg = Image.open(filepath_New)  
@@ -586,26 +590,30 @@ class gameTabFunc:
                 else:
                     gameDesc = gameD
 
-                if os.path.isfile(gameListRef):
-                    addGList = open(gameListRef, "a")
-                else:
-                    messagebox.showerror("Error", "The games list cannot be found!")
+                # Additional check if the game profile already exists
+                gameProfileRef = f"{base_path}\\resources\\profiles\\{gameN.lower()}.txt"
+                if os.path.isfile(gameProfileRef):
+                    messagebox.showerror("Error", "A game of that name already exists!")
                     return False
-                
-                addGList.write(f"\n \nGameÃ· {gameName}Ã· {gameName}\n")
-                addGList.write(f"DescÃ· {gameName}Ã· {gameDesc}\n")
-                addGList.write(f"ThumbImgÃ· {gameName}Ã· {imgPath}\n")
-                addGList.write(f"ExeÃ· {gameName}Ã· {exePath}")
-                addGList.close()
+                else:
+                    if os.path.isfile(gameListRef):
+                        addGList = open(gameListRef, "a")
+                        addGList.write(f"\n \nGameÃ· {gameName}Ã· {gameName}\n")
+                        addGList.write(f"DescÃ· {gameName}Ã· {gameDesc}\n")
+                        addGList.write(f"ThumbImgÃ· {gameName}Ã· {imgPath}\n")
+                        addGList.write(f"ExeÃ· {gameName}Ã· {exePath}")
+                        addGList.close()
 
-                generalUI.addProfile(gameName.lower())
-                goBack()
-                
-                messagebox.showinfo("You have added a Game to the list!","You can now assign controls to the game!")
-                gameTabFunc(gamesDFrame)
+                        generalUI.addProfile(gameName.lower())
+                        messagebox.showinfo("You have added a Game to the list!","You can now assign controls to the game!")
+                        goBack()
+                        gameTabFunc(gamesDFrame)
+                    else:
+                        messagebox.showerror("Error", "The games list cannot be found!")
+                        return False
 
             except NameError:
-                messagebox.showinfo("Warning","One or more fields are not filled")
+                messagebox.showwarning("Warning","One or more fields are not filled")
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to add games to games list: {e}")
@@ -638,10 +646,11 @@ class gameTabFunc:
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_AddFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
 
-            addGameLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            addGameLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0,font=(ui_Font, 15, ui_Bold))
             addGameLabel.insert(tk.END, "Add game name here")
 
-            backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1,
+                                   font=(ui_Font, 15, ui_Bold))
 
             placeHolder = base_path + f"\\img\\gameimg\\Placeholder.png"
 
@@ -655,7 +664,8 @@ class gameTabFunc:
             addGameItemImg = ImageTk.PhotoImage(agiForm)
             addGameImg = tk.Button(game_DisplayPicFrame, image=addGameItemImg, command=writeIMG, bg=ui_AC1, fg=ui_Txt, border=0)
             addGameImg.image = addGameItemImg
-            agiLabel = tk.Label(game_TutFrame, text="Click on the white area to add your own image", height=1, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+            agiLabel = tk.Label(game_TutFrame, text="Click on the white area to add your own image", height=1, bg=ui_AC1, fg=ui_Txt,
+                                font=(ui_Font, 12))
 
             addGameTXT = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
             addGameTXT.insert(tk.END, "Add game description here")
@@ -663,8 +673,10 @@ class gameTabFunc:
             addGameLabel.bind("<Button-1>", selectName)
             addGameTXT.bind("<Button-1>", selectDesc)
 
-            addGameFP = tk.Button(game_InfoFrame, text="Configure Filepath (REQUIRED)", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            addGameButton = tk.Button(game_AddFrame, text="Add Game to Games List", command=addToGL, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            addGameFP = tk.Button(game_InfoFrame, text="Configure Filepath (REQUIRED)", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0,
+                                  activebackground=ui_AH1, font=(ui_Font, 12))
+            addGameButton = tk.Button(game_AddFrame, text="Add Game to Games List", command=addToGL, bg=ui_AC1, fg=ui_Txt, border=0,
+                                      activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -750,7 +762,8 @@ class gameTabFunc:
             global gameListRef
             try:
                 # Formats the filepath to fit the gamesList format
-                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",filetypes = [('Execitables', '*.exe')])
+                filepath_New = filedialog.askopenfilename(initialdir = "/", title = "Select a File",
+                                                          filetypes = [('Execitables', '*.exe')])
                 if filepath_New:
 
                     filepath_Change = f"ExeÃ· {gameItem}Ã· {filepath_New}"
@@ -790,9 +803,12 @@ class gameTabFunc:
 
                 dialogFrame = tk.Canvas(gameDisplay, background=ui_AC2, highlightthickness=0)
                 
-                confirmDialog = tk.Label(dialogFrame, text="Do you want to delete this game? This is irreversible!", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                yesButton = tk.Button(dialogFrame, text="Yes", command=deleteGame, bg=ui_AH1, fg=ui_Txt, border=0, width=15, height=3, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-                noButton = tk.Button(dialogFrame, text="No", command=undoDelete, bg=ui_AC1, fg=ui_Txt, border=0, width=15, height=3, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                confirmDialog = tk.Label(dialogFrame, text="Do you want to delete this game? This is irreversible!", bg=ui_AC1,
+                                         fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                yesButton = tk.Button(dialogFrame, text="Yes", command=deleteGame, bg=ui_AH1, fg=ui_Txt, border=0, width=15, height=3,
+                                      activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+                noButton = tk.Button(dialogFrame, text="No", command=undoDelete, bg=ui_AC1, fg=ui_Txt, border=0, width=15, height=3,
+                                     activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
                 dialogFrame.place(relx=0, rely=0, relheight=1, relwidth=1)
                 confirmDialog.pack(padx=25, pady=25, side="top", fill="x")
 
@@ -953,12 +969,16 @@ class gameTabFunc:
             game_InfoFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
             game_RunFrame = tk.Frame(game_DisplayFrame, bg=ui_AC2)
 
-            gameItemLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC3, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+            gameItemLabel = tk.Text(gameDisplay, width=MaxRes[0], height=2, wrap="word", bg=ui_AC3, fg=ui_Txt, border=0,
+                                    font=(ui_Font, 15, ui_Bold))
             gameItemLabel.insert(tk.END, gameDetails[0])
 
-            gameRename = tk.Button(gameDisplay, text="Rename Game", command=lambda gameN=gameDetails[0]: renameGame(gameN), bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            gameDelete = tk.Button(gameDisplay, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
-            backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameRename = tk.Button(gameDisplay, text="Rename Game", command=lambda gameN=gameDetails[0]: renameGame(gameN), bg=ui_AC1,
+                                   fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            gameDelete = tk.Button(gameDisplay, text=f"DELETE GAME", command= confirmDelete, bg=ui_AH1, fg=ui_Txt, border=0,
+                                   activebackground=ui_AH1, font=(ui_Font, 15, ui_Bold))
+            backButton = tk.Button(gameDisplay, text="Go back", command=goBack, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1,
+                                   font=(ui_Font, 15, ui_Bold))
             
             placeHolder = base_path + f"\\img\\gameimg\\Placeholder.png"
             if os.path.isfile(gameDetails[1]):
@@ -979,15 +999,20 @@ class gameTabFunc:
                 gameImg = tk.Label(game_DisplayPicFrame, image=gameItemImg, bg=ui_AC1, fg=ui_Txt, border=0)
                 gameImg.image = gameItemImg
 
-            gameItemTxt = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0, font=(ui_Font, 12))
+            gameItemTxt = tk.Text(game_DisplayFrame, width=MaxRes[0], height=5, wrap="word", bg=ui_AC4, fg=ui_Txt, border=0,
+                                  font=(ui_Font, 12))
             gameItemTxt.insert(tk.END, gameDetails[3])
             gameItemTxt.configure(exportselection=0, state="disabled")  
 
-            gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[2], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 12))
+            gameItemFileP = tk.Button(game_InfoFrame, text="Configure Filepath", command=writeEXE, bg=ui_AC1, fg=ui_Txt, border=0,
+                                      activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemFile = tk.Label(game_InfoFrame, text=gameDetails[2], wraplength=MaxRes[0], height=1, justify="left", bg=ui_AC1,
+                                    fg=ui_Txt, font=(ui_Font, 12))
             
-            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with Gesture Controls", command=runGame, bg=ui_AC1, fg=ui_Txt, border=0, height=3, activebackground=ui_AH1, font=(ui_Font, 12))
-            gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt, border=0, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameItemExe = tk.Button(game_RunFrame, text=f"Start Game with Gesture Controls", command=runGame, bg=ui_AC1, fg=ui_Txt,
+                                    border=0, height=3, activebackground=ui_AH1, font=(ui_Font, 12))
+            gameRelease = tk.Button(game_RunFrame, text=f"Release Gesture Control", command=quit.release_control, bg=ui_AC1, fg=ui_Txt,
+                                    border=0, activebackground=ui_AH1, font=(ui_Font, 12))
 
             game_DisplayFrame.pack(padx=5, pady=5, side="bottom", fill="x")
             game_DisplayPicFrame.pack(padx=5, pady=5, side="left", fill="x")
@@ -1092,7 +1117,7 @@ class bindsTabFunc:
                         messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newClick}")
                     # Or if a keypress is the new bind, sets that as the new keybind instead
                     elif newKeybind.keysym:
-                        newKey = newKeybind.keysym
+                        newKey = newKeybind.keysym.lower()
                         initBinds[gesture] = newKey
                         bindLabel[gesture].config(text=f"Key*: {newKey}")
                         messagebox.showinfo("Keybind Updated", f"{gesture} is now bound to {newKey}")               
@@ -1119,7 +1144,8 @@ class bindsTabFunc:
             # If option is Detect Input, displays a dialog showing that inputs are being detected
             elif gMapper == controlsList[1]:
                 dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
-                bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
+                bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt,
+                                      border=0, font=(ui_Font, 20, ui_Bold))
 
                 dialogFrame.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
                 bindDialog.pack(padx=25, pady=25, fill="x")
@@ -1142,7 +1168,7 @@ class bindsTabFunc:
 
             # Reset the changes
             changeArray = []
-            rightStart = 11
+            rightStart = 12
 
             # Consolidates the changes
             for gesture, key in initBinds.items():
@@ -1210,7 +1236,8 @@ class bindsTabFunc:
                                     imgFrame[gNumber] = tk.Frame(bindMaster, padx=5, pady=5, bg=ui_AC2)
 
                                     gestureFormat = gesture.split(":")
-                                    bindAction = tk.Label(bindFrame[gNumber], text=f"{gestureFormat[0].capitalize()} Hand: {gestureFormat[1].capitalize()}", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
+                                    bindAction = tk.Label(bindFrame[gNumber],text=f"{gestureFormat[0].capitalize()} Hand: {gestureFormat[1].capitalize()}",
+                                                          bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 15, ui_Bold))
 
                                     # Checks if the image file exists
                                     imgS = base_path + f"\\img\\gestureimg\\{gestureFormat[1]}.png"
@@ -1237,8 +1264,11 @@ class bindsTabFunc:
                                     controlType[gNumber] = tk.StringVar(root)
                                     controlType[gNumber].set(controlsList[1])
                                     bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
-                                    bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1, font=(ui_Font, 12))
-                                    bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber, gNum= gesture: bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
+                                    bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1,
+                                                                 font=(ui_Font, 12))
+                                    bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber,
+                                                                    gNum= gesture:bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt,
+                                                                    activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
 
                                     bindFrame[gNumber].pack(padx=20, pady=5, anchor="nw", fill="x")
                                     keyFrame[gNumber].pack(padx=20, pady=5, anchor="nw", fill="x")
@@ -1480,7 +1510,7 @@ class settingsFunc:
                     if os.path.isfile(configRef):
                         with open(configRef, "r") as configGet:
                             for line in configGet:
-                                if f"senseSlider Ã·" in line:
+                                if f"posDisplace Ã·" in line:
                                     senseInt = line.split("Ã· ")
                                     senseRef = (senseInt[1].replace("\n",""))
                     else:
@@ -1504,8 +1534,8 @@ class settingsFunc:
 
                         with open(configRef, "w") as configWrite:
                             for line in camWrite:
-                                if f"senseSlider Ã· " in line:
-                                    configWrite.write(f"senseSlider Ã· {newVal}\n")
+                                if f"posDisplace Ã· " in line:
+                                    configWrite.write(f"posDisplace Ã· {newVal}\n")
                                 else:
                                     configWrite.write(line)
                     else:
@@ -1529,7 +1559,8 @@ class settingsFunc:
 
                     gearTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC1)
                     gearTitle = tk.Label(gearTF, text="SETTINGS", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
-                    closeGear = tk.Button(gearTF, text="RETURN", command=settingsFunc.setClose, width=10, height=0, bg=ui_AC1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+                    closeGear = tk.Button(gearTF, text="RETURN", command=settingsFunc.setClose, width=10, height=0, bg=ui_AC1, fg=ui_Txt, border=0,
+                                          font=(ui_Font, 15, ui_Bold))
 
                     # Toggles window state
                     winStateTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
@@ -1537,32 +1568,44 @@ class settingsFunc:
                     winStateLabel = tk.Label(winStateTF, text="DISPLAY", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     winStateDescLabel = tk.Label(winStateTF, text="Modify the display mode of the App", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
                     
-                    fullscreen_button = tk.Button(winStateFrame, text="Fullscreen", command=lambda:toggleWindowState("fullscreen"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
-                    borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
-                    windowed_button = tk.Button(winStateFrame, text="Windowed", command=lambda:toggleWindowState("windowed"), width=15, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
+                    fullscreen_button = tk.Button(winStateFrame, text="Fullscreen", command=lambda:toggleWindowState("fullscreen"), width=15, height=2,
+                                                  bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
+                    borderless_button = tk.Button(winStateFrame, text="Borderless Windowed", command=lambda:toggleWindowState("borderless"), width=20,
+                                                  height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
+                    windowed_button = tk.Button(winStateFrame, text="Windowed", command=lambda:toggleWindowState("windowed"), width=15, height=2,
+                                                bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH3, border=0, font=(ui_Font, 10))
 
                     # For setting the auto-start tutorial feature
                     miscTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     miscFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     miscLabel = tk.Label(miscTF, text="TUTORIAL START-UP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    miscDescLabel = tk.Label(miscTF, text="Sets whether if you want to have the tutorial shown when you start up the app", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
-                    autoTutOpen = tk.Button(miscFrame, text=f"{tutStartUp}", command=setAutoButton, width=12, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    miscDescLabel = tk.Label(miscTF, text="Sets whether if you want to have the tutorial shown when you start up the app", bg=ui_AC2,
+                                             fg=ui_Txt, border=0, font=(ui_Font, 12))
+                    autoTutOpen = tk.Button(miscFrame, text=f"{tutStartUp}", command=setAutoButton, width=12, height=2, bg=ui_AC1, fg=ui_Txt,
+                                            activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
                     # For setting the camera for again2 to use
                     camTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     camFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     camDisplayFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     camLabel = tk.Label(camTF, text="DEFAULT CAMERA", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    camDescLabel = tk.Label(camTF, text="Set a default camera for the gesture controller to use", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
-                    camLister = tk.Button(camFrame, text="Detect Cameras", command=detectCamFunc, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    camDescLabel = tk.Label(camTF, text="Set a default camera for the gesture controller to use", bg=ui_AC2, fg=ui_Txt,
+                                            border=0, font=(ui_Font, 12))
+                    camLister = tk.Button(camFrame, text="Detect Cameras", command=detectCamFunc, width=20, height=2, bg=ui_AC1, fg=ui_Txt,
+                                          activebackground=ui_AH1, border=0, font=(ui_Font, 10))
 
                     # Modifies the sensitivity settings in config.ini
                     sensTF = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     sensFrame = tk.Frame(gearMaster, padx=5, pady=5, bg=ui_AC2)
                     sensLabel = tk.Label(sensTF, text="SENSITIVITY", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
-                    sensDescLabel = tk.Label(sensTF, text="Sets the sensitivity of the mouse for the respective gesture controls", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
-                    sensSlider = tk.Scale(sensFrame, bg=ui_AC2, fg=ui_Txt, highlightthickness=0, highlightcolor=ui_AH2, troughcolor=ui_Txt, length=800, width=30, orient="horizontal", from_=5, to=50, font=(ui_Font, 12))
-                    sensEditor = tk.Button(sensFrame, text="Set Sensitivity", command=senseEdit, width=20, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    sensDescLabel = tk.Label(sensTF, text="Sets the sensitivity of the mouse movement for the gesture controls", bg=ui_AC2, fg=ui_Txt,
+                                             border=0, font=(ui_Font, 12))
+
+                    floatSet = tk.DoubleVar()
+                    sensSlider = tk.Scale(sensFrame, bg=ui_AC2, fg=ui_Txt, highlightthickness=0, highlightcolor=ui_AH2, troughcolor=ui_Txt, length=800,
+                                          width=30,orient="horizontal", from_=1, to=2, variable=floatSet, resolution=0.02, font=(ui_Font, 12))
+                    sensEditor = tk.Button(sensFrame, text="Set Sensitivity", command=senseEdit, width=20, height=2, bg=ui_AC1, fg=ui_Txt,
+                                           activebackground=ui_AH1, border=0, font=(ui_Font, 10))
                     senseGet()
 
                     # For getting help / viewing the FAQ
@@ -1571,8 +1614,10 @@ class settingsFunc:
                     helperLabel = tk.Label(helperTF, text="HELP", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20, ui_Bold))
                     helperDescLabel = tk.Label(helperTF, text="Contains info on how to use the App", bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 12))
 
-                    tutorial_button = tk.Button(helperFrame, text="HELP", command=run.tutorial, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
-                    faq_button = tk.Button(helperFrame, text="FAQs", command=run.faq, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    tutorial_button = tk.Button(helperFrame, text="HELP", command=run.tutorial, width=10, height=2, bg=ui_AC1, fg=ui_Txt,
+                                                activebackground=ui_AH1, border=0, font=(ui_Font, 10))
+                    faq_button = tk.Button(helperFrame, text="FAQs", command=run.faq, width=10, height=2, bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1,
+                                           border=0, font=(ui_Font, 10))
 
                     detectCamFunc()
                     gearTF.pack(side="top", anchor="nw", fill="x")
@@ -1768,37 +1813,53 @@ class run:
                         return False
 
                     tutTitle = tk.Label(tutText, text="GETTING STARTED WITH HANDFLUX", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
-                    tutDesc1 = tk.Label(tutText, text="This UI can be closed by clicking on 'Close' or pressing the ESC key", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
-                    tutDesc2 = tk.Label(tutText, text="Tip: You can tell the app to not show this by going to SETTINGS", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
+                    tutDesc1 = tk.Label(tutText, text="This UI can be closed by clicking on 'Close' or pressing the ESC key",
+                                        bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 20))
+                    tutDesc2 = tk.Label(tutText, text="Tip: You can tell the app to not show this by going to SETTINGS", bg=ui_AC2,
+                                        fg=ui_Txt, font=(ui_Font, 20))
                     tutUIBase = tk.Label(tutText, text="Main Menu Tabs", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
                     tutUIImg = tk.Label(tutText, image=tabsImg, bg=ui_AC1, fg=ui_Txt, border=0)
                     tutUIImg.image = tabsImg
 
-                    tutUIG = tk.Label(tutText, text="GAMES – Shows the games from the games list text file.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutUIK = tk.Label(tutText, text="KEYBINDS – Shows the gestures and the keys they are mapped to.",  bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutUIS = tk.Label(tutText, text="SETTINGS – Opens up the settings for you to fine tune.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutUIG = tk.Label(tutText, text="GAMES – Shows the games from the games list text file.", bg=ui_AC2, fg=ui_Txt,
+                                      font=(ui_Font, 14))
+                    tutUIK = tk.Label(tutText, text="KEYBINDS – Shows the gestures and the keys they are mapped to.",  bg=ui_AC2,
+                                      fg=ui_Txt, font=(ui_Font, 14))
+                    tutUIS = tk.Label(tutText, text="SETTINGS – Opens up the settings for you to fine tune.", bg=ui_AC2, fg=ui_Txt,
+                                      font=(ui_Font, 14))
                     tutUIQ = tk.Label(tutText, text="QUIT - Closes the App", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
 
                     tutGTBase = tk.Label(tutText, text="Game Tab", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
                     tutGTImg = tk.Label(tutText, image=gametabImg, bg=ui_AC1, fg=ui_Txt, border=0)
-                    tutGTDesc = tk.Label(tutText, text="Displays the games and apps you can use. The default items are listed above.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14, ui_Bold))
-                    tutGTGC1 = tk.Label(tutText, text="1. (Optional) Type the item's name in the searchbar and click on 'Search' to filter it.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutGTGC2 = tk.Label(tutText, text="2. Click on that game/app to go to that game/app.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutGTDesc = tk.Label(tutText, text="Displays the games and apps you can use. The default items are listed above.",
+                                         bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14, ui_Bold))
+                    tutGTGC1 = tk.Label(tutText, text="1. (Optional) Type the item's name in the searchbar and click on 'Search' to filter it.",
+                                        bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutGTGC2 = tk.Label(tutText, text="2. Click on that game/app to go to that game/app.", bg=ui_AC2, fg=ui_Txt,
+                                        font=(ui_Font, 14))
                     tutGTImg.image = gametabImg
                     
-                    tutAGDesc1 = tk.Label(tutText, text="To add a game or app to the list Click on the Add a Game Button.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutAGDesc1 = tk.Label(tutText, text="To add a game or app to the list Click on the Add a Game Button.", bg=ui_AC2,
+                                          fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
                     tutAGImg = tk.Label(tutText, image=gameAddImg, bg=ui_AC1, fg=ui_Txt, border=0)
-                    tutAGDesc2 = tk.Label(tutText, text="Then do these steps to add a new item to the Games List.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 18, ui_Bold))
+                    tutAGDesc2 = tk.Label(tutText, text="Then do these steps to add a new item to the Games List.", bg=ui_AC2, fg=ui_Txt,
+                                          font=(ui_Font, 18, ui_Bold))
                     tutAGImg.image = gameAddImg
 
-                    tutAGS1 = tk.Label(tutText, text="1. (REQUIRED) Click on Configure Filepath to set the EXE for the app to use.", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 14))
+                    tutAGS1 = tk.Label(tutText, text="1. (REQUIRED) Click on Configure Filepath to set the EXE for the app to use.",
+                                       bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 14))
                     tutAGS2 = tk.Label(tutText, text="2. Type in a name for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutAGS3 = tk.Label(tutText, text="3. (Optional) Type in a description for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutAGS4 = tk.Label(tutText, text="4. (Optional) Click on the white area to add a thumbnail for the new item.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-                    tutAGS5 = tk.Label(tutText, text="5. Click on 'Add Game to Games List' to add it to the Games List.", bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutAGS3 = tk.Label(tutText, text="3. (Optional) Type in a description for the new item.", bg=ui_AC2, fg=ui_Txt,
+                                       font=(ui_Font, 14))
+                    tutAGS4 = tk.Label(tutText, text="4. (Optional) Click on the white area to add a thumbnail for the new item.",
+                                       bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
+                    tutAGS5 = tk.Label(tutText, text="5. Click on 'Add Game to Games List' to add it to the Games List.", bg=ui_AC2,
+                                       fg=ui_Txt, font=(ui_Font, 14))
 
-                    closeTut = tk.Button(tutMenu, text="Close", command=tutClose, border=0, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
-                    hideTut = tk.Button(tutMenu, text="Do not show again", command=tutDis, border=0, bg=ui_AC1, fg=ui_Txt, font=(ui_Font, 25, ui_Bold))
+                    closeTut = tk.Button(tutMenu, text="Close", command=tutClose, border=0, bg=ui_AC1, fg=ui_Txt,
+                                         font=(ui_Font, 25, ui_Bold))
+                    hideTut = tk.Button(tutMenu, text="Do not show again", command=tutDis, border=0, bg=ui_AC1, fg=ui_Txt,
+                                        font=(ui_Font, 25, ui_Bold))
                     
                     tutMenu.pack(pady=5, side="top", fill="x")
                     tutText.pack(pady=5, side="bottom", fill="x")
@@ -1898,11 +1959,13 @@ class run:
                 faqScroll = tk.Scrollbar(faqCanvas)
 
                 # Text Element to input FAQ Items
-                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=ui_AC3, height=MaxRes[0], width=MaxRes[1], font=(ui_Font, 14), fg=ui_Txt, border=0, wrap="word")
+                faqtxt = tk.Text(faqFrame, yscrollcommand = faqScroll.set, bg=ui_AC3, height=MaxRes[0], width=MaxRes[1],
+                                 font=(ui_Font, 14), fg=ui_Txt, border=0, wrap="word")
 
                 # Label and button to close the FAQ Window
                 FAQlabel = tk.Label(faqTF, text="Frequently Asked Questions", bg=ui_AC1, fg=ui_AH2, font=(ui_Font, 20, ui_Bold))
-                close_faq = tk.Button(faqTF, text="Return", command=faqClose, width=10, height=0, bg=ui_AH1, fg=ui_Txt, border=0, font=(ui_Font, 15, ui_Bold))
+                close_faq = tk.Button(faqTF, text="Return", command=faqClose, width=10, height=0, bg=ui_AH1, fg=ui_Txt,
+                                      border=0, font=(ui_Font, 15, ui_Bold))
 
                 # GUI Layout
                 faqTF.pack(side="top", anchor="nw", fill="x")
@@ -1944,8 +2007,10 @@ class quit:
                     quitCan.place(relheight=1, relwidth=1)
         
                     quitLabel = tk.Label(quitCan, text="Do you want to quit?", bg=ui_AC2, fg=ui_AH2, font=(ui_Font, 25, ui_Bold))
-                    yesButton = tk.Button(quitCan, text="YES", command=zeroAll ,width=15, height=3, bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20))
-                    noButton = tk.Button(quitCan, text="NO", command=stayIn ,width=15, height=3, bg=ui_AC2, fg=ui_Txt, border=0, font=(ui_Font, 20))
+                    yesButton = tk.Button(quitCan, text="YES", command=zeroAll ,width=15, height=3, bg=ui_AC2, fg=ui_Txt,
+                                          border=0, font=(ui_Font, 20))
+                    noButton = tk.Button(quitCan, text="NO", command=stayIn ,width=15, height=3, bg=ui_AC2, fg=ui_Txt,
+                                         border=0, font=(ui_Font, 20))
 
                     quitLabel.pack(padx=25, pady=25, anchor="center")
 
