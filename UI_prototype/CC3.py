@@ -18,6 +18,7 @@ base_path = os.getcwd()
 
 modelPath = f"{base_path}\\resources\\mgm_v2.h5"
 model = load_model(modelPath)
+posRef = ""
 
 with open(f"{base_path}\\resources\\config.ini", "r") as config:
     for items in config:
@@ -41,7 +42,7 @@ debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
-position_displacement = posRef
+position_displacement = float(posRef)
 previous_base_coord = [0, 0]
 is_left_click_held = False
 
@@ -128,7 +129,7 @@ def positionCursor(index_x, index_y, index_base, previous_base_coord):
     offset_x = int((index_x - center_pos[0]) * position_displacement)
     offset_y = int((index_y - center_pos[1]) * position_displacement)
     
-    if deadzone_dist > 0.006:
+    if deadzone_dist > 0.005:
         # Move cursor
         win32api.SetCursorPos(((index_x + offset_x), (index_y + offset_y)))
             
@@ -328,11 +329,11 @@ while cap.isOpened():
                 # Click mouse if fingers are close enough
                 if distance < 0.05:
                     if not is_left_click_held:
-                        pyautogui.mouseDown()
+                        pydirectinput.mouseDown()
                         is_left_click_held = True
                 else:
                     if is_left_click_held:
-                        pyautogui.mouseUp()
+                        pydirectinput.mouseUp()
                         is_left_click_held = False
                         
             if controller_state == "Keyboard" and gesture_name != "three":
