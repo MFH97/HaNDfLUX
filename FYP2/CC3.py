@@ -22,7 +22,7 @@ model = load_model(modelPath)
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.8)
 mp_drawing = mp.solutions.drawing_utils
 
 # Path to the mapping file
@@ -35,7 +35,7 @@ debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
-position_displacement = 1.5
+position_displacement = 1.25
 previous_base_coord = [0, 0]
 is_left_click_held = False
 
@@ -43,6 +43,8 @@ is_left_click_held = False
 controller_state = "Mouse"
 controller_states = ["Mouse", "Default", "Steering", "Swiping"]
 changed_controller = False
+timer_started = False
+c_start_time = 0
 
 # Gesture class-to-name mapping
 gesture_names = {
@@ -146,7 +148,7 @@ def select_camera():
     
     while True:
         try:
-            with open(f"config.ini", "r") as config:
+            with open(f"{base_path}\\resources\\config.ini", "r") as config:
                 for items in config:
                     if ("configCam" in items):
                         camUse = items.split("Ã· ")
@@ -256,10 +258,23 @@ while cap.isOpened():
 
             # Change controller
             if gesture_name == "three" and changed_controller == False:
-                del controller_states[0]
-                controller_states.append(controller_state)
-                controller_state = controller_states[0]
-                changed_controller = True
+                if timer_started == False:
+                    c_start_time = time.time()
+                    timer_started = True
+                
+                c_end_time = time.time()
+                c_length = c_end_time - c_start_time
+                
+                if c_length >= 1:
+                    del controller_states[0]
+                    controller_states.append(controller_state)
+                    controller_state = controller_states[0]
+                    changed_controller = True
+                    c_start_time = 0
+                    timer_started = False
+            else:
+                c_start_time = 0
+                timer_started = False
             
             if controller_state == "Mouse" and gesture_name != "three":
                 # Get fingertip coordinates and move the mouse
@@ -404,6 +419,9 @@ while cap.isOpened():
                     time.sleep(0.0001)
 
     else:
+        c_start_time = 0
+        timer_started = False
+        
         if changed_controller == True:
             changed_controller = False
         
