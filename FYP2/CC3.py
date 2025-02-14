@@ -22,7 +22,7 @@ model = load_model(modelPath)
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.8)
+hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.8)
 mp_drawing = mp.solutions.drawing_utils
 
 # Path to the mapping file
@@ -41,10 +41,20 @@ is_left_click_held = False
 
 # Record selected controller
 controller_state = "Mouse"
-controller_states = ["Mouse", "Default", "Steering", "Swiping"]
+controller_states = ["Mouse", "Keyboard", "Default", "Steering", "Swiping"]
 changed_controller = False
-timer_started = False
+c_timer_started = False
 c_start_time = 0
+
+# Keyboard emulator variables
+selected_key_input = "a"
+selected_key_pressed = False
+keyboard_selection = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", 
+                     "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", 
+                     "u", "v", "w", "x", "y", "z",
+                     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+keyboard_timer_started = False
+keyboard_start_time = 0
 
 # Gesture class-to-name mapping
 gesture_names = {
@@ -234,6 +244,8 @@ while cap.isOpened():
     results = hands.process(frame_rgb)
     
     cv2.putText(frame, f'Current Control: {controller_state}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    if controller_state == "Keyboard":
+        cv2.putText(frame, f'Current key selected: {selected_key_input}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     if results.multi_hand_landmarks:
         for i, hand_landmarks in enumerate(results.multi_hand_landmarks):
@@ -258,23 +270,36 @@ while cap.isOpened():
 
             # Change controller
             if gesture_name == "three" and changed_controller == False:
-                if timer_started == False:
+                if c_timer_started == False:
                     c_start_time = time.time()
-                    timer_started = True
+                    c_timer_started = True
                 
                 c_end_time = time.time()
                 c_length = c_end_time - c_start_time
                 
                 if c_length >= 1:
-                    del controller_states[0]
-                    controller_states.append(controller_state)
-                    controller_state = controller_states[0]
-                    changed_controller = True
-                    c_start_time = 0
-                    timer_started = False
+                    if handedness == "Right":
+                        del controller_states[0]
+                        controller_states.append(controller_state)
+                        controller_state = controller_states[0]
+                        changed_controller = True
+                        c_start_time = 0
+                        c_timer_started = False
+                    if handedness == "Left":
+                        controller_state = controller_states[-1]
+                        del controller_states[-1]
+                        controller_states.insert(0, controller_state)
+                        changed_controller = True
+                        c_start_time = 0
+                        c_timer_started = False
             else:
                 c_start_time = 0
-                timer_started = False
+                c_timer_started = False
+                
+            if changed_controller == True and gesture_name != "three":
+                c_start_time = 0
+                c_timer_started = False
+                changed_controller = False
             
             if controller_state == "Mouse" and gesture_name != "three":
                 # Get fingertip coordinates and move the mouse
@@ -297,12 +322,60 @@ while cap.isOpened():
                 # Click mouse if fingers are close enough
                 if distance < 0.05:
                     if not is_left_click_held:
-                        pydirectinput.mouseDown()
+                        pyautogui.mouseDown()
                         is_left_click_held = True
                 else:
                     if is_left_click_held:
-                        pydirectinput.mouseUp()
+                        pyautogui.mouseUp()
                         is_left_click_held = False
+                        
+            if controller_state == "Keyboard" and gesture_name != "three":
+                if gesture_name == "stop":
+                    if keyboard_timer_started == False:
+                        keyboard_start_time = time.time()
+                        keyboard_timer_started = True
+                    
+                    keyboard_end_time = time.time()
+                    keyboard_length = keyboard_end_time - keyboard_start_time
+                    
+                    if keyboard_length >= 0.5:
+                        del keyboard_selection[0]
+                        keyboard_selection.append(selected_key_input)
+                        selected_key_input = keyboard_selection[0]
+                        keyboard_start_time = 0
+                        keyboard_timer_started = False
+                elif gesture_name == "stop_inverted":
+                    if keyboard_timer_started == False:
+                        keyboard_start_time = time.time()
+                        keyboard_timer_started = True
+                    
+                    keyboard_end_time = time.time()
+                    keyboard_length = keyboard_end_time - keyboard_start_time
+                    
+                    if keyboard_length >= 0.5:
+                        selected_key_input = keyboard_selection[-1]
+                        del keyboard_selection[-1]
+                        keyboard_selection.insert(0, selected_key_input)
+                        keyboard_start_time = 0
+                        keyboard_timer_started = False
+                else:
+                    keyboard_start_time = 0
+                    keyboard_timer_started = False
+                
+                if selected_key_pressed == False:
+                    if gesture_name == "like" and handedness == "Right":
+                        pydirectinput.press(selected_key_input)
+                        selected_key_pressed = True
+                        
+                    if gesture_name == "like" and handedness == "Left":
+                        pydirectinput.keyDown("shift")
+                        pydirectinput.press(selected_key_input)
+                        pydirectinput.keyUp("shift")
+                        selected_key_pressed = True
+                        
+                if selected_key_pressed == True and gesture_name != "like":
+                    selected_key_pressed = False
+
                         
             if controller_state == "Steering" and gesture_name != "three":
                 # Add steering logic here (from your previous code)
@@ -420,10 +493,15 @@ while cap.isOpened():
 
     else:
         c_start_time = 0
-        timer_started = False
+        c_timer_started = False
         
         if changed_controller == True:
             changed_controller = False
+            
+        if controller_state == "Keyboard":
+            keyboard_start_time = 0
+            keyboard_timer_started = False
+            selected_key_pressed = False
         
         if controller_state == "Default":
             pydirectinput.keyUp(key)
