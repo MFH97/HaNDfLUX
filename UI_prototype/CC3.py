@@ -1,4 +1,4 @@
-# Test using FAHIQ bUGS
+# Test using 'mgm_v2.h5' final testing
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -18,7 +18,7 @@ base_path = os.getcwd()
 
 modelPath = f"{base_path}\\resources\\mgm_v2.h5"
 model = load_model(modelPath)
-posRef = ""
+posRef = 0
 
 with open(f"{base_path}\\resources\\config.ini", "r") as config:
     for items in config:
@@ -42,7 +42,7 @@ debounce_time_ms = 30  # Adjust the debounce time in milliseconds
 
 screen_width, screen_height = pydirectinput.size()
 cursor_speed = 5
-#position_displacement = float(posRef)
+position_displacement = float(posRef)
 previous_base_coord = [0, 0]
 is_left_click_held = False
 
@@ -383,8 +383,8 @@ while cap.isOpened():
                 if selected_key_pressed == True and gesture_name != "like":
                     selected_key_pressed = False
 
-                        
-            # Add steering logic here            
+            
+             # Add steering logic here                 
             if controller_state == "Steering" and gesture_name != "three":
                 # Check if left hand "stop" gesture is performed
                 if handedness == "Left" and gesture_name == "stop":
@@ -398,7 +398,7 @@ while cap.isOpened():
                 #Right hand steering control
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     hand_label = handedness.classification[0].label  # 'Left' or 'Right'
-
+                    
                     if hand_label == "Right":
                         thumb_tip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP]
                         thumb_ip = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_IP]
@@ -425,6 +425,7 @@ while cap.isOpened():
                                 print(f"Continuously pressing steering key: {key}")
                         else:
                             release_right_key()# steering ends here
+
             if controller_state == "Default" and gesture_name != "three":
                 # Process gesture and trigger actions
                 current_time = time.time() * 1000  # Current time in milliseconds
