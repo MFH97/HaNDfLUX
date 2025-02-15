@@ -192,7 +192,6 @@ class generalUI:
         global pControls, configRef
         try:
             # Changes the profile's name
-            #pControls.update({profileControl.capitalize():newProfile})
             pControls[newProfile.capitalize()] = pControls.pop(profileControl.capitalize())
             append = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
             
@@ -1134,29 +1133,16 @@ class bindsTabFunc:
 
                 except Exception as e:
                      messagebox.showerror("Error", f"Failed to detect the input: {e}")
+    
+            dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
+            bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt,
+                                    border=0, font=(ui_Font, 20, ui_Bold))
 
-            # Gets the dropdown list option for mapping the new input
-            gMapper = controlType[gRef].get()
+            dialogFrame.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
+            bindDialog.pack(padx=25, pady=25, fill="x")
 
-            # If option is Mouse Movement, sets keybind to mouse_movement
-            if gMapper == controlsList[0]:
-                initBinds[gesture] = "mouse_movement"
-                bindLabel[gesture].config(text="Key*: mouse_movement")
-                messagebox.showinfo("Keybind Updated", f"{gRef} is now bound to Mouse Movement")
-            
-            # If option is Detect Input, displays a dialog showing that inputs are being detected
-            elif gMapper == controlsList[1]:
-                dialogFrame = tk.Canvas(bindsCanvas, background=ui_AC2, highlightthickness=0)
-                bindDialog = tk.Label(dialogFrame, text="Press a keyboard button or Click with your mouse", bg=ui_AC1, fg=ui_Txt,
-                                      border=0, font=(ui_Font, 20, ui_Bold))
-
-                dialogFrame.place(relx=0.02, rely=0.02, relheight=0.95, relwidth=0.95)
-                bindDialog.pack(padx=25, pady=25, fill="x")
-
-                root.bind("<KeyPress>", keyPress)
-                root.bind("<Button>", keyPress)
-            else:
-                messagebox.showerror("Error", f"Somehow this error was triggered")
+            root.bind("<KeyPress>", keyPress)
+            root.bind("<Button>", keyPress)
  
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update the keybind: {e}")
@@ -1263,12 +1249,6 @@ class bindsTabFunc:
                                         gestImg.image = gestThumb
 
                                     bindLabel[gesture] = tk.Label(keyFrame[gNumber], text=f"Key: {key}",bg=ui_AC2, fg=ui_Txt, font=(ui_Font, 14))
-
-                                    controlType[gNumber] = tk.StringVar(root)
-                                    controlType[gNumber].set(controlsList[1])
-                                    bindCType[gNumber] = tk.OptionMenu(keyFrame[gNumber], controlType[gNumber], *controlsList)
-                                    bindCType[gNumber].configure(bg=ui_AC1, fg=ui_Txt, activebackground=ui_AH1, highlightbackground=ui_AC1,
-                                                                 font=(ui_Font, 12))
                                     bindChange[gNumber] = tk.Button(keyFrame[gNumber], text="Change", command=lambda gRef=gNumber,
                                                                     gNum= gesture:bindsTabFunc.updateKeys(gRef, gNum), bg=ui_AC1, fg=ui_Txt,
                                                                     activebackground=ui_AH1, border=0, font=(ui_Font, 15, ui_Bold))
@@ -1282,7 +1262,6 @@ class bindsTabFunc:
                                     bindLabel[gesture].pack(padx=5, side="left")
 
                                     bindChange[gNumber].pack(padx=5, side="right", anchor="e")
-                                    bindCType[gNumber].pack(padx=5, side="right", anchor="e")
 
                                     generalUI.button_hover(bindChange[gNumber], ui_AH1, ui_AC1)
                                     gNumber += 1
@@ -1343,7 +1322,6 @@ class bindsTabFunc:
     def refreshList(pControlList):
         global pControls, profileDrop
         try:
-            print(pControls)
             profileOption.set(next(iter(pControls)))
             profileDrop["menu"].delete(0, "end")
 
@@ -1710,7 +1688,7 @@ class settingsFunc:
         
 # Class for running programs in the UI
 class run:
-    # Default Controls - Hybrid
+    # Default Controls - CC3
     def program1():
         global process
         try:
@@ -2155,12 +2133,6 @@ hControls = {
     "Right": "right:"
 }
 
-# Control Type definitions for Keybinds - mouse_movement, open_keyboard and detect input
-controlsList = [
-    "Mouse Movement",
-    "Detect Input",
-]
-
 # Initial list for listing keybinds, will be filled with loadKeys
 initBinds = {}
 
@@ -2234,7 +2206,6 @@ keyFrame = {}
 imgFrame = {}
 bindLabel = {}
 bindAction = {}
-bindCType = {}
 bindChange = {}
 controlType = {}
 
