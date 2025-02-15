@@ -9,7 +9,7 @@ import math, time
 
 # this 2 libraries for the on-screen keyboard and more encoding support across various devices
 import os, sys
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+#sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 base_path = os.getcwd()
 
 modelPath = f"{base_path}\\resources\\mgm_v2.h5"
