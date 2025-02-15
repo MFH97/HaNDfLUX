@@ -227,15 +227,6 @@ camera_index = select_camera()
 cap = cv2.VideoCapture(camera_index)
 key = ""
 
-# Initialize swiping variable
-is_d_pressed = False
-is_k_pressed = False
-previous_fingertip_coords = None  # Store previous fingertip positions
-previous_time = None
-velocity_threshold = 1050 # Adjust this for sensitivity tuning the more you bump it up the faster your hand needs to go
-min_distance_threshold = 10  # Ignore tiny jitters
-velocity_history = []  # Store last few velocity values for smoothing
-
 
 while cap.isOpened():
     ret, frame = cap.read()
