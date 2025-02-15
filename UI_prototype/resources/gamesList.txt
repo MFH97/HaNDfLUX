@@ -1,19 +1,5 @@
-Game÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL
-Desc÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ Taiko no Tatsujin: Rhythm Festival is a drum-based rhythm game featuring songs from genres such as Anime and VOCALOID, and also a variety of game modes! Have fun playing solo or online!
-ThumbImg÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ BASE/img/gameimg/Taiko.png
-Exe÷ TAIKO NO TATSUJIN RHYTHM FESTIVAL÷ D:/Games/AbsoluteDrift/absolutedrift.exe
 
-Game÷ FORZA HORIZON 5÷ FORZA HORIZON 5
-Desc÷ FORZA HORIZON 5÷ Explore the vibrant open world landscapes of Mexico with limitless, fun driving action in the world's greatest cars. Join a thrilling game of chase with our new 5v1 Multiplayer Experience: Hide & Seek.
-ThumbImg÷ FORZA HORIZON 5÷ BASE/img/gameimg/Forza.png
-Exe÷ FORZA HORIZON 5÷ C:/Games/Game.exe
 
-Game÷ SOLITAIRE÷ SOLITAIRE
-Desc÷ SOLITAIRE÷ Celebrating over 30 Years of FUN, join millions of gamers worldwide in one of the most played video game of ALL TIME! Discover favorite Solitaire card games in one app; Klondike Solitaire, Spider Solitaire, FreeCell Solitaire, TriPeaks Solitaire and Pyramid Solitaire! Simple rules and straightforward gameplay make Microsoft Solitaire Collection fun for players age 8 to 108.
-ThumbImg÷ SOLITAIRE÷ BASE/img/gameimg/Solitaire.png
-Exe÷ SOLITAIRE÷ C:/Games/Game.exe
 
-Game÷ ASPHALT LEGENDS UNITE÷ ASPHALT LEGENDS UNITE
-Desc÷ ASPHALT LEGENDS UNITE÷ Spark your competitive soul with Asphalt Legends UNITE and feel the collective heartbeat of the road! Join forces with other players to speed through intense arcade races, perform jaw-dropping stunts, and charge towards victory while driving the finest hypercars!
-ThumbImg÷ ASPHALT LEGENDS UNITE÷ BASE/img/gameimg/Asphalt.png
-Exe÷ ASPHALT LEGENDS UNITE÷ D:/SteamGame/steamapps/common/Asphalt 9 Legends/Asphalt9_Steam_x64_rtl.exe
+
+ 

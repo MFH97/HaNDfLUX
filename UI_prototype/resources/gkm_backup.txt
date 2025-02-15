@@ -1,4 +1,4 @@
-left:call=open_keyboard
+left:call=escape
 left:dislike=q
 left:fist=space
 left:like=e
@@ -18,5 +18,5 @@ right:one=u
 right:peace=o
 right:peace_inverted=p
 right:rock=left_click
-right:stop=mouse_movement
+right:stop=i
 right:stop_inverted=l
