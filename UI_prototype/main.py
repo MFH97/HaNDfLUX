@@ -228,7 +228,7 @@ class generalUI:
             messagebox.showerror("Error", f"Failed to add the profile: {e}")
      
     # Removes the selected gesture profile
-    def deleteProfile(profileControl):
+    def deleteProfile(profileControl, profileRef):
         global pControls, configRef
         try:
             
@@ -247,7 +247,7 @@ class generalUI:
                     else:
                         delete.write(items)
 
-            os.remove(f"{base_path}\\resources\\profiles\\{profileControl}.txt")
+            os.remove(profileRef)
             bindsTabFunc.refreshList(pControls)
             return pControls
 
@@ -724,18 +724,19 @@ class gameTabFunc:
         # Runs the exe described in the filepath
         def runGame():
             # Checks if the game is in the process list
-            def gameCheck(proc):
+            def gameCheck(proc, gameProc):
                 while True:
-                    procs = [proc.name() for proc in psutil.process_iter()]
-                    
-                    if proc not in procs:
+                    while psutil.pid_exists(gameProc.pid) is None:
+                        #print("Still going")
+                        pass
+                    else:
                         #quit.release_control()
+                        #print("How")
                         break
-                    time.sleep(1)
 
             # Opens up an asynchronous thread for the game and gesture control to concurrently run
-            def gameStart(proc):
-                thread = threading.Thread(target=gameCheck, args=(proc,))
+            def gameStart(proc, gameProc):
+                thread = threading.Thread(target=gameCheck, args=(proc, gameProc))
                 thread.daemon = True
                 thread.start()
 
@@ -747,12 +748,11 @@ class gameTabFunc:
                     messagebox.showerror("Error", "Game's EXE filepath is NOT configured")
                 else:
                     # Starts up the respective game's control, gesture profile and game
-                    os.startfile(gameDetails[2])
+                    gameProcess = subprocess.Popen(gameDetails[2])
                     run.program1()
                     generalUI.loadGameProfile(gameDetails[0].lower())
-                    gameStart(gameEXE[-1])
+                    gameStart(gameEXE[-1], gameProcess)
                     
-
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to run the game: {e}")
 
@@ -856,7 +856,12 @@ class gameTabFunc:
                     os.remove(gameDetails[1])
                     pass
 
-                generalUI.deleteProfile(gameItem)
+                profileRef = f"{base_path}\\resources\\profiles\\{gameItem}.txt"
+                if os.path.isfile(profileRef):
+                    generalUI.deleteProfile(gameItem, profileRef)
+                else:
+                    pass
+
                 goBack()
                 
             except Exception as e:
@@ -1698,7 +1703,7 @@ class run:
             process = subprocess.Popen(["py", os.path.join(base_path, "CC3.py")], shell=True)
 
             # Debugging info 
-            print(f"Started Mouse Control with PID: {process.pid}")
+            print(f"Started CC3 with PID: {process.pid}")
 
             # For runGame to process
             return process
