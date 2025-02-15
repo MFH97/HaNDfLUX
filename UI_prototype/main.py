@@ -1738,9 +1738,24 @@ class run:
             
             # Closes the tutorial and sets the config.ini to disabled
             def tutDis():
-                tutFuncState = ""
+                if os.path.isfile(configRef):
+
+                    startConfig = "Disabled"
+                    with open(configRef, "r") as ref:
+                        configWrite = ref.readlines()
+                
+                    with open(configRef, "w") as mod:
+                        for item in configWrite:
+                            if f"startupTut Ã· " in item:
+                                mod.write(f"startupTut Ã· {startConfig}\n")
+                            else:
+                                mod.write(item)
+                else:
+                    messagebox.showerror("Error", "config.ini cannot be found!")
+                    return False
+                
+                ref.close(), mod.close()
                 tutClose()
-                settingsFunc.setTutAuto(tutFuncState)
 
             # Scroll Functions for tutorial UI
             def tutConfig(e):
