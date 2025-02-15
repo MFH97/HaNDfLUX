@@ -1,0 +1,15 @@
+matplotlib==3.10.0
+mediapipe==0.10.14
+numpy==2.2.3
+opencv_contrib_python==4.10.0.84
+opencv_python==4.11.0.86
+Pillow==11.1.0
+psutil==6.1.0
+PyAutoGUI==0.9.54
+PyDirectInput==1.0.4
+pygrabber==0.2
+pynput==1.7.7
+pywin32==308
+scikit_learn==1.6.1
+tensorflow==2.18.0
+tensorflow_intel==2.18.0
