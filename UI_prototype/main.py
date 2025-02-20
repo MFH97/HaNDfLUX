@@ -193,6 +193,7 @@ class generalUI:
         try:
             # Changes the profile's name
             pControls[newProfile.capitalize()] = pControls.pop(profileControl.capitalize())
+            pControls[newProfile.capitalize()] = newProfile
             append = " â”¼ ".join(f"{profileItems}" for profileKey, profileItems in pControls.items())
             
             # Consolidates that change in config.ini
@@ -435,7 +436,13 @@ class gameTabFunc:
             
                     elif f"ThumbImgÃ· {filterForm}" in line:
                         gameThumb = line.split("Ã· ")
-                        file = base_path + gameThumb[2].replace("\n","")
+                        baseCheck = gameThumb[2].startswith("BASE")
+                        if baseCheck:
+                            txt = gameThumb[2].replace("\n","")
+                            txt2 = txt.replace("BASE","")
+                            file = base_path + txt2
+                        else:
+                            file = gameThumb[2].replace("\n","")
                         thumbDisplayArray.append(file)
                 
                     elif f"ExeÃ· {filterForm}" in line:
@@ -727,11 +734,9 @@ class gameTabFunc:
             def gameCheck(proc, gameProc):
                 while True:
                     while psutil.pid_exists(gameProc.pid) is None:
-                        #print("Still going")
                         pass
                     else:
                         #quit.release_control()
-                        #print("How")
                         break
 
             # Opens up an asynchronous thread for the game and gesture control to concurrently run
